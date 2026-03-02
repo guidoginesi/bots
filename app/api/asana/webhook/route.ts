@@ -45,7 +45,7 @@ async function getHookSecret(): Promise<string | null> {
     .select("hook_secret")
     .not("hook_secret", "is", null)
     .limit(1)
-    .single();
+    .maybeSingle();
   return data?.hook_secret ?? null;
 }
 
@@ -201,16 +201,6 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ ok: true });
   }
 
-  // Check if bot is enabled before processing
-  const { data: configs } = await supabaseAdmin
-    .from("asana_webhook_config")
-    .select("is_enabled")
-    .limit(1);
-  const isEnabled = configs?.[0]?.is_enabled ?? true;
-  if (!isEnabled) {
-    return NextResponse.json({ ok: true, skipped: "bot disabled" });
-  }
-
   // Resolve allowed project GIDs
   const allowedProjects = new Set(
     (process.env.ASANA_PROJECT_GIDS ?? "")
@@ -218,6 +208,16 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       .map((g) => g.trim())
       .filter(Boolean)
   );
+
+  // Check if bot is enabled: at least one configured project must be enabled
+  const { data: configs } = await supabaseAdmin
+    .from("asana_webhook_config")
+    .select("is_enabled")
+    .in("project_gid", [...allowedProjects]);
+  const isEnabled = configs?.some((c) => c.is_enabled) ?? true;
+  if (!isEnabled) {
+    return NextResponse.json({ ok: true, skipped: "bot disabled" });
+  }
 
   const taskGids = extractTaskGids(events);
 
