@@ -14,10 +14,20 @@ export async function PATCH(
   }
 
   if (botId === "asana-chat") {
+    const projectGids = (process.env.ASANA_PROJECT_GIDS ?? "")
+      .split(",")
+      .map((g) => g.trim())
+      .filter(Boolean);
+
+    if (projectGids.length === 0) {
+      return NextResponse.json({ error: "No project GIDs configured" }, { status: 500 });
+    }
+
     const db = getSupabaseAdmin();
     const { error } = await db
       .from("asana_webhook_config")
-      .update({ is_enabled: enabled });
+      .update({ is_enabled: enabled })
+      .in("project_gid", projectGids);
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
