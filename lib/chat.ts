@@ -13,9 +13,7 @@ export async function sendToGoogleChat(
   const baseUrl = process.env.GC_WEBHOOK_URL;
   if (!baseUrl) throw new Error("Missing GC_WEBHOOK_URL");
 
-  const threadKey = `asana-task-${payload.taskGid}`;
-  const separator = baseUrl.includes("?") ? "&" : "?";
-  const url = `${baseUrl}${separator}threadKey=${threadKey}&messageReplyOption=REPLY_MESSAGE_FALLBACK_TO_NEW_THREAD`;
+  const url = baseUrl;
 
   const date = new Date(payload.timestamp).toLocaleString("es-AR", {
     timeZone: "America/Argentina/Buenos_Aires",
