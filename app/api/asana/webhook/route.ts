@@ -209,12 +209,15 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       .filter(Boolean)
   );
 
-  // Check if bot is enabled: at least one configured project must be enabled
+  // Check if bot is enabled: all configured projects must be enabled
   const { data: configs } = await supabaseAdmin
     .from("asana_webhook_config")
     .select("is_enabled")
     .in("project_gid", [...allowedProjects]);
-  const isEnabled = configs?.some((c) => c.is_enabled) ?? true;
+  const isEnabled =
+    configs !== null && configs.length > 0
+      ? configs.every((c) => c.is_enabled)
+      : true;
   if (!isEnabled) {
     return NextResponse.json({ ok: true, skipped: "bot disabled" });
   }
