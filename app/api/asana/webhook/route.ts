@@ -81,10 +81,30 @@ async function processTask(taskGid: string, projectGid: string): Promise<void> {
 
     if (existing) continue;
 
-    if (!containsAnyTag(story.text)) continue;
+    const authorName = story.created_by?.name ?? "Desconocido";
+
+    if (!containsAnyTag(story.text)) {
+      // Log skipped comments so we can debug missing forwards
+      await supabaseAdmin.from("asana_message_log").insert({
+        project_gid: projectGid,
+        task_gid: taskGid,
+        story_gid: story.gid,
+        author_name: authorName,
+        comment_text: story.text,
+        forwarded: false,
+        error: "no_tag_match",
+        created_at: new Date().toISOString(),
+      });
+      await supabaseAdmin
+        .from("asana_processed_stories")
+        .upsert(
+          { story_gid: story.gid, task_gid: taskGid },
+          { onConflict: "story_gid", ignoreDuplicates: true }
+        );
+      continue;
+    }
 
     const cleanText = stripTags(story.text);
-    const authorName = story.created_by?.name ?? "Desconocido";
 
     let forwarded = false;
     let chatStatus: number | null = null;
