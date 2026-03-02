@@ -1,141 +1,162 @@
-.page {
-  --background: #fafafa;
-  --foreground: #fff;
-
-  --text-primary: #000;
-  --text-secondary: #666;
-
-  --button-primary-hover: #383838;
-  --button-secondary-hover: #f2f2f2;
-  --button-secondary-border: #ebebeb;
-
-  display: flex;
+.layout {
   min-height: 100vh;
-  align-items: center;
-  justify-content: center;
-  font-family: var(--font-geist-sans);
-  background-color: var(--background);
+  padding: 40px 24px;
+  max-width: 860px;
+  margin: 0 auto;
 }
 
-.main {
+.header {
+  margin-bottom: 32px;
+}
+
+.header h1 {
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.header p {
+  font-size: 14px;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+/* ── Bot card ─────────────────────────────────────── */
+.grid {
+  display: grid;
+  gap: 16px;
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px 24px;
+  box-shadow: var(--shadow);
   display: flex;
-  min-height: 100vh;
-  width: 100%;
-  max-width: 800px;
-  flex-direction: column;
   align-items: flex-start;
   justify-content: space-between;
-  background-color: var(--foreground);
-  padding: 120px 60px;
+  gap: 20px;
 }
 
-.intro {
+.cardInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.cardTop {
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  text-align: left;
-  gap: 24px;
-}
-
-.intro h1 {
-  max-width: 320px;
-  font-size: 40px;
-  font-weight: 600;
-  line-height: 48px;
-  letter-spacing: -2.4px;
-  text-wrap: balance;
-  color: var(--text-primary);
-}
-
-.intro p {
-  max-width: 440px;
-  font-size: 18px;
-  line-height: 32px;
-  text-wrap: balance;
-  color: var(--text-secondary);
-}
-
-.intro a {
-  font-weight: 500;
-  color: var(--text-primary);
-}
-
-.ctas {
-  display: flex;
-  flex-direction: row;
-  width: 100%;
-  max-width: 440px;
-  gap: 16px;
-  font-size: 14px;
-}
-
-.ctas a {
-  display: flex;
-  justify-content: center;
   align-items: center;
-  height: 40px;
-  padding: 0 16px;
-  border-radius: 128px;
-  border: 1px solid transparent;
-  transition: 0.2s;
-  cursor: pointer;
-  width: fit-content;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.cardName {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.badge {
+  font-size: 12px;
   font-weight: 500;
+  padding: 2px 8px;
+  border-radius: 999px;
 }
 
-a.primary {
-  background: var(--text-primary);
-  color: var(--background);
-  gap: 8px;
+.badgeOn {
+  background: var(--green-bg);
+  color: var(--green);
 }
 
-a.secondary {
-  border-color: var(--button-secondary-border);
+.badgeOff {
+  background: var(--gray-bg);
+  color: var(--text-muted);
 }
 
-/* Enable hover only on non-touch devices */
-@media (hover: hover) and (pointer: fine) {
-  a.primary:hover {
-    background: var(--button-primary-hover);
-    border-color: transparent;
-  }
-
-  a.secondary:hover {
-    background: var(--button-secondary-hover);
-    border-color: transparent;
-  }
+.cardDesc {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-bottom: 10px;
 }
 
-@media (max-width: 600px) {
-  .main {
-    padding: 48px 24px;
-  }
-
-  .intro {
-    gap: 16px;
-  }
-
-  .intro h1 {
-    font-size: 32px;
-    line-height: 40px;
-    letter-spacing: -1.92px;
-  }
+.cardMeta {
+  display: flex;
+  gap: 16px;
+  font-size: 12px;
+  color: var(--text-muted);
 }
 
-@media (prefers-color-scheme: dark) {
-  .logo {
-    filter: invert();
-  }
+.dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  margin-right: 5px;
+  vertical-align: middle;
+}
 
-  .page {
-    --background: #000;
-    --foreground: #000;
+.dotGreen { background: var(--green); }
+.dotGray  { background: #9ca3af; }
 
-    --text-primary: #ededed;
-    --text-secondary: #999;
+/* ── Toggle switch ────────────────────────────────── */
+.toggle {
+  flex-shrink: 0;
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 24px;
+}
 
-    --button-primary-hover: #ccc;
-    --button-secondary-hover: #1a1a1a;
-    --button-secondary-border: #1a1a1a;
-  }
+.toggle input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  inset: 0;
+  background: #d1d5db;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.slider::before {
+  content: "";
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  left: 3px;
+  top: 3px;
+  background: #fff;
+  border-radius: 50%;
+  transition: transform 0.2s;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+
+.toggle input:checked + .slider {
+  background: var(--green);
+}
+
+.toggle input:checked + .slider::before {
+  transform: translateX(20px);
+}
+
+.toggle input:disabled + .slider {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ── Loading / error states ───────────────────────── */
+.loading {
+  color: var(--text-muted);
+  font-size: 14px;
+  padding: 20px 0;
+}
+
+.error {
+  color: var(--red);
+  font-size: 14px;
+  padding: 20px 0;
 }

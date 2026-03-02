@@ -1,0 +1,30 @@
+import { NextRequest, NextResponse } from "next/server";
+import { getSupabaseAdmin } from "@/lib/supabaseAdmin";
+
+export async function PATCH(
+  req: NextRequest,
+  { params }: { params: Promise<{ botId: string }> }
+) {
+  const { botId } = await params;
+  const body = await req.json();
+  const enabled: boolean = body.enabled;
+
+  if (typeof enabled !== "boolean") {
+    return NextResponse.json({ error: "enabled must be boolean" }, { status: 400 });
+  }
+
+  if (botId === "asana-chat") {
+    const db = getSupabaseAdmin();
+    const { error } = await db
+      .from("asana_webhook_config")
+      .update({ is_enabled: enabled });
+
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    return NextResponse.json({ ok: true, enabled });
+  }
+
+  return NextResponse.json({ error: "Bot not found" }, { status: 404 });
+}

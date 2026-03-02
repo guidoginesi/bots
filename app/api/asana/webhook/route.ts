@@ -181,6 +181,16 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ ok: true });
   }
 
+  // Check if bot is enabled before processing
+  const { data: configs } = await supabaseAdmin
+    .from("asana_webhook_config")
+    .select("is_enabled")
+    .limit(1);
+  const isEnabled = configs?.[0]?.is_enabled ?? true;
+  if (!isEnabled) {
+    return NextResponse.json({ ok: true, skipped: "bot disabled" });
+  }
+
   // Resolve allowed project GIDs
   const allowedProjects = new Set(
     (process.env.ASANA_PROJECT_GIDS ?? "")

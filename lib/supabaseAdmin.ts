@@ -1,6 +1,10 @@
-import { createClient } from "@supabase/supabase-js";
+import { createClient, SupabaseClient } from "@supabase/supabase-js";
 
-function getSupabaseAdmin() {
+let _client: SupabaseClient | null = null;
+
+export function getSupabaseAdmin(): SupabaseClient {
+  if (_client) return _client;
+
   const url = process.env.SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
@@ -8,9 +12,14 @@ function getSupabaseAdmin() {
     throw new Error("Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY");
   }
 
-  return createClient(url, key, {
+  _client = createClient(url, key, {
     auth: { persistSession: false },
   });
+
+  return _client;
 }
 
-export const supabaseAdmin = getSupabaseAdmin();
+export const supabaseAdmin = {
+  from: (...args: Parameters<SupabaseClient["from"]>) =>
+    getSupabaseAdmin().from(...args),
+};
