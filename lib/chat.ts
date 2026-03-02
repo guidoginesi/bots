@@ -26,8 +26,7 @@ export async function sendToGoogleChat(
   const text =
     `📌 *E/R* | ${payload.authorName}\n` +
     `*${payload.taskName}*\n` +
-    `${payload.commentText}\n` +
-    `🕒 ${date}`;
+    `${payload.commentText}`;
 
   const res = await fetch(url, {
     method: "POST",
