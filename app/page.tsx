@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import styles from "./page.module.css";
+import BotLogs from "./BotLogs";
 
 interface Bot {
   id: string;
@@ -68,46 +69,52 @@ export default function Dashboard() {
         <div className={styles.grid}>
           {bots.map((bot) => (
             <div key={bot.id} className={styles.card}>
-              <div className={styles.cardInfo}>
-                <div className={styles.cardTop}>
-                  <span className={styles.cardName}>{bot.name}</span>
-                  <span
-                    className={`${styles.badge} ${
-                      bot.enabled ? styles.badgeOn : styles.badgeOff
-                    }`}
-                  >
-                    {bot.enabled ? "Activo" : "Inactivo"}
-                  </span>
-                </div>
-                <p className={styles.cardDesc}>{bot.description}</p>
-                <div className={styles.cardMeta}>
-                  <span>
+              {/* header row: info + toggle */}
+              <div className={styles.cardRow}>
+                <div className={styles.cardInfo}>
+                  <div className={styles.cardTop}>
+                    <span className={styles.cardName}>{bot.name}</span>
                     <span
-                      className={`${styles.dot} ${
-                        bot.connected ? styles.dotGreen : styles.dotGray
+                      className={`${styles.badge} ${
+                        bot.enabled ? styles.badgeOn : styles.badgeOff
                       }`}
-                    />
-                    {bot.connected ? "Conectado" : "Sin handshake"}
-                  </span>
-                  {bot.projectCount > 0 && (
-                    <span>
-                      {bot.projectCount} proyecto
-                      {bot.projectCount !== 1 ? "s" : ""}
+                    >
+                      {bot.enabled ? "Activo" : "Inactivo"}
                     </span>
-                  )}
-                  {bot.tags && <span>Tags: {bot.tags}</span>}
+                  </div>
+                  <p className={styles.cardDesc}>{bot.description}</p>
+                  <div className={styles.cardMeta}>
+                    <span>
+                      <span
+                        className={`${styles.dot} ${
+                          bot.connected ? styles.dotGreen : styles.dotGray
+                        }`}
+                      />
+                      {bot.connected ? "Conectado" : "Sin handshake"}
+                    </span>
+                    {bot.projectCount > 0 && (
+                      <span>
+                        {bot.projectCount} proyecto
+                        {bot.projectCount !== 1 ? "s" : ""}
+                      </span>
+                    )}
+                    {bot.tags && <span>Tags: {bot.tags}</span>}
+                  </div>
                 </div>
+
+                <label className={styles.toggle} title={bot.enabled ? "Desactivar" : "Activar"}>
+                  <input
+                    type="checkbox"
+                    checked={bot.enabled}
+                    disabled={toggling === bot.id}
+                    onChange={() => handleToggle(bot)}
+                  />
+                  <span className={styles.slider} />
+                </label>
               </div>
 
-              <label className={styles.toggle} title={bot.enabled ? "Desactivar" : "Activar"}>
-                <input
-                  type="checkbox"
-                  checked={bot.enabled}
-                  disabled={toggling === bot.id}
-                  onChange={() => handleToggle(bot)}
-                />
-                <span className={styles.slider} />
-              </label>
+              {/* logs section, full width */}
+              <BotLogs botId={bot.id} />
             </div>
           ))}
         </div>
