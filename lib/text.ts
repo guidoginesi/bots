@@ -9,11 +9,15 @@ function getTags(): string[] {
 }
 
 export function containsAnyTag(text: string): boolean {
-  return getTags().some((tag) => text.includes(tag));
+  const lower = text.toLowerCase();
+  return getTags().some((tag) => lower.includes(tag.toLowerCase()));
 }
 
 export function stripTags(text: string): string {
   return getTags()
-    .reduce((acc, tag) => acc.replaceAll(tag, ""), text)
+    .reduce((acc, tag) => {
+      const regex = new RegExp(tag.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "gi");
+      return acc.replace(regex, "");
+    }, text)
     .trim();
 }
