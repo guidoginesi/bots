@@ -1,0 +1,16 @@
+{
+  "reports": [
+    {
+      "slug": "ceo-scorecard",
+      "file": "ceo-scorecard.html",
+      "title": "CEO Scorecard",
+      "description": "Estado de resultados · Mayo 2026"
+    },
+    {
+      "slug": "crm-dashboard",
+      "file": "crm-dashboard.html",
+      "title": "CRM Dashboard",
+      "description": "Pipeline HubSpot · sync ~cada 1 h · Pow / Undo"
+    }
+  ]
+}

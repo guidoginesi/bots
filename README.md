@@ -110,6 +110,49 @@ supabase/
 
 ---
 
+## Informes HTML internos (`/reports`)
+
+Dashboards estáticos (CEO Scorecard, etc.) servidos desde el mismo deploy de Vercel, con **contraseña en servidor** (no embebida en el HTML).
+
+### Publicar / actualizar un informe
+
+1. Editá el HTML en `app-directorio` (u otra ruta).
+2. Registrá la fuente en `scripts/sync-reports.mjs` (`SOURCES`).
+3. Desde `bots`:
+
+```bash
+npm run sync-reports
+```
+
+4. Commit de `public/reports/` y deploy.
+
+### Variables en Vercel
+
+| Variable | Descripción |
+|----------|-------------|
+| `REPORTS_PASSWORD` | Contraseña compartida para el equipo |
+| `REPORTS_AUTH_SECRET` | Opcional — refuerza la cookie de sesión |
+
+### URLs
+
+| Ruta | Uso |
+|------|-----|
+| `/reports` | Índice de informes |
+| `/reports/login` | Login |
+| `/reports/ceo-scorecard.html` | Ejemplo: CEO Scorecard |
+| `/reports/crm-dashboard.html` | CRM + Funnel · datos desde HubSpot |
+
+El script `sync-reports` **elimina el login JavaScript del HTML**; la protección real es middleware + cookie `httpOnly`.
+
+### CRM Dashboard (HubSpot)
+
+- API: `GET /api/hubspot/deals` (requiere sesión de `/reports` o cron de Vercel)
+- Cache CDN: **1 hora** · cron horario en `vercel.json` precalienta la API
+- Variables: `HUBSPOT_TOKEN` (+ scopes `deals.read`, `line_items.read`, `contacts.read`)
+- El HTML vive en `public/reports/crm-dashboard.html` (editar ahí o copiar desde `pow-dashboard`)
+
+---
+
 ## Definition of Done
 
 - [ ] Webhook activo — `hook_secret` guardado en DB

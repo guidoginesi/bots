@@ -1,124 +1,35 @@
-"use client";
-
-import { useEffect, useState } from "react";
+import Link from "next/link";
 import styles from "./page.module.css";
-import BotLogs from "./BotLogs";
+import LogoutButton from "./reports/LogoutButton";
 
-interface Bot {
-  id: string;
-  name: string;
-  description: string;
-  enabled: boolean;
-  connected: boolean;
-  projectCount: number;
-  tags?: string;
-}
-
-export default function Dashboard() {
-  const [bots, setBots] = useState<Bot[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [toggling, setToggling] = useState<string | null>(null);
-
-  useEffect(() => {
-    fetchBots();
-  }, []);
-
-  async function fetchBots() {
-    try {
-      const res = await fetch("/api/bots");
-      if (!res.ok) throw new Error("Error cargando bots");
-      setBots(await res.json());
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Error desconocido");
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function handleToggle(bot: Bot) {
-    setToggling(bot.id);
-    try {
-      const res = await fetch(`/api/bots/${bot.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ enabled: !bot.enabled }),
-      });
-      if (!res.ok) throw new Error("Error al cambiar estado");
-      setBots((prev) =>
-        prev.map((b) => (b.id === bot.id ? { ...b, enabled: !b.enabled } : b))
-      );
-    } catch (e) {
-      alert(e instanceof Error ? e.message : "Error");
-    } finally {
-      setToggling(null);
-    }
-  }
-
+export default function HomeLanding() {
   return (
     <main className={styles.layout}>
-      <div className={styles.header}>
-        <h1>Bots</h1>
-        <p>Administración de automatizaciones internas</p>
-      </div>
-
-      {loading && <p className={styles.loading}>Cargando…</p>}
-      {error && <p className={styles.error}>{error}</p>}
-
-      {!loading && !error && (
-        <div className={styles.grid}>
-          {bots.map((bot) => (
-            <div key={bot.id} className={styles.card}>
-              {/* header row: info + toggle */}
-              <div className={styles.cardRow}>
-                <div className={styles.cardInfo}>
-                  <div className={styles.cardTop}>
-                    <span className={styles.cardName}>{bot.name}</span>
-                    <span
-                      className={`${styles.badge} ${
-                        bot.enabled ? styles.badgeOn : styles.badgeOff
-                      }`}
-                    >
-                      {bot.enabled ? "Activo" : "Inactivo"}
-                    </span>
-                  </div>
-                  <p className={styles.cardDesc}>{bot.description}</p>
-                  <div className={styles.cardMeta}>
-                    <span>
-                      <span
-                        className={`${styles.dot} ${
-                          bot.connected ? styles.dotGreen : styles.dotGray
-                        }`}
-                      />
-                      {bot.connected ? "Conectado" : "Sin handshake"}
-                    </span>
-                    {bot.projectCount > 0 && (
-                      <span>
-                        {bot.projectCount} proyecto
-                        {bot.projectCount !== 1 ? "s" : ""}
-                      </span>
-                    )}
-                    {bot.tags && <span>Tags: {bot.tags}</span>}
-                  </div>
-                </div>
-
-                <label className={styles.toggle} title={bot.enabled ? "Desactivar" : "Activar"}>
-                  <input
-                    type="checkbox"
-                    checked={bot.enabled}
-                    disabled={toggling === bot.id}
-                    onChange={() => handleToggle(bot)}
-                  />
-                  <span className={styles.slider} />
-                </label>
-              </div>
-
-              {/* logs section, full width */}
-              <BotLogs botId={bot.id} />
-            </div>
-          ))}
+      <header className={styles.header}>
+        <div>
+          <h1>POW</h1>
+          <p>Panel interno</p>
         </div>
-      )}
+        <LogoutButton />
+      </header>
+
+      <div className={styles.hubGrid}>
+        <Link href="/bots" className={`${styles.card} ${styles.hubCard}`}>
+          <span className={styles.hubLabel}>Automatización</span>
+          <span className={styles.hubTitle}>Bots</span>
+          <p className={styles.cardDesc}>
+            Administración de webhooks, Asana y Google Chat.
+          </p>
+        </Link>
+
+        <Link href="/reports" className={`${styles.card} ${styles.hubCard}`}>
+          <span className={styles.hubLabel}>Análisis</span>
+          <span className={styles.hubTitle}>Informes</span>
+          <p className={styles.cardDesc}>
+            CEO Scorecard, CRM HubSpot (sync ~1 h) y más.
+          </p>
+        </Link>
+      </div>
     </main>
   );
 }
