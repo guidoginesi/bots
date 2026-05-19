@@ -10,7 +10,7 @@
       "slug": "crm-dashboard",
       "file": "crm-dashboard.html",
       "title": "CRM Dashboard",
-      "description": "Pipeline HubSpot · sync ~cada 1 h · Pow / Undo"
+      "description": "Pipeline HubSpot · cache 1 h · sync diario · Pow / Undo"
     }
   ]
 }

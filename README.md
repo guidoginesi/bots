@@ -147,7 +147,7 @@ El script `sync-reports` **elimina el login JavaScript del HTML**; la protecció
 ### CRM Dashboard (HubSpot)
 
 - API: `GET /api/hubspot/deals` (requiere sesión de `/reports` o cron de Vercel)
-- Cache CDN: **1 hora** · cron horario en `vercel.json` precalienta la API
+- Cache CDN: **1 hora** · cron **diario** (13:00 UTC) precalienta la API (límite plan Hobby)
 - Variables: `HUBSPOT_TOKEN` (+ scopes `deals.read`, `line_items.read`, `contacts.read`)
 - El HTML vive en `public/reports/crm-dashboard.html` (editar ahí o copiar desde `pow-dashboard`)
 
