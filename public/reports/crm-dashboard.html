@@ -1,0 +1,1164 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CRM Dashboard · Pow</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#F1EFE8;display:flex;height:100vh;overflow:hidden}
+
+/* Layout */
+.main{flex:1;overflow-y:auto;padding:2rem;min-width:0}
+.sidebar{width:56px;background:#1a1a18;display:flex;flex-direction:column;align-items:center;padding:1rem 0;gap:4px;flex-shrink:0}
+.stab{width:40px;height:40px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;border:none;background:transparent;color:#888780;transition:all .15s;position:relative}
+.stab:hover{background:#2C2C2A;color:#D3D1C7}
+.stab.active{background:#378ADD;color:white}
+.stab-tip{position:absolute;right:52px;background:#2C2C2A;color:#F1EFE8;font-size:11px;font-weight:500;padding:4px 10px;border-radius:6px;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .15s}
+.stab:hover .stab-tip{opacity:1}
+.sidebar-divider{width:28px;height:.5px;background:#2C2C2A;margin:4px 0}
+
+/* Dashboard sections */
+.view{display:none}.view.active{display:block}
+.wrap{max-width:920px;margin:0 auto}
+
+/* Header */
+.header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:1.25rem;flex-wrap:wrap;gap:1rem}
+h1{font-size:21px;font-weight:500;color:#1a1a18}
+.meta{font-size:12px;color:#888780;margin-top:3px}
+.btn-link{font-size:12px;padding:6px 14px;border:.5px solid #B4B2A9;border-radius:8px;background:white;color:#5F5E5A;display:flex;align-items:center;gap:5px;text-decoration:none;white-space:nowrap}
+.btn-link:hover{background:#E8E6DE}
+
+/* Filters */
+.filter-row{display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap}
+.filter-label{font-size:10px;color:#B4B2A9;font-weight:600;letter-spacing:.06em;min-width:44px}
+.filter-group{display:flex;gap:4px;background:white;border:.5px solid #D3D1C7;border-radius:10px;padding:3px;flex-wrap:wrap}
+.ftab{font-size:12px;font-weight:500;padding:5px 15px;border-radius:7px;cursor:pointer;border:none;background:transparent;color:#888780;transition:all .15s}
+.ftab:hover{background:#F1EFE8;color:#444441}
+.ftab.active{color:white}
+.ftab.all.active{background:#1a1a18}
+.ftab.pow.active{background:#185FA5}
+.ftab.undo.active{background:#534AB7}
+.cpill{font-size:12px;font-weight:500;padding:5px 13px;border-radius:7px;cursor:pointer;border:none;background:transparent;color:#888780;transition:all .15s}
+.cpill:hover{background:#F1EFE8;color:#444441}
+.cpill.active{background:#1a1a18;color:white}
+
+/* KPIs */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin:1rem 0}
+.kpi{background:white;border-radius:10px;padding:.9rem 1rem;border:.5px solid #D3D1C7}
+.kpi-label{font-size:10px;color:#888780;letter-spacing:.05em;margin-bottom:5px;text-transform:uppercase}
+.kpi-value{font-size:22px;font-weight:500;line-height:1;color:#1a1a18}
+.kpi-value.blue{color:#185FA5}.kpi-value.green{color:#0F6E56}
+.kpi-value.amber{color:#854F0B}.kpi-value.red{color:#A32D2D}
+.kpi-value.purple{color:#534AB7}
+
+/* Cards */
+.card{background:white;border:.5px solid #D3D1C7;border-radius:12px;padding:1.1rem 1.25rem;margin-bottom:1rem}
+.card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:8px}
+.card-title{font-size:10px;font-weight:600;color:#888780;letter-spacing:.07em;text-transform:uppercase}
+.hint{font-size:11px;color:#B4B2A9;display:flex;align-items:center;gap:4px}
+
+/* Pipeline stages (CRM view) */
+.stage-item{border-radius:8px;cursor:pointer;padding:9px 10px 7px;margin-bottom:3px;transition:background .12s;border:.5px solid transparent}
+.stage-item:hover{background:#FAFAF8;border-color:#ECEAE2}
+.stage-item.active{background:#FAFAF8;border-color:#D3D1C7}
+.stage-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:5px}
+.stage-left{display:flex;align-items:center;gap:8px}
+.stage-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.stage-name{font-size:13px;color:#2C2C2A;font-weight:500}
+.stage-right{display:flex;align-items:center;gap:10px}
+.stage-count{font-size:13px;font-weight:500}
+.stage-count.won{color:#0F6E56}.stage-count.lost{color:#A32D2D}.stage-count.neutral{color:#1a1a18}
+.bar-bg{background:#F1EFE8;border-radius:3px;height:5px}
+.bar{height:5px;border-radius:3px}
+.chevron{font-size:14px;color:#B4B2A9;transition:transform .2s;display:inline-block}
+.chevron.open{transform:rotate(90deg)}
+.stage-deals{overflow:hidden;max-height:0;transition:max-height .3s ease;margin-top:0}
+.stage-deals.open{max-height:600px;margin-top:8px}
+.sdeal-row{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:.5px solid #F1EFE8}
+.sdeal-row:last-child{border-bottom:none}
+.brand-pill{font-size:9px;font-weight:600;padding:1px 6px;border-radius:3px;flex-shrink:0}
+.brand-pill.pow{background:#E6F1FB;color:#185FA5}.brand-pill.undo{background:#EEEDFE;color:#534AB7}
+.sdeal-name{font-size:12px;font-weight:500;color:#2C2C2A;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sdeal-meta{font-size:11px;color:#B4B2A9;white-space:nowrap;flex-shrink:0}
+
+/* Contacts */
+.two-col{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1rem}
+.contact-row{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:.5px solid #ECEAE2}
+.contact-row:last-child{border-bottom:none}
+.avatar{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;flex-shrink:0}
+.avatar.pow{background:#E6F1FB;color:#185FA5}.avatar.undo{background:#EEEDFE;color:#534AB7}
+.contact-name{font-size:13px;font-weight:500;color:#1a1a18;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.contact-sub{font-size:11px;color:#888780}
+
+/* Deals list */
+.deal-row{display:flex;align-items:center;padding:8px 0;border-bottom:.5px solid #ECEAE2}
+.deal-row:last-child{border-bottom:none}
+.deal-body{flex:1;min-width:0}
+.deal-name{font-size:13px;font-weight:500;color:#1a1a18;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.deal-meta{font-size:11px;color:#888780;margin-top:2px}
+.tag{font-size:10px;padding:2px 8px;border-radius:4px;white-space:nowrap;margin-left:8px;flex-shrink:0}
+.tag.default{background:#F1EFE8;color:#5F5E5A}
+.tag.won{background:#E1F5EE;color:#0F6E56;font-weight:500}
+.tag.lost{background:#FCEBEB;color:#A32D2D}
+.owner-badge{font-size:11px;color:#5F5E5A;background:#F1EFE8;border-radius:4px;padding:2px 8px;border:.5px solid #D3D1C7}
+
+/* ============ FUNNEL STYLES ============ */
+.funnel-wrap{overflow-x:auto;padding-bottom:.5rem}
+.funnel-track{display:flex;gap:0;align-items:stretch;min-width:600px}
+
+.funnel-col{flex:1;min-width:80px;display:flex;flex-direction:column;align-items:center;position:relative}
+
+/* Arrow connector */
+.funnel-col::after{content:'›';position:absolute;right:-10px;top:28px;font-size:20px;color:#D3D1C7;z-index:1;pointer-events:none}
+.funnel-col:last-child::after{display:none}
+
+.funnel-stage-bar{width:100%;display:flex;flex-direction:column;align-items:center;padding:0 4px}
+.funnel-bar-outer{width:100%;background:#F1EFE8;border-radius:4px;overflow:hidden}
+.funnel-bar-inner{border-radius:4px;transition:height .5s ease;min-height:4px}
+.funnel-label{font-size:10px;font-weight:600;color:#888780;text-align:center;letter-spacing:.03em;line-height:1.3;margin-bottom:2px}
+.funnel-count{font-size:18px;font-weight:500;color:#1a1a18;line-height:1}
+.funnel-value{font-size:11px;color:#888780;text-align:center}
+.funnel-value.has-value{color:#185FA5;font-weight:500}
+.funnel-value.won{color:#0F6E56;font-weight:500}
+
+/* Funnel bottom KPIs */
+.funnel-kpi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:1.25rem}
+.funnel-kpi{background:white;border-radius:12px;padding:1.25rem 1.5rem;border:.5px solid #D3D1C7;text-align:center}
+.fkpi-label{font-size:10px;color:#888780;letter-spacing:.05em;text-transform:uppercase;margin-bottom:8px}
+.fkpi-value{font-size:26px;font-weight:500;color:#1a1a18;line-height:1;margin-bottom:4px}
+.fkpi-value.green{color:#0F6E56}
+.fkpi-value.blue{color:#185FA5}
+.fkpi-value.purple{color:#534AB7}
+.fkpi-sub{font-size:11px;color:#B4B2A9}
+
+/* Funnel lost bar at bottom */
+.funnel-lost-row{display:flex;align-items:center;gap:10px;margin-top:1rem;padding:10px 12px;background:#FEF4F4;border-radius:8px;border:.5px solid #F7C1C1}
+.lost-label{font-size:12px;color:#A32D2D;font-weight:500}
+.lost-bar-bg{flex:1;background:#F7C1C1;border-radius:3px;height:5px}
+.lost-bar-fill{background:#E24B4A;height:5px;border-radius:3px}
+.lost-stats{font-size:12px;color:#A32D2D;white-space:nowrap}
+
+/* Service breakdown */
+.svc-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-bottom:.75rem}
+.svc-kpi{border-radius:10px;padding:.85rem 1rem;border:.5px solid #D3D1C7}
+.svc-name{font-size:10px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;margin-bottom:6px}
+.svc-mrr{font-size:20px;font-weight:600;line-height:1;margin-bottom:3px}
+.svc-sub{font-size:11px;color:#888780}
+.svc-bar-wrap{height:4px;background:#F1EFE8;border-radius:3px;margin-top:8px}
+.svc-bar{height:4px;border-radius:3px}
+
+.empty{font-size:13px;color:#B4B2A9;padding:1rem 0;text-align:center}
+.footer{font-size:11px;color:#B4B2A9;text-align:center;margin-top:.5rem;padding-bottom:1rem}
+
+/* Brand detail table */
+.bdt{width:100%;border-collapse:collapse}
+.bdt th{font-size:10px;font-weight:600;color:#B4B2A9;letter-spacing:.05em;text-transform:uppercase;padding:6px 10px;text-align:left;border-bottom:.5px solid #ECEAE2}
+.bdt th.num{text-align:right}
+.bdt td{font-size:12px;padding:9px 10px;border-bottom:.5px solid #F1EFE8;vertical-align:middle}
+.bdt tr:last-child td{border-bottom:none}
+.bdt td.num{text-align:right;font-variant-numeric:tabular-nums}
+.bdt tr:hover td{background:#FAFAF8}
+.bdt .mrr{color:#185FA5;font-weight:500}
+.bdt .ltv{color:#534AB7;font-weight:500}
+.bdt .val{color:#0F6E56;font-weight:500}
+.bdt .dash{color:#B4B2A9}
+.bdt-total td{background:#F7F6F2;font-weight:600;font-size:12px}
+.stage-badge{font-size:10px;padding:2px 7px;border-radius:4px;background:#F1EFE8;color:#5F5E5A;white-space:nowrap}
+</style>
+</head>
+<body>
+
+<div class="main" id="main-scroll">
+
+  <!-- ========== CRM DASHBOARD ========== -->
+  <div class="view active" id="view-crm">
+  <div class="wrap">
+    <div class="header">
+      <div><h1>CRM Dashboard</h1><p class="meta">Andres Acerenza · HubSpot Portal 48113030 · 15 mayo 2026</p></div>
+      <a class="btn-link" href="https://app.hubspot.com/contacts/48113030/deals" target="_blank">Abrir en HubSpot ↗</a>
+    </div>
+    <div class="filter-row">
+      <span class="filter-label">MARCA</span>
+      <div class="filter-group">
+        <button class="ftab all active" onclick="setBrand('all',this)">Todos</button>
+        <button class="ftab pow" onclick="setBrand('pow',this)">Pow</button>
+        <button class="ftab undo" onclick="setBrand('undo',this)">Undo</button>
+      </div>
+    </div>
+    <div class="filter-row">
+      <span class="filter-label">PAÍS</span>
+      <div class="filter-group" id="country-group"></div>
+    </div>
+    <div class="kpi-grid">
+      <div class="kpi"><p class="kpi-label">Deals</p><p class="kpi-value" id="kpi-deals">—</p></div>
+      <div class="kpi"><p class="kpi-label">Contactos</p><p class="kpi-value blue" id="kpi-contacts">—</p></div>
+      <div class="kpi"><p class="kpi-label">Cierre ganado</p><p class="kpi-value green" id="kpi-won">—</p></div>
+      <div class="kpi"><p class="kpi-label">Cierre perdido</p><p class="kpi-value red" id="kpi-lost">—</p></div>
+      <div class="kpi"><p class="kpi-label">En exploración</p><p class="kpi-value amber" id="kpi-exp">—</p></div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <p class="card-title">Pipeline por etapa</p>
+        <span class="hint">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><circle cx="6" cy="6" r="5.5" stroke="#B4B2A9"/><path d="M6 5.5v3M6 3.5v.5" stroke="#B4B2A9" stroke-linecap="round"/></svg>
+          Hacé click para ver los deals
+        </span>
+      </div>
+      <div id="crm-stages"></div>
+    </div>
+    <div class="card">
+      <div class="card-header"><p class="card-title">Contactos recientes</p></div>
+      <div class="two-col"><div id="contacts-a"></div><div id="contacts-b"></div></div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <p class="card-title">Deals recientes <span id="deal-count-label" style="font-weight:400;text-transform:none;letter-spacing:0"></span></p>
+        <div id="owner-badges" style="display:flex;gap:6px;flex-wrap:wrap"></div>
+      </div>
+      <div id="crm-deals"></div>
+    </div>
+    <p class="footer">Datos vía HubSpot · cache ~1 h · sync diario · Pow · Portal 48113030</p>
+  </div>
+  </div>
+
+  <!-- ========== FUNNEL DASHBOARD ========== -->
+  <div class="view" id="view-funnel">
+  <div class="wrap">
+    <div class="header">
+      <div><h1>Funnel de Ventas</h1><p class="meta">Pipeline Pow · Medido en valor de negocio · 15 mayo 2026</p></div>
+      <a class="btn-link" href="https://app.hubspot.com/contacts/48113030/deals" target="_blank">Abrir en HubSpot ↗</a>
+    </div>
+
+    <!-- Funnel filters -->
+    <div style="background:white;border:.5px solid #D3D1C7;border-radius:12px;padding:.9rem 1rem;margin-bottom:1rem;display:flex;flex-direction:column;gap:.65rem">
+
+      <div style="display:flex;align-items:center;gap:12px">
+        <span style="font-size:10px;font-weight:600;color:#B4B2A9;letter-spacing:.06em;width:52px;flex-shrink:0">MONEDA</span>
+        <div class="filter-group" style="flex:1;max-width:220px">
+          <button class="ftab all active" id="fctab-usd" onclick="setCurrency('USD',this)">USD</button>
+          <button class="ftab pow" id="fctab-ars" onclick="setCurrency('ARS',this)">Pesos</button>
+        </div>
+        <div id="ars-rate-wrap" style="display:none;align-items:center;gap:6px;font-size:12px;color:#5F5E5A">
+          <span>1 USD =</span>
+          <input id="ars-rate-input" type="number" value="1200" min="1" step="10"
+            oninput="arsRate=Math.max(1,+this.value||1200);renderFunnel()"
+            style="width:72px;padding:5px 8px;font-size:12px;border:.5px solid #D3D1C7;border-radius:8px;background:#F7F6F2;color:#1a1a18;outline:none;font-family:inherit">
+          <span>ARS</span>
+        </div>
+      </div>
+
+      <div style="display:flex;align-items:center;gap:12px">
+        <span style="font-size:10px;font-weight:600;color:#B4B2A9;letter-spacing:.06em;width:52px;flex-shrink:0">EMPRESA</span>
+        <div class="filter-group" style="flex:1;max-width:220px">
+          <button class="ftab all active" id="fstab-all" onclick="setFunnelEmpresa('all',this)">Todas</button>
+          <button class="ftab pow" id="fstab-pow" onclick="setFunnelEmpresa('pow',this)">Pow</button>
+          <button class="ftab undo" id="fstab-undo" onclick="setFunnelEmpresa('undo',this)">Undo</button>
+        </div>
+      </div>
+
+      <div style="display:flex;align-items:center;gap:12px">
+        <span style="font-size:10px;font-weight:600;color:#B4B2A9;letter-spacing:.06em;width:52px;flex-shrink:0">AÑO</span>
+        <div class="filter-group" id="funnel-year-group" style="flex:1;max-width:220px"></div>
+      </div>
+
+      <div style="display:flex;align-items:center;gap:12px">
+        <span style="font-size:10px;font-weight:600;color:#B4B2A9;letter-spacing:.06em;width:52px;flex-shrink:0">MARCA</span>
+        <div style="position:relative;flex:1;max-width:320px">
+          <svg style="position:absolute;left:10px;top:50%;transform:translateY(-50%);pointer-events:none" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#B4B2A9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <input id="funnel-search" type="text" placeholder="Buscar por marca…" oninput="setFunnelSearch(this.value)"
+            style="width:100%;padding:7px 30px 7px 30px;font-size:12px;border:.5px solid #D3D1C7;border-radius:10px;background:#F7F6F2;color:#1a1a18;outline:none;font-family:inherit">
+          <button id="funnel-search-clear" onclick="clearFunnelSearch()" style="display:none;position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#B4B2A9;font-size:14px;line-height:1;padding:2px">✕</button>
+        </div>
+      </div>
+
+      <div style="display:flex;align-items:center;gap:12px">
+        <span style="font-size:10px;font-weight:600;color:#B4B2A9;letter-spacing:.06em;width:52px;flex-shrink:0">PAÍS</span>
+        <div class="filter-group" id="funnel-country-group" style="flex:1"></div>
+      </div>
+
+    </div>
+
+    <!-- Horizontal funnel -->
+    <div class="card" style="margin-top:1rem">
+      <div class="card-header">
+        <p class="card-title">Pipeline activo por etapa</p>
+        <span class="hint">Altura proporcional al nº de deals · Valor total en azul</span>
+      </div>
+      <div class="funnel-wrap">
+        <div class="funnel-track" id="funnel-track"></div>
+      </div>
+      <div id="funnel-lost-row"></div>
+    </div>
+
+    <!-- KPI mode toggle -->
+    <div style="display:flex;align-items:center;gap:8px;margin-top:1.25rem;margin-bottom:.75rem">
+      <div class="filter-group">
+        <button class="ftab all active" id="kpitab-won" onclick="setKpiMode('won',this)">Cierre ganado</button>
+        <button class="ftab pow" id="kpitab-funnel" onclick="setKpiMode('funnel',this)">Funnel activo</button>
+      </div>
+      <span id="kpi-mode-hint" style="font-size:11px;color:#B4B2A9">Solo deals cerrados ganados</span>
+    </div>
+
+    <!-- Bottom KPIs -->
+    <div class="funnel-kpi-grid" id="funnel-kpis">
+      <div class="funnel-kpi">
+        <p class="fkpi-label" id="f-mrr-label">MRR Cerrado</p>
+        <p class="fkpi-value green" id="f-mrr">—</p>
+        <p class="fkpi-sub" id="f-mrr-sub">Fee mensual recurrente</p>
+      </div>
+      <div class="funnel-kpi">
+        <p class="fkpi-label" id="f-ltv-label">LTV 18 meses</p>
+        <p class="fkpi-value blue" id="f-ltv">—</p>
+        <p class="fkpi-sub">MRR × 18</p>
+      </div>
+      <div class="funnel-kpi">
+        <p class="fkpi-label" id="f-2026-label">Valor generado 2026</p>
+        <p class="fkpi-value purple" id="f-2026">—</p>
+        <p class="fkpi-sub">MRR × meses restantes al cierre</p>
+      </div>
+    </div>
+
+    <!-- Service breakdown -->
+    <div class="card" id="service-breakdown-card" style="margin-top:1rem;display:none">
+      <div class="card-header">
+        <p class="card-title" id="service-breakdown-title">Totales por servicio</p>
+      </div>
+      <div id="service-breakdown-body"></div>
+    </div>
+
+    <!-- Won deals detail -->
+    <div class="card" style="margin-top:1rem">
+      <div class="card-header" style="display:flex;align-items:center;justify-content:space-between"><p class="card-title" id="funnel-panel-title">Deals cerrados ganados</p></div>
+      <div id="funnel-won-deals"></div>
+    </div>
+
+    <!-- Brand search detail -->
+    <div class="card" id="brand-detail-card" style="margin-top:1rem;display:none">
+      <div class="card-header" style="display:flex;align-items:center;justify-content:space-between">
+        <p class="card-title" id="brand-detail-title">Detalle de marca</p>
+      </div>
+      <div id="brand-detail-body"></div>
+    </div>
+
+    <p class="footer">Datos vía HubSpot · cache ~1 h · sync diario · Pow · Portal 48113030</p>
+  </div>
+  </div>
+
+</div>
+
+<!-- RIGHT SIDEBAR -->
+<div class="sidebar">
+  <button class="stab active" id="stab-crm" onclick="switchView('crm')">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+    <span class="stab-tip">CRM Dashboard</span>
+  </button>
+  <button class="stab" id="stab-funnel" onclick="switchView('funnel')">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4h18l-7 8v6l-4 2v-8L3 4z"/></svg>
+    <span class="stab-tip">Funnel de Ventas</span>
+  </button>
+</div>
+
+<script>
+// ===================== SHARED DATA =====================
+const SM={
+  "1069729148":"Lead Calificado","qualifiedtobuy":"Oportunidad calificada",
+  "appointmentscheduled":"Cita programada","999830416":"Exploración",
+  "decisionmakerboughtin":"Presupuesto enviado","contractsent":"Negociación",
+  "1004627528":"Firma del contrato","closedwon":"Cierre ganado","closedlost":"Cierre perdido",
+  "1005171560":"Cita programada","1005171561":"Calificado para comprar","1005171562":"Demo",
+  "1005324570":"Negociación","1005171563":"Período de Prueba","1005171564":"Contrato enviado",
+  "1005171565":"Cierre ganado","1005171566":"Cierre perdido"
+};
+const OW={"1302677373":"Andres Acerenza","75838016":"Patricio Messia"};
+const PAL=['#378ADD','#D85A30','#BA7517','#7F77DD','#D4537E','#185FA5','#854F0B'];
+const FLAGS={"Argentina":"🇦🇷","Colombia":"🇨🇴","Chile":"🇨🇱","México":"🇲🇽"};
+
+// Full deals dataset
+let DEALS=[
+  {n:"FEDCO",s:"1069729148",c:"2026-11-11",o:"1302677373",b:"pow",p:"Colombia",a:0},
+  {n:"CKT Global - Segway",s:"999830416",c:"2026-11-09",o:"1302677373",b:"pow",p:"Colombia",a:0},
+  {n:"Mono",s:"1004627528",c:"2026-11-08",o:"1302677373",b:"pow",p:"Argentina",a:2950,li:[{n:"Paid Media",a:1750},{n:"E-mail Marketing",a:1200}]},
+  {n:"Kevingston | Undo",s:"1005171562",c:"2026-08-31",o:"75838016",b:"undo",p:"Argentina",a:0},
+  {n:"Arredo | Undo",s:"1005171562",c:"2026-10-31",o:"75838016",b:"undo",p:"Argentina",a:0},
+  {n:"Urban Cow | Undo",s:"1005324570",c:"2026-10-31",o:"75838016",b:"undo",p:"Argentina",a:0},
+  {n:"Grupo Newsport | Undo",s:"1005324570",c:"2026-07-01",o:"75838016",b:"undo",p:"Argentina",a:0},
+  {n:"Naif | Undo",s:"1005171563",c:"2026-05-15",o:"75838016",b:"undo",p:"Argentina",a:0},
+  {n:"Head Store | Undo",s:"1005171565",c:"2026-03-01",o:"75838016",b:"undo",p:"Argentina",a:0},
+  {n:"Chill Out | Undo",s:"1005171564",c:"2026-04-01",o:"75838016",b:"undo",p:"Argentina",a:0},
+  {n:"Bourbon Store | Undo",s:"1005171564",c:"2026-05-01",o:"75838016",b:"undo",p:"Argentina",a:0},
+  {n:"Phillips TV & Sound | Undo",s:"1005171564",c:"2026-04-01",o:"75838016",b:"undo",p:"Argentina",a:0},
+  {n:"Emporio | Undo",s:"1005171564",c:"2026-05-01",o:"75838016",b:"undo",p:"Argentina",a:0},
+  {n:"Mi Corral",s:"1069729148",c:"2026-10-28",o:"1302677373",b:"pow",p:"Colombia",a:0},
+  {n:"El Templo de la Moda",s:"999830416",c:"2026-10-26",o:"1302677373",b:"pow",p:"Colombia",a:0},
+  {n:"AGUA BENDITA",s:"999830416",c:"2026-10-25",o:"1302677373",b:"pow",p:"Colombia",a:0},
+  {n:"Planeta Sport",s:"999830416",c:"2026-10-24",o:"1302677373",b:"pow",p:"Colombia",a:0},
+  {n:"Incolmotos Yamaha",s:"appointmentscheduled",c:"2026-10-24",o:"1302677373",b:"pow",p:"Colombia",a:0},
+  {n:"BIX",s:"999830416",c:"2026-10-17",o:"1302677373",b:"pow",p:"Chile",a:0},
+  {n:"Monmarque",s:"appointmentscheduled",c:"2026-10-17",o:"1302677373",b:"pow",p:"Argentina",a:0},
+  {n:"Sur Sports & Tilki",s:"decisionmakerboughtin",c:"2026-10-14",o:"1302677373",b:"pow",p:"Chile",a:0},
+  {n:"Farmacity",s:"contractsent",c:"2026-10-14",o:"1302677373",b:"pow",p:"Argentina",a:5000,li:[{n:"Paid Media",a:5000}]},
+  {n:"KLIK Muebles",s:"decisionmakerboughtin",c:"2026-10-12",o:"1302677373",b:"pow",p:"Chile",a:0},
+  {n:"Bringeri OMS",s:"decisionmakerboughtin",c:"2026-09-26",o:"1302677373",b:"pow",p:"Argentina",a:0},
+  {n:"COLLOKY",s:"1069729148",c:"2026-09-26",o:"1302677373",b:"pow",p:"Chile",a:0},
+  {n:"LIPPI Outdoors",s:"appointmentscheduled",c:"2026-09-22",o:"1302677373",b:"pow",p:"Chile",a:0},
+  {n:"Luccianos",s:"appointmentscheduled",c:"2026-09-02",o:"1302677373",b:"pow",p:"Argentina",a:0},
+  {n:"Yagmour (MKT)",s:"closedlost",c:"2026-09-02",o:"1302677373",b:"pow",p:"Argentina",a:3790,li:[{n:"Paid Media",a:2240},{n:"E-mail Marketing",a:1550}]},
+  {n:"Hipódromo Argentino",s:"qualifiedtobuy",c:"2026-09-01",o:"1302677373",b:"pow",p:"Argentina",a:0},
+  {n:"EASY",s:"contractsent",c:"2026-08-31",o:"1302677373",b:"pow",p:"Colombia",a:80000},
+  {n:"TABATHA JEANS",s:"appointmentscheduled",c:"2026-08-31",o:"1302677373",b:"pow",p:"Argentina",a:0},
+  {n:"Springstep",s:"appointmentscheduled",c:"2026-08-17",o:"1302677373",b:"pow",p:"Colombia",a:0},
+  {n:"Shasa",s:"999830416",c:"2026-08-11",o:"1302677373",b:"pow",p:"México",a:30000},
+  {n:"Scandinavian / Gama Italy",s:"1069729148",c:"2026-08-10",o:"1302677373",b:"pow",p:"Argentina",a:0},
+  {n:"Laila",s:"decisionmakerboughtin",c:"2026-08-10",o:"1302677373",b:"pow",p:"México",a:40000},
+  {n:"Wonder Brands",s:"decisionmakerboughtin",c:"2026-08-03",o:"1302677373",b:"pow",p:"México",a:40000},
+  {n:"Norauto",s:"closedlost",c:"2026-07-25",o:"1302677373",b:"pow",p:"Argentina",a:0},
+  {n:"Estudio de Moda",s:"qualifiedtobuy",c:"2026-07-25",o:"1302677373",b:"pow",p:"Colombia",a:0},
+  {n:"Grupo Dass | FILA",s:"decisionmakerboughtin",c:"2026-07-18",o:"1302677373",b:"pow",p:"Argentina",a:30000},
+  {n:"MAKRO",s:"decisionmakerboughtin",c:"2026-06-10",o:"1302677373",b:"pow",p:"Colombia",a:0},
+  {n:"BIDCOM",s:"1069729148",c:"2026-05-04",o:"1302677373",b:"pow",p:"México",a:0},
+  {n:"BIDCOM - GADNIC",s:"1069729148",c:"2026-05-04",o:"1302677373",b:"pow",p:"Argentina",a:0},
+  {n:"TOP MEGA",s:"closedlost",c:"2026-02-07",o:"1302677373",b:"pow",p:"Argentina",a:100000},
+  {n:"SLA Trading",s:"999830416",c:"2026-02-03",o:"1302677373",b:"pow",p:"Colombia",a:30000},
+  {n:"Topper",s:"999830416",c:"2026-01-11",o:"1302677373",b:"pow",p:"Argentina",a:30000},
+  {n:"Life Fitness",s:"999830416",c:"2026-01-19",o:"1302677373",b:"pow",p:"Chile",a:30000},
+  {n:"AGAVAL",s:"999830416",c:"2025-08-06",o:"1302677373",b:"pow",p:"Colombia",a:30000},
+  {n:"Grupo Uribe",s:"999830416",c:"2025-08-10",o:"1302677373",b:"pow",p:"Colombia",a:30000},
+  {n:"LOTO DEL SUR",s:"999830416",c:"2025-08-10",o:"1302677373",b:"pow",p:"Colombia",a:30000},
+  {n:"Tall - Swantex",s:"999830416",c:"2025-08-15",o:"1302677373",b:"pow",p:"Colombia",a:30000},
+  {n:"S2GO/Play Station",s:"1004627528",c:"2025-12-16",o:"1302677373",b:"pow",p:"México",a:40000},
+  {n:"OGGI - Big John",s:"1004627528",c:"2026-04-07",o:"1302677373",b:"pow",p:"México",a:10000},
+  {n:"La Europea",s:"1004627528",c:"2026-04-05",o:"1302677373",b:"pow",p:"México",a:2125},
+  {n:"Grupo BIOS",s:"decisionmakerboughtin",c:"2025-12-31",o:"1302677373",b:"pow",p:"Colombia",a:30000},
+  {n:"Grupo Roga",s:"decisionmakerboughtin",c:"2026-03-28",o:"1302677373",b:"pow",p:"México",a:0},
+  {n:"Rimax",s:"qualifiedtobuy",c:"2026-03-28",o:"1302677373",b:"pow",p:"Colombia",a:0},
+  {n:"Moda Tela",s:"qualifiedtobuy",c:"2026-03-29",o:"1302677373",b:"pow",p:"México",a:0},
+  {n:"Marti",s:"qualifiedtobuy",c:"2026-03-22",o:"1302677373",b:"pow",p:"México",a:0},
+  {n:"Ishop Mixup",s:"qualifiedtobuy",c:"2025-12-10",o:"1302677373",b:"pow",p:"México",a:0},
+  {n:"Corporación Jesa",s:"qualifiedtobuy",c:"2026-03-28",o:"1302677373",b:"pow",p:"México",a:0},
+  {n:"Madesa",s:"qualifiedtobuy",c:"2026-03-28",o:"1302677373",b:"pow",p:"México",a:0},
+  {n:"Crocs",s:"appointmentscheduled",c:"2026-03-29",o:"1302677373",b:"pow",p:"México",a:0},
+  {n:"Totto (Col)",s:"appointmentscheduled",c:"2025-08-10",o:"1302677373",b:"pow",p:"Colombia",a:0},
+  {n:"Toluca FC",s:"appointmentscheduled",c:"2026-03-29",o:"1302677373",b:"pow",p:"México",a:0},
+  {n:"Akiabara",s:"contractsent",c:"2025-10-08",o:"1302677373",b:"pow",p:"Argentina",a:3200,li:[{n:"Paid Media",a:3200}]},
+  {n:"Raindoor",s:"contractsent",c:"2025-07-09",o:"1302677373",b:"pow",p:"Chile",a:0},
+  // Closed won
+  {n:"Arredo",s:"closedwon",c:"2025-12-31",o:"1302677373",b:"pow",p:"Argentina",a:0},
+  {n:"Volta Bikes",s:"closedwon",c:"2025-02-12",o:"1302677373",b:"pow",p:"Argentina",a:0},
+  {n:"Longchamp",s:"closedwon",c:"2025-05-07",o:"1302677373",b:"pow",p:"Argentina",a:2600,li:[{n:"Paid Media",a:1500},{n:"E-mail Marketing",a:1100}]},
+  {n:"Cerini",s:"closedwon",c:"2026-04-21",o:"1302677373",b:"pow",p:"Argentina",a:4170,li:[{n:"Paid Media",a:2350},{n:"E-mail Marketing",a:1670},{n:"Fee Fijo Link Up",a:150}]},
+  {n:"Kevingston",s:"closedwon",c:"2026-05-18",o:"1302677373",b:"pow",p:"Argentina",a:2850,gmv:335000,fv:0.014,li:[{n:"Paid Media",a:1570},{n:"E-mail Marketing",a:1100},{n:"Fee Fijo Link Up",a:180}]},
+  {n:"Bringeri",s:"closedwon",c:"2025-06-18",o:"1302677373",b:"pow",p:"Argentina",a:2800,li:[{n:"Paid Media",a:1500},{n:"E-mail Marketing",a:1100},{n:"Fee Fijo Link Up",a:200}]},
+  {n:"LUZ DE MAR",s:"closedwon",c:"2026-02-17",o:"1302677373",b:"pow",p:"Argentina",a:2770,li:[{n:"Paid Media",a:1570},{n:"E-mail Marketing",a:1200}]},
+  {n:"Cheeky (España)",s:"closedwon",c:"2026-05-18",o:"1302677373",b:"pow",p:"Argentina",a:1000,li:[{n:"E-mail Marketing",a:1000}]},
+  {n:"Farm Rio",s:"closedwon",c:"2026-02-26",o:"1302677373",b:"pow",p:"Argentina",a:0},
+  {n:"47Street Mex",s:"closedwon",c:"2025-05-07",o:"1302677373",b:"pow",p:"México",a:0},
+  {n:"Yagmour",s:"closedwon",c:"2025-03-13",o:"1302677373",b:"pow",p:"Argentina",a:0},
+  // Closed lost (sample)
+  {n:"India Style",s:"closedlost",c:"2026-04-21",o:"1302677373",b:"pow",p:"Argentina",a:0},
+  {n:"XL Extra Large",s:"closedlost",c:"2026-04-21",o:"1302677373",b:"pow",p:"Argentina",a:0},
+  {n:"Odisea",s:"closedlost",c:"2026-04-23",o:"1302677373",b:"pow",p:"Argentina",a:4370,li:[{n:"Paid Media",a:2570},{n:"E-mail Marketing",a:1800}]},
+  {n:"Cuesta Blanca",s:"closedlost",c:"2026-02-26",o:"1302677373",b:"pow",p:"Argentina",a:0},
+  {n:"La Dolfina",s:"closedlost",c:"2025-04-28",o:"1302677373",b:"pow",p:"Argentina",a:60000},
+  {n:"Grupo Disal",s:"closedlost",c:"2025-02-18",o:"1302677373",b:"pow",p:"Argentina",a:50000},
+  {n:"BLAQUE",s:"closedlost",c:"2026-02-26",o:"1302677373",b:"pow",p:"Argentina",a:0},
+  {n:"RUSTY / VULK",s:"closedlost",c:"2026-03-19",o:"1302677373",b:"pow",p:"Argentina",a:0},
+  {n:"47 Street (Paid Media)",s:"closedlost",c:"2026-01-20",o:"1302677373",b:"pow",p:"Argentina",a:2000},
+  {n:"Pepe - Carter's",s:"closedlost",c:"2026-01-20",o:"1302677373",b:"pow",p:"Colombia",a:0},
+  {n:"HEYAS | Undo",s:"closedwon",c:"2024-01-01",o:"75838016",b:"undo",p:"Argentina",a:0},
+];
+
+let CONTACTS=[
+  {n:"lluque@keybiscayne.com.ar",s:"Key Biscayne",b:"pow"},
+  {n:"Gabriel Eisenband Gontovnik",s:"FEDCO",b:"pow"},
+  {n:"contacto@somos-pymes.digital",s:"",b:"pow"},
+  {n:"Ines Urdaniz",s:"unifywork.app",b:"pow"},
+  {n:"atencionalcliente@mizuno-ar.com",s:"Mizuno AR",b:"undo"},
+  {n:"montellacalzados@gmail.com",s:"",b:"undo"},
+  {n:"homero.garza@gmail.com",s:"",b:"undo"},
+  {n:"direccion@ckt-global.com",s:"CKT Global",b:"undo"},
+];
+
+// Funnel stage order
+const FUNNEL_ORDER=[
+  "1069729148","999830416","appointmentscheduled","qualifiedtobuy",
+  "decisionmakerboughtin","contractsent","1004627528","closedwon"
+];
+const FUNNEL_COLORS={
+  "1069729148":"#B4B2A9","999830416":"#378ADD","appointmentscheduled":"#7F77DD",
+  "qualifiedtobuy":"#BA7517","decisionmakerboughtin":"#D85A30",
+  "contractsent":"#D4537E","1004627528":"#185FA5","closedwon":"#1D9E75"
+};
+
+function fmt(n){if(!n||n===0)return'—';if(n>=1000000)return'$'+Math.round(n/1000000*10)/10+'M';if(n>=1000)return'$'+Math.round(n/1000)+'k';return'$'+n.toLocaleString('es-AR')}
+function fmtGMV(n){if(!n||n===0)return'—';if(n>=1000000000)return'$'+Math.round(n/1000000000*10)/10+'B';if(n>=1000000)return'$'+Math.round(n/1000000*10)/10+'M';if(n>=1000)return'$'+Math.round(n/1000)+'k';return'$'+n.toLocaleString('es-AR')}
+// Funnel currency
+let currency='USD', arsRate=1200;
+function setCurrency(c,btn){
+  currency=c;
+  document.querySelectorAll('#view-funnel .filter-group .ftab').forEach(t=>{
+    if(t.id==='fctab-usd'||t.id==='fctab-ars') t.classList.remove('active');
+  });
+  btn.classList.add('active');
+  const wrap=document.getElementById('ars-rate-wrap');
+  wrap.style.display=c==='ARS'?'flex':'none';
+  renderFunnel();
+}
+// Full-precision money for funnel (no abbreviation)
+function money(n){
+  if(!n||n===0)return'—';
+  const v=currency==='ARS'?Math.round(n*arsRate):n;
+  const sym=currency==='ARS'?'$':'USD ';
+  return sym+v.toLocaleString('es-AR');
+}
+function moneyGMV(n){
+  if(!n||n===0)return'—';
+  // GMV always shown in USD regardless
+  return'USD '+Math.round(n).toLocaleString('es-AR');
+}
+// Fee E-Commerce mensual = GMV × fee_variable
+function feeEC(d){return d.gmv&&d.fv?(Math.round(d.gmv*d.fv)):0}
+// Ingreso mensual total = MRR fijo + fee variable
+function totalRevenue(d){return (d.a||0)+feeEC(d)}
+function ini(n){const w=n.trim().split(/\s+/);return((w[0]||'')[0]+(w[1]||'')[0]).toUpperCase()||'?'}
+function fd(d){if(!d)return'';const[y,m,dy]=d.split('-');return`${dy}/${m}/${y}`}
+function won(l){return l&&l.includes('ganado')}
+function lost(l){return l&&l.includes('perdido')}
+
+// ===================== VIEW SWITCHER =====================
+function switchView(view){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.querySelectorAll('.stab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('view-'+view).classList.add('active');
+  document.getElementById('stab-'+view).classList.add('active');
+  document.getElementById('main-scroll').scrollTop=0;
+}
+
+// ===================== CRM DASHBOARD =====================
+let activeBrand='all', activeCountry='all', expandedStage=null;
+
+function setBrand(b,btn){
+  activeBrand=b; activeCountry='all'; expandedStage=null;
+  document.querySelectorAll('.ftab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  renderCountryFilter(); renderCRM();
+}
+function setCountry(c){
+  activeCountry=c; expandedStage=null;
+  renderCountryFilter(); renderCRM();
+}
+function toggleStage(label){
+  expandedStage=expandedStage===label?null:label;
+  renderStages(getCRMFiltered());
+}
+function getCRMFiltered(){
+  return DEALS.filter(d=>{
+    if(activeBrand!=='all'&&d.b!==activeBrand)return false;
+    if(activeCountry!=='all'&&d.p!==activeCountry)return false;
+    return true;
+  });
+}
+function renderCountryFilter(){
+  const bd=activeBrand==='all'?DEALS:DEALS.filter(d=>d.b===activeBrand);
+  const av=[...new Set(bd.map(d=>d.p).filter(Boolean))].sort();
+  document.getElementById('country-group').innerHTML=['all',...av].map(c=>{
+    const label=c==='all'?'Todos':`${FLAGS[c]||''} ${c}`;
+    return`<button class="cpill${activeCountry===c?' active':''}" onclick="setCountry('${c}')">${label}</button>`;
+  }).join('');
+}
+function renderStages(deals){
+  const counts={},stageDeals={};
+  deals.forEach(d=>{
+    const l=SM[d.s]||d.s;
+    counts[l]=(counts[l]||0)+1;
+    if(!stageDeals[l])stageDeals[l]=[];
+    stageDeals[l].push(d);
+  });
+  const sorted=Object.entries(counts).sort((a,b)=>b[1]-a[1]);
+  const mx=sorted[0]?.[1]||1;
+  document.getElementById('crm-stages').innerHTML=sorted.length?sorted.map(([l,c],i)=>{
+    const pct=Math.round(c/mx*100);
+    const col=won(l)?'#1D9E75':lost(l)?'#E24B4A':PAL[i%PAL.length];
+    const cls=won(l)?'won':lost(l)?'lost':'neutral';
+    const isOpen=expandedStage===l;
+    const sd=stageDeals[l]||[];
+    const safe=l.replace(/'/g,"\\'");
+    return`<div class="stage-item${isOpen?' active':''}" onclick="toggleStage('${safe}')">
+      <div class="stage-top">
+        <div class="stage-left"><div class="stage-dot" style="background:${col}"></div><span class="stage-name">${l}</span></div>
+        <div class="stage-right"><span class="stage-count ${cls}">${c} deal${c>1?'s':''}</span><span class="chevron${isOpen?' open':''}">›</span></div>
+      </div>
+      <div class="bar-bg"><div class="bar" style="background:${col};width:${pct}%"></div></div>
+      <div class="stage-deals${isOpen?' open':''}">
+        ${sd.map(d=>`<div class="sdeal-row">
+          <span>${FLAGS[d.p]||''}</span>
+          <span class="brand-pill ${d.b}">${d.b==='pow'?'Pow':'Undo'}</span>
+          <span class="sdeal-name">${d.n.replace(/\s*\|\s*Undo$/i,'')}</span>
+          <span class="sdeal-meta">${OW[d.o]?.split(' ')[0]||''} · ${fd(d.c)}</span>
+        </div>`).join('')}
+      </div>
+    </div>`;
+  }).join(''):`<p class="empty">Sin deals en esta selección</p>`;
+}
+function renderCRM(){
+  const deals=getCRMFiltered();
+  document.getElementById('kpi-deals').textContent=deals.length;
+  document.getElementById('kpi-won').textContent=deals.filter(d=>won(SM[d.s]||d.s)).length;
+  document.getElementById('kpi-lost').textContent=deals.filter(d=>lost(SM[d.s]||d.s)).length;
+  document.getElementById('kpi-exp').textContent=deals.filter(d=>(SM[d.s]||d.s)==='Exploración').length;
+  renderStages(deals);
+  const contacts=activeBrand==='all'?CONTACTS:CONTACTS.filter(c=>c.b===activeBrand);
+  const half=Math.ceil(contacts.length/2);
+  ['a','b'].forEach((col,ci)=>{
+    const slice=contacts.slice(ci*half,(ci+1)*half);
+    document.getElementById(`contacts-${col}`).innerHTML=slice.map(c=>`
+      <div class="contact-row"><div class="avatar ${c.b}">${ini(c.n)}</div>
+        <div style="min-width:0;flex:1"><p class="contact-name">${c.n}</p><p class="contact-sub">${c.s||'—'}</p></div>
+      </div>`).join('');
+  });
+  const ownerIds=[...new Set(deals.map(d=>d.o))];
+  document.getElementById('owner-badges').innerHTML=ownerIds.map(id=>`<span class="owner-badge">${OW[id]||id}</span>`).join('');
+  document.getElementById('deal-count-label').textContent=`(${deals.length})`;
+  document.getElementById('crm-deals').innerHTML=deals.length
+    ? deals.slice(0,20).map(d=>{
+        const l=SM[d.s]||d.s;
+        const cls=won(l)?'won':lost(l)?'lost':'default';
+        return`<div class="deal-row">
+          <div class="deal-body">
+            <p class="deal-name">${d.n.replace(/\s*\|\s*Undo$/i,'')}${d.b==='undo'?' <span style="font-size:10px;color:#7F77DD"> · Undo</span>':''}</p>
+            <p class="deal-meta">${OW[d.o]||''} · ${FLAGS[d.p]||''} ${d.p||''} · Cierre: ${fd(d.c)}</p>
+          </div>
+          <span class="tag ${cls}">${l}</span>
+        </div>`;
+      }).join('')+(deals.length>20?`<p style="font-size:12px;color:#B4B2A9;text-align:center;padding:.75rem 0">+${deals.length-20} más en HubSpot</p>`:'')
+    : `<p class="empty" style="padding:1rem 0">Sin deals</p>`;
+}
+
+// ===================== FUNNEL DASHBOARD =====================
+let funnelCountry='all';
+let funnelEmpresa='all';
+let funnelYear='all';
+let funnelSearch='';
+let selectedFunnelStage=null;
+let kpiMode='won'; // 'won' | 'funnel'
+
+function setKpiMode(mode, btn){
+  kpiMode=mode;
+  document.querySelectorAll('#view-funnel .filter-group .ftab').forEach(t=>{
+    if(t.id==='kpitab-won'||t.id==='kpitab-funnel') t.classList.remove('active');
+  });
+  btn.classList.add('active');
+  renderFunnel();
+}
+function setFunnelYear(y){
+  funnelYear=y; funnelCountry='all'; selectedFunnelStage=null;
+  renderFunnelYearFilter(); renderFunnelCountryFilter(); renderFunnel();
+}
+function renderFunnelYearFilter(){
+  const base=DEALS.filter(d=>{
+    if(funnelEmpresa!=='all'&&d.b!==funnelEmpresa)return false;
+    if(funnelSearch&&!d.n.toLowerCase().includes(funnelSearch))return false;
+    return true;
+  });
+  const years=[...new Set(base.map(d=>(d.c||'').split('-')[0]).filter(Boolean))].sort().reverse();
+  const el=document.getElementById('funnel-year-group');
+  if(!el)return;
+  el.innerHTML=['all',...years].map(y=>{
+    const label=y==='all'?'Todos':y;
+    return`<button class="cpill${funnelYear===y?' active':''}" onclick="setFunnelYear('${y}')">${label}</button>`;
+  }).join('');
+}
+function setFunnelEmpresa(e,btn){
+  funnelEmpresa=e; funnelCountry='all'; funnelYear='all'; funnelSearch=''; selectedFunnelStage=null;
+  document.querySelectorAll('#view-funnel .ftab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  const inp=document.getElementById('funnel-search');
+  if(inp) inp.value='';
+  const clr=document.getElementById('funnel-search-clear');
+  if(clr) clr.style.display='none';
+  renderFunnelYearFilter(); renderFunnelCountryFilter(); renderFunnel();
+}
+function setFunnelSearch(val){
+  funnelSearch=val.trim().toLowerCase();
+  funnelCountry='all'; selectedFunnelStage=null;
+  const clearBtn=document.getElementById('funnel-search-clear');
+  if(clearBtn) clearBtn.style.display=funnelSearch?'block':'none';
+  renderFunnelCountryFilter(); renderFunnel();
+}
+function clearFunnelSearch(){
+  funnelSearch='';
+  const inp=document.getElementById('funnel-search');
+  if(inp) inp.value='';
+  const clearBtn=document.getElementById('funnel-search-clear');
+  if(clearBtn) clearBtn.style.display='none';
+  funnelCountry='all'; selectedFunnelStage=null;
+  renderFunnelCountryFilter(); renderFunnel();
+}
+function setFunnelCountry(c){
+  funnelCountry=c; selectedFunnelStage=null;
+  renderFunnelCountryFilter(); renderFunnel();
+}
+function selectFunnelStage(sid){
+  selectedFunnelStage = selectedFunnelStage===sid ? null : sid;
+  const deals=getFunnelDeals();
+  renderFunnelBars(deals);
+  renderFunnelDealsPanel(deals);
+  renderServiceBreakdown(deals);
+}
+function getFunnelDeals(){
+  return DEALS.filter(d=>{
+    if(funnelEmpresa!=='all'&&d.b!==funnelEmpresa)return false;
+    if(funnelYear!=='all'&&(d.c||'').split('-')[0]!==funnelYear)return false;
+    if(funnelCountry!=='all'&&d.p!==funnelCountry)return false;
+    if(funnelSearch&&!d.n.toLowerCase().includes(funnelSearch))return false;
+    return true;
+  });
+}
+function renderFunnelCountryFilter(){
+  const base=DEALS.filter(d=>{
+    if(funnelEmpresa!=='all'&&d.b!==funnelEmpresa)return false;
+    if(funnelYear!=='all'&&(d.c||'').split('-')[0]!==funnelYear)return false;
+    if(funnelSearch&&!d.n.toLowerCase().includes(funnelSearch))return false;
+    return true;
+  });
+  const countries=[...new Set(base.map(d=>d.p).filter(Boolean))].sort();
+  document.getElementById('funnel-country-group').innerHTML=['all',...countries].map(c=>{
+    const label=c==='all'?'Todos':`${FLAGS[c]||''} ${c}`;
+    return`<button class="cpill${funnelCountry===c?' active':''}" onclick="setFunnelCountry('${c}')">${label}</button>`;
+  }).join('');
+}
+
+function renderFunnelBars(deals){
+  const activeDeals=deals.filter(d=>!lost(SM[d.s]||d.s));
+  const lostDeals=deals.filter(d=>lost(SM[d.s]||d.s));
+  const byStage={};
+  activeDeals.forEach(d=>{
+    if(!byStage[d.s])byStage[d.s]={deals:[],count:0,value:0};
+    byStage[d.s].deals.push(d);
+    byStage[d.s].count++;
+    byStage[d.s].value+=totalRevenue(d);
+  });
+  const maxCount=Math.max(...FUNNEL_ORDER.map(s=>(byStage[s]?.count||0)),1);
+  const maxBarH=140;
+
+  document.getElementById('funnel-track').innerHTML=FUNNEL_ORDER.map(sid=>{
+    const label=SM[sid]||sid;
+    const data=byStage[sid]||{count:0,value:0,deals:[]};
+    const h=Math.max(Math.round((data.count/maxCount)*maxBarH),4);
+    const col=FUNNEL_COLORS[sid]||'#888780';
+    const isWon=won(label);
+    const isSelected=selectedFunnelStage===sid;
+    return`<div class="funnel-col" onclick="selectFunnelStage('${sid}')" style="cursor:pointer">
+      <div class="funnel-stage-bar" style="opacity:${selectedFunnelStage&&!isSelected?.4:1};transition:opacity .2s">
+        <p class="funnel-label" style="color:${isSelected?col:'#888780'};font-weight:${isSelected?'600':'500'};height:2.6em;display:flex;align-items:flex-end;justify-content:center;margin-bottom:6px">${label}</p>
+        <div class="funnel-bar-outer" style="height:${maxBarH}px;display:flex;align-items:flex-end">
+          <div class="funnel-bar-inner" style="background:${col};height:${h}px;width:100%;outline:${isSelected?'2px solid '+col:'none'};outline-offset:2px;border-radius:4px"></div>
+        </div>
+        <p class="funnel-count" style="color:${col};margin-top:6px">${data.count}</p>
+        <p class="funnel-value${data.value>0?(isWon?' won':' has-value'):''}">${data.value>0?money(data.value):'Sin monto'}</p>
+      </div>
+    </div>`;
+  }).join('');
+
+  const lostCount=lostDeals.length;
+  const lostVal=lostDeals.reduce((s,d)=>s+(d.a||0),0);
+  const lostPct=Math.round((lostCount/Math.max(deals.length,1))*100);
+  document.getElementById('funnel-lost-row').innerHTML=`
+    <div class="funnel-lost-row" onclick="selectFunnelStage('closedlost')" style="cursor:pointer;opacity:${selectedFunnelStage&&selectedFunnelStage!=='closedlost'?.4:1};transition:opacity .2s">
+      <span class="lost-label">⚠ Cierre perdido</span>
+      <div class="lost-bar-bg"><div class="lost-bar-fill" style="width:${lostPct}%"></div></div>
+      <span class="lost-stats">${lostCount} deals${lostVal>0?' · '+fmt(lostVal):''} · ${lostPct}% del total</span>
+    </div>`;
+}
+
+function renderFunnelDealsPanel(deals){
+  const wonDeals=deals.filter(d=>won(SM[d.s]||d.s));
+  const funnelDeals=deals.filter(d=>!won(SM[d.s]||d.s)&&!lost(SM[d.s]||d.s));
+  const kpiDeals = kpiMode==='won' ? wonDeals : funnelDeals;
+
+  // Update labels
+  const mrrLabel   = document.getElementById('f-mrr-label');
+  const ltvLabel   = document.getElementById('f-ltv-label');
+  const v2026Label = document.getElementById('f-2026-label');
+  const hint       = document.getElementById('kpi-mode-hint');
+  const mrrSub     = document.getElementById('f-mrr-sub');
+  const mrrVal     = document.getElementById('f-mrr');
+  if(kpiMode==='won'){
+    if(mrrLabel)   mrrLabel.textContent='MRR Cerrado';
+    if(ltvLabel)   ltvLabel.textContent='LTV 18 meses';
+    if(v2026Label) v2026Label.textContent='Valor generado 2026';
+    if(hint)       hint.textContent='Solo deals cerrados ganados';
+    if(mrrSub)     mrrSub.textContent='Fee mensual recurrente';
+    if(mrrVal)     mrrVal.className='fkpi-value green';
+  } else {
+    if(mrrLabel)   mrrLabel.textContent='MRR en Funnel';
+    if(ltvLabel)   ltvLabel.textContent='LTV Potencial 18m';
+    if(v2026Label) v2026Label.textContent='Valor potencial 2026';
+    if(hint)       hint.textContent='Pipeline activo · excluye ganados y perdidos';
+    if(mrrSub)     mrrSub.textContent='Fee mensual estimado';
+    if(mrrVal)     mrrVal.className='fkpi-value amber';
+  }
+
+  const mrr=kpiDeals.reduce((s,d)=>s+totalRevenue(d),0);
+  const ltv18=mrr*18;
+  let val2026=0;
+  kpiDeals.forEach(d=>{
+    const rev=totalRevenue(d);
+    if(!rev)return;
+    const closeYear=parseInt((d.c||'').split('-')[0]);
+    const closeMonth=parseInt((d.c||'').split('-')[1]);
+    if(closeYear<=2026){const startMonth=closeYear===2026?closeMonth:1;val2026+=rev*(13-startMonth);}
+  });
+  document.getElementById('f-mrr').textContent=mrr>0?money(mrr):'—';
+  document.getElementById('f-ltv').textContent=ltv18>0?money(ltv18):'—';
+  document.getElementById('f-2026').textContent=val2026>0?money(val2026):'—';
+
+  const panelTitle=document.getElementById('funnel-panel-title');
+  const panelDeals=document.getElementById('funnel-won-deals');
+
+  function dealCard(d,isWonDeal){
+    const rev=totalRevenue(d);
+    const ec=feeEC(d);
+    const closeYear=parseInt((d.c||'').split('-')[0]);
+    const closeMonth=parseInt((d.c||'').split('-')[1]);
+    const remMonths=isWonDeal?(closeYear===2026?13-closeMonth:closeYear<2026?12:0):0;
+    const val2026d=rev*remMonths;
+    const metaParts=[];
+    if(d.a>0) metaParts.push('MRR: '+money(d.a));
+    if(ec>0) metaParts.push('Fee EC: '+money(ec)+` (GMV ${moneyGMV(d.gmv)} × ${(d.fv*100).toFixed(1)}%)`);
+    return`<div class="deal-row">
+      <div class="deal-body">
+        <p class="deal-name">${d.n} <span style="font-size:10px;color:#888780">${FLAGS[d.p]||''} ${d.p||''}</span></p>
+        <p class="deal-meta">Cierre: ${fd(d.c)}${metaParts.length?' · '+metaParts.join(' · '):''}</p>
+      </div>
+      <div style="text-align:right;flex-shrink:0;margin-left:12px">
+        <p style="font-size:12px;font-weight:500;color:${isWonDeal?'#0F6E56':'#1a1a18'}">${rev>0?money(rev)+'/mes':'Sin monto'}</p>
+        ${val2026d>0?`<p style="font-size:11px;color:#888780">2026: ${money(val2026d)}</p>`:''}
+      </div>
+    </div>`;
+  }
+
+  if(selectedFunnelStage){
+    const sid=selectedFunnelStage;
+    const label=SM[sid]||sid;
+    const col=FUNNEL_COLORS[sid]||'#888780';
+    const stageDealsList=deals.filter(d=>d.s===sid);
+    panelTitle.innerHTML=`<span style="display:inline-flex;align-items:center;gap:6px">
+      <span style="width:8px;height:8px;border-radius:50%;background:${col};display:inline-block;flex-shrink:0"></span>
+      ${label}
+      <span style="font-size:11px;font-weight:400;color:#888780">(${stageDealsList.length} deal${stageDealsList.length!==1?'s':''})</span>
+    </span>
+    <button onclick="selectFunnelStage('${sid}')" style="font-size:11px;color:#888780;background:none;border:none;cursor:pointer;padding:0">✕ Limpiar</button>`;
+    panelDeals.innerHTML=stageDealsList.length?stageDealsList.map(d=>dealCard(d,won(SM[d.s]||d.s))).join(''):`<p class="empty">Sin deals en esta etapa</p>`;
+  } else {
+    panelTitle.innerHTML='Deals cerrados ganados';
+    panelDeals.innerHTML=wonDeals.length?wonDeals.map(d=>dealCard(d,true)).join(''):`<p class="empty">Sin deals cerrados ganados</p>`;
+  }
+}
+
+function renderFunnel(){
+  const deals=getFunnelDeals();
+  renderFunnelBars(deals);
+  renderFunnelDealsPanel(deals);
+  renderServiceBreakdown(deals);
+  renderBrandDetail(deals);
+}
+
+// ── Service breakdown ────────────────────────────────────────────────────────
+const SVC_COLORS={
+  'Paid Media':      {bg:'#EBF3FC', name:'#185FA5', bar:'#378ADD'},
+  'E-mail Marketing':{bg:'#EEF0FE', name:'#4B44CC', bar:'#7F77DD'},
+  'Fee Fijo Link Up':{bg:'#FFF5EB', name:'#854F0B', bar:'#D85A30'},
+  'Fee E-Commerce':  {bg:'#EDFAF4', name:'#0F6E56', bar:'#1D9E75'},
+};
+const SVC_ORDER=['Paid Media','E-mail Marketing','Fee Fijo Link Up','Fee E-Commerce'];
+
+function renderServiceBreakdown(deals){
+  const card  = document.getElementById('service-breakdown-card');
+  const title = document.getElementById('service-breakdown-title');
+  const body  = document.getElementById('service-breakdown-body');
+
+  // Determine scope: stage click overrides kpiMode; otherwise use kpiMode
+  const isFiltered = selectedFunnelStage || funnelSearch;
+  const scopeDeals = selectedFunnelStage
+    ? deals.filter(d => d.s === selectedFunnelStage)
+    : kpiMode==='won'
+      ? deals.filter(d=>won(SM[d.s]||d.s))
+      : deals.filter(d=>!won(SM[d.s]||d.s)&&!lost(SM[d.s]||d.s));
+
+  // Only show if there's something to break down (has any li or fee EC)
+  const hasData = scopeDeals.some(d => (d.li && d.li.length > 0) || feeEC(d) > 0);
+  if(!hasData){ card.style.display='none'; return; }
+  card.style.display='block';
+
+  function remMonths(d){
+    const y=parseInt((d.c||'').split('-')[0]);
+    const m=parseInt((d.c||'').split('-')[1]);
+    if(y>2026)return 0; if(y<2026)return 12;
+    return Math.max(13-m,0);
+  }
+
+  // Tally per service
+  const svcTotals={};
+  SVC_ORDER.forEach(s=>svcTotals[s]={mrr:0,ltv:0,val:0,count:0});
+
+  scopeDeals.forEach(d=>{
+    const rm=remMonths(d);
+    (d.li||[]).forEach(li=>{
+      if(!svcTotals[li.n]) svcTotals[li.n]={mrr:0,ltv:0,val:0,count:0};
+      svcTotals[li.n].mrr  += li.a;
+      svcTotals[li.n].ltv  += li.a*18;
+      svcTotals[li.n].val  += li.a*rm;
+      svcTotals[li.n].count++;
+    });
+    const ec=feeEC(d);
+    if(ec>0){
+      svcTotals['Fee E-Commerce'].mrr  += ec;
+      svcTotals['Fee E-Commerce'].ltv  += ec*18;
+      svcTotals['Fee E-Commerce'].val  += ec*rm;
+      svcTotals['Fee E-Commerce'].count++;
+    }
+  });
+
+  // Cards grid
+  const active=SVC_ORDER.filter(s=>svcTotals[s]&&svcTotals[s].mrr>0);
+  if(!active.length){ card.style.display='none'; return; }
+  const maxMrr=Math.max(...active.map(s=>svcTotals[s].mrr));
+  const totalMrr=active.reduce((s,k)=>s+svcTotals[k].mrr,0);
+  const grandLtv=active.reduce((s,k)=>s+svcTotals[k].ltv,0);
+  const grandVal=active.reduce((s,k)=>s+svcTotals[k].val,0);
+
+  let ctxLabel = kpiMode==='won' ? 'Totales por servicio · Cierre ganado' : 'Totales por servicio · Funnel activo';
+  if(selectedFunnelStage){
+    const l=SM[selectedFunnelStage]||selectedFunnelStage;
+    ctxLabel=`Totales por servicio · ${l}`;
+  } else if(funnelSearch){
+    ctxLabel=`Totales por servicio · "${funnelSearch}"`;
+  } else if(funnelEmpresa!=='all'){
+    ctxLabel=`Totales por servicio · ${funnelEmpresa==='pow'?'Pow':'Undo'} · ${kpiMode==='won'?'Cierre ganado':'Funnel activo'}`;
+  }
+  title.textContent=ctxLabel;
+
+  const rows=active.map((s,i)=>{
+    const t=svcTotals[s];
+    const col=SVC_COLORS[s]||{bar:'#888780',name:'#5F5E5A'};
+    const shade=i%2===0?'#FAFAF8':'#FFFFFF';
+    return`<tr style="background:${shade}">
+      <td style="padding:10px 12px;font-size:13px;font-weight:500;color:${col.name};border-bottom:.5px solid #F1EFE8;display:flex;align-items:center;gap:8px">
+        <span style="width:8px;height:8px;border-radius:50%;background:${col.bar};flex-shrink:0;display:inline-block"></span>${s}
+      </td>
+      <td style="padding:10px 12px;font-size:13px;font-weight:600;color:${col.name};border-bottom:.5px solid #F1EFE8;text-align:right">${money(t.mrr)}</td>
+      <td style="padding:10px 12px;font-size:13px;color:#534AB7;border-bottom:.5px solid #F1EFE8;text-align:right">${money(t.ltv)}</td>
+      <td style="padding:10px 12px;font-size:13px;color:#0F6E56;border-bottom:.5px solid #F1EFE8;text-align:right">${t.val>0?money(t.val):'—'}</td>
+    </tr>`;
+  }).join('');
+
+  body.innerHTML=`<div style="overflow-x:auto">
+    <table style="width:100%;border-collapse:collapse">
+      <thead><tr style="background:#F7F6F2">
+        <th style="padding:8px 12px;font-size:10px;font-weight:600;color:#888780;letter-spacing:.06em;text-transform:uppercase;text-align:left;border-bottom:.5px solid #ECEAE2">Servicio</th>
+        <th style="padding:8px 12px;font-size:10px;font-weight:600;color:#888780;letter-spacing:.06em;text-transform:uppercase;text-align:right;border-bottom:.5px solid #ECEAE2">Total / mes</th>
+        <th style="padding:8px 12px;font-size:10px;font-weight:600;color:#888780;letter-spacing:.06em;text-transform:uppercase;text-align:right;border-bottom:.5px solid #ECEAE2">LTV 18m</th>
+        <th style="padding:8px 12px;font-size:10px;font-weight:600;color:#888780;letter-spacing:.06em;text-transform:uppercase;text-align:right;border-bottom:.5px solid #ECEAE2">Valor 2026</th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+      <tfoot><tr style="background:#F7F6F2">
+        <td style="padding:10px 12px;font-size:12px;font-weight:600;color:#1a1a18;border-top:.5px solid #D3D1C7">Total</td>
+        <td style="padding:10px 12px;font-size:12px;font-weight:700;color:#1a1a18;text-align:right;border-top:.5px solid #D3D1C7">${money(totalMrr)}</td>
+        <td style="padding:10px 12px;font-size:12px;font-weight:600;color:#534AB7;text-align:right;border-top:.5px solid #D3D1C7">${money(grandLtv)}</td>
+        <td style="padding:10px 12px;font-size:12px;font-weight:600;color:#0F6E56;text-align:right;border-top:.5px solid #D3D1C7">${grandVal>0?money(grandVal):'—'}</td>
+      </tr></tfoot>
+    </table>
+  </div>`;
+}
+
+function renderBrandDetail(deals){
+  const card=document.getElementById('brand-detail-card');
+  const title=document.getElementById('brand-detail-title');
+  const body=document.getElementById('brand-detail-body');
+
+  const showDetail = funnelSearch || funnelEmpresa!=='all';
+  if(!showDetail){card.style.display='none';return;}
+  card.style.display='block';
+
+  function remMonths(d){
+    const y=parseInt((d.c||'').split('-')[0]);
+    const m=parseInt((d.c||'').split('-')[1]);
+    if(y>2026)return 0; if(y<2026)return 12;
+    return Math.max(13-m,0);
+  }
+
+  const empresaLabel = funnelEmpresa==='all'?'Todas':funnelEmpresa==='pow'?'Pow':'Undo';
+  const searchPart = funnelSearch?` · "${funnelSearch}"`:'';
+  const curLabel = currency==='ARS'?` · ARS (1 USD = ${arsRate.toLocaleString('es-AR')})`:'· USD';
+  title.textContent=`Apertura de ingresos · ${empresaLabel}${searchPart} ${curLabel} (${deals.length} deal${deals.length!==1?'s':''})`;
+
+  // Fixed row order for line items
+  const ROW_ORDER=['Fee E-Commerce','Paid Media','E-mail Marketing','Fee Fijo Link Up'];
+
+  let grandTotal=0, grandLTV=0, grandVal=0;
+  const rowTotals={};
+
+  const dealBlocks=deals.map(d=>{
+    const ec=feeEC(d);
+    const rev=totalRevenue(d);
+    const rm=remMonths(d);
+    const ltv=rev*18;
+    const val=rev*rm;
+    grandTotal+=rev; grandLTV+=ltv; grandVal+=val;
+
+    const l=SM[d.s]||d.s;
+    const isWon=won(l),isLost=lost(l);
+    const stageBg=isWon?'#E1F5EE;color:#0F6E56':isLost?'#FCEBEB;color:#A32D2D':'#F1EFE8;color:#5F5E5A';
+    const pill=`<span class="brand-pill ${d.b}">${d.b==='pow'?'Pow':'Undo'}</span>`;
+
+    // Build line items for this deal in fixed order
+    const allLI=[];
+    ROW_ORDER.forEach(name=>{
+      let amt=0;
+      if(name==='Fee E-Commerce') amt=ec;
+      else {const li=(d.li||[]).find(x=>x.n===name); amt=li?li.a:0;}
+      if(amt>0){
+        allLI.push({name,amt});
+        rowTotals[name]=(rowTotals[name]||0)+amt;
+      }
+    });
+    // Any extra line items not in ROW_ORDER
+    (d.li||[]).forEach(li=>{
+      if(!ROW_ORDER.includes(li.name)&&li.a>0){
+        allLI.push({name:li.n,amt:li.a});
+        rowTotals[li.n]=(rowTotals[li.n]||0)+li.a;
+      }
+    });
+
+    const liRows=allLI.map(({name,amt})=>{
+      const amtLTV=amt*18;
+      const amtVal=amt*rm;
+      const color=name==='Fee E-Commerce'?'#D85A30':'#185FA5';
+      let extra='';
+      if(name==='Fee E-Commerce'&&d.gmv&&d.fv)
+        extra=`<span style="font-size:10px;color:#B4B2A9;margin-left:6px">GMV ${moneyGMV(d.gmv)} × ${(d.fv*100).toFixed(1)}%</span>`;
+      return`<tr style="background:#FAFAF8">
+        <td style="padding-left:28px;font-size:12px;color:#5F5E5A;border-bottom:.5px solid #F1EFE8">
+          <span style="color:${color}">${name}</span>${extra}
+        </td>
+        <td style="border-bottom:.5px solid #F1EFE8"></td>
+        <td class="num" style="font-size:12px;color:${color};font-weight:500;border-bottom:.5px solid #F1EFE8">${money(amt)}</td>
+        <td class="num" style="font-size:12px;color:#888780;border-bottom:.5px solid #F1EFE8">${amtLTV>0?money(amtLTV):'—'}</td>
+        <td class="num" style="font-size:12px;color:#888780;border-bottom:.5px solid #F1EFE8">${amtVal>0?money(amtVal):'—'}</td>
+      </tr>`;
+    }).join('');
+
+    return`
+      <tr style="background:white">
+        <td style="padding-top:10px;padding-bottom:${allLI.length?'4px':'10px'}">
+          <div style="display:flex;align-items:center;gap:6px">${pill}<span style="font-size:13px;font-weight:600;color:#1a1a18">${d.n.replace(/\s*\|\s*Undo$/i,'')}</span></div>
+          <p style="font-size:11px;color:#B4B2A9;margin-top:3px">${FLAGS[d.p]||''} ${d.p||''} · Cierre: ${fd(d.c)}</p>
+        </td>
+        <td style="padding-top:10px;vertical-align:top"><span class="stage-badge" style="background:${stageBg}">${l}</span></td>
+        <td class="num" style="padding-top:10px;vertical-align:top"><span style="font-weight:700;color:${isWon?'#0F6E56':isLost?'#A32D2D':'#1a1a18'}">${rev>0?money(rev):'—'}</span></td>
+        <td class="num" style="padding-top:10px;vertical-align:top;color:#534AB7;font-weight:500">${ltv>0?money(ltv):'—'}</td>
+        <td class="num" style="padding-top:10px;vertical-align:top;color:#0F6E56;font-weight:500">${val>0?money(val):'—'}</td>
+      </tr>
+      ${liRows}
+      <tr><td colspan="5" style="height:4px;background:#F7F6F2"></td></tr>`;
+  }).join('');
+
+  // Grand total row
+  const totalLIRows=ROW_ORDER.filter(n=>rowTotals[n]>0).map(n=>{
+    const color=n==='Fee E-Commerce'?'#D85A30':'#185FA5';
+    return`<tr style="background:#F7F6F2">
+      <td style="padding-left:28px;font-size:12px;color:${color};font-weight:500;border-bottom:.5px solid #ECEAE2">${n}</td>
+      <td style="border-bottom:.5px solid #ECEAE2"></td>
+      <td class="num" style="font-size:12px;color:${color};font-weight:600;border-bottom:.5px solid #ECEAE2">${money(rowTotals[n])}</td>
+      <td class="num" style="font-size:12px;color:#888780;border-bottom:.5px solid #ECEAE2">${money(rowTotals[n]*18)}</td>
+      <td class="num" style="font-size:12px;color:#888780;border-bottom:.5px solid #ECEAE2">—</td>
+    </tr>`;
+  }).join('');
+
+  body.innerHTML=`<div style="overflow-x:auto">
+    <table class="bdt">
+      <thead><tr>
+        <th>Marca</th><th>Etapa</th>
+        <th class="num">Total / mes</th>
+        <th class="num">LTV 18m</th>
+        <th class="num">Valor 2026</th>
+      </tr></thead>
+      <tbody>${dealBlocks}</tbody>
+      ${deals.length>1?`<tfoot>
+        ${totalLIRows}
+        <tr class="bdt-total">
+          <td colspan="2">TOTAL</td>
+          <td class="num">${grandTotal>0?money(grandTotal):'—'}</td>
+          <td class="num" style="color:#534AB7">${grandLTV>0?money(grandLTV):'—'}</td>
+          <td class="num" style="color:#0F6E56">${grandVal>0?money(grandVal):'—'}</td>
+        </tr>
+      </tfoot>`:''}
+    </table>
+  </div>`;
+}
+
+// ===================== INIT =====================
+const LOADING_HTML=`<div id="loading-overlay" style="position:fixed;inset:0;background:#F1EFE8;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;gap:16px">
+  <div style="font-size:22px;font-weight:500;color:#1a1a18">Pow · CRM Dashboard</div>
+  <div style="display:flex;gap:6px;align-items:center">
+    <div class="spin-dot" style="width:8px;height:8px;border-radius:50%;background:#378ADD;animation:spin-fade 1s ease-in-out infinite"></div>
+    <div class="spin-dot" style="width:8px;height:8px;border-radius:50%;background:#378ADD;animation:spin-fade 1s ease-in-out .2s infinite"></div>
+    <div class="spin-dot" style="width:8px;height:8px;border-radius:50%;background:#378ADD;animation:spin-fade 1s ease-in-out .4s infinite"></div>
+  </div>
+  <div id="loading-msg" style="font-size:13px;color:#888780">Conectando con HubSpot…</div>
+  <style>@keyframes spin-fade{0%,100%{opacity:.2;transform:scale(.8)}50%{opacity:1;transform:scale(1)}}</style>
+</div>`;
+
+document.body.insertAdjacentHTML('beforeend', LOADING_HTML);
+
+function setLoadingMsg(msg){ const el=document.getElementById('loading-msg'); if(el) el.textContent=msg; }
+function hideLoading(){ const el=document.getElementById('loading-overlay'); if(el) el.remove(); }
+
+async function init(){
+  try {
+    setLoadingMsg('Cargando deals…');
+    const res = await fetch('/api/hubspot/deals', { credentials: 'same-origin' });
+    if(!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+
+    if(data.deals && data.deals.length){
+      DEALS = data.deals;
+      setLoadingMsg(`${data.deals.length} deals cargados · actualizando dashboard…`);
+    } else {
+      setLoadingMsg('Sin datos de HubSpot, usando datos locales…');
+    }
+
+    if(data.stageMap) Object.assign(SM, data.stageMap);
+    if(data.owners) Object.assign(OW, data.owners);
+    if(data.contacts?.length) CONTACTS = data.contacts;
+    if(data.contactsTotal != null){
+      const kpiEl=document.getElementById('kpi-contacts');
+      if(kpiEl) kpiEl.textContent=data.contactsTotal.toLocaleString('es-AR');
+    }
+
+    if(data.fetchedAt){
+      const d=new Date(data.fetchedAt);
+      const fmt=d.toLocaleString('es-AR',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
+      document.querySelectorAll('.meta').forEach(el=>{
+        el.textContent=el.textContent.replace(/\d{1,2} mayo \d{4}/,fmt.replace(',',''));
+      });
+    }
+  } catch(err){
+    console.warn('API fetch failed, using static data:', err.message);
+    setLoadingMsg('No se pudo conectar con HubSpot, usando datos locales…');
+    await new Promise(r=>setTimeout(r,1500));
+  }
+
+  hideLoading();
+  renderCountryFilter();
+  renderCRM();
+  renderFunnelYearFilter();
+  renderFunnelCountryFilter();
+  renderFunnel();
+}
+
+init();
+</script>
+</body>
+</html>
