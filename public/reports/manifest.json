@@ -9,8 +9,14 @@
     {
       "slug": "crm-dashboard",
       "file": "crm-dashboard.html",
-      "title": "CRM Dashboard",
-      "description": "Pipeline HubSpot · cache 1 h · sync diario · Pow / Undo"
+      "title": "CRM Dashboard · Pow",
+      "description": "Pipeline HubSpot Pow · funnel Pow · sync diario"
+    },
+    {
+      "slug": "crm-dashboard-undo",
+      "file": "crm-dashboard-undo.html",
+      "title": "CRM Dashboard · Undo",
+      "description": "Pipeline HubSpot Undo · funnel Undo · sync diario"
     }
   ]
 }

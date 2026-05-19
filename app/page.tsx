@@ -26,7 +26,7 @@ export default function HomeLanding() {
           <span className={styles.hubLabel}>Análisis</span>
           <span className={styles.hubTitle}>Informes</span>
           <p className={styles.cardDesc}>
-            CEO Scorecard, CRM HubSpot (sync ~1 h) y más.
+            CEO Scorecard, CRM Pow, CRM Undo y más.
           </p>
         </Link>
       </div>

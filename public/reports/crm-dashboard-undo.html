@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CRM Dashboard · Pow</title>
+<title>CRM Dashboard · Undo</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#F1EFE8;display:flex;height:100vh;overflow:hidden}
@@ -177,7 +177,7 @@ h1{font-size:21px;font-weight:500;color:#1a1a18}
   <div class="view active" id="view-crm">
   <div class="wrap">
     <div class="header">
-      <div><h1>CRM Dashboard · Pow</h1><p class="meta">Andres Acerenza · HubSpot Portal 48113030 · 15 mayo 2026</p></div>
+      <div><h1>CRM Dashboard · Undo</h1><p class="meta">Andres Acerenza · HubSpot Portal 48113030 · 15 mayo 2026</p></div>
       <a class="btn-link" href="https://app.hubspot.com/contacts/48113030/deals" target="_blank">Abrir en HubSpot ↗</a>
     </div>
     <div class="filter-row">
@@ -212,7 +212,7 @@ h1{font-size:21px;font-weight:500;color:#1a1a18}
       </div>
       <div id="crm-deals"></div>
     </div>
-    <p class="footer">Datos vía HubSpot · cache ~1 h · sync diario · Pow · Portal 48113030</p>
+    <p class="footer">Datos vía HubSpot · cache ~1 h · sync diario · Undo · Portal 48113030</p>
   </div>
   </div>
 
@@ -220,7 +220,7 @@ h1{font-size:21px;font-weight:500;color:#1a1a18}
   <div class="view" id="view-funnel">
   <div class="wrap">
     <div class="header">
-      <div><h1>Funnel de Ventas · Pow</h1><p class="meta">Pipeline Pow · Medido en valor de negocio · 15 mayo 2026</p></div>
+      <div><h1>Funnel de Ventas · Undo</h1><p class="meta">Pipeline Undo · Medido en valor de negocio · 15 mayo 2026</p></div>
       <a class="btn-link" href="https://app.hubspot.com/contacts/48113030/deals" target="_blank">Abrir en HubSpot ↗</a>
     </div>
 
@@ -326,7 +326,7 @@ h1{font-size:21px;font-weight:500;color:#1a1a18}
       <div id="brand-detail-body"></div>
     </div>
 
-    <p class="footer">Datos vía HubSpot · cache ~1 h · sync diario · Pow · Portal 48113030</p>
+    <p class="footer">Datos vía HubSpot · cache ~1 h · sync diario · Undo · Portal 48113030</p>
   </div>
   </div>
 
@@ -336,11 +336,11 @@ h1{font-size:21px;font-weight:500;color:#1a1a18}
 <div class="sidebar">
   <button class="stab active" id="stab-crm" onclick="switchView('crm')">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
-    <span class="stab-tip">CRM Dashboard</span>
+    <span class="stab-tip">CRM · Undo</span>
   </button>
   <button class="stab" id="stab-funnel" onclick="switchView('funnel')">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4h18l-7 8v6l-4 2v-8L3 4z"/></svg>
-    <span class="stab-tip">Funnel de Ventas</span>
+    <span class="stab-tip">Funnel Undo</span>
   </button>
 </div>
 
@@ -357,8 +357,8 @@ const SM={
 };
 const OW={"1302677373":"Andres Acerenza","75838016":"Patricio Messia"};
 const PAL=['#378ADD','#D85A30','#BA7517','#7F77DD','#D4537E','#185FA5','#854F0B'];
-const DASHBOARD_BRAND='pow';
-const LOST_STAGE_ID='closedlost';
+const DASHBOARD_BRAND='undo';
+const LOST_STAGE_ID='1005171566';
 const FLAGS={"Argentina":"🇦🇷","Colombia":"🇨🇴","Chile":"🇨🇱","México":"🇲🇽"};
 
 // Full deals dataset
@@ -468,13 +468,13 @@ let CONTACTS=[
 
 // Funnel stage order
 const FUNNEL_ORDER=[
-  "1069729148","999830416","appointmentscheduled","qualifiedtobuy",
-  "decisionmakerboughtin","contractsent","1004627528","closedwon"
+  "1005171560","1005171561","1005171562","1005324570",
+  "1005171563","1005171564","1005171565"
 ];
 const FUNNEL_COLORS={
-  "1069729148":"#B4B2A9","999830416":"#378ADD","appointmentscheduled":"#7F77DD",
-  "qualifiedtobuy":"#BA7517","decisionmakerboughtin":"#D85A30",
-  "contractsent":"#D4537E","1004627528":"#185FA5","closedwon":"#1D9E75"
+  "1005171560":"#B4B2A9","1005171561":"#7F77DD","1005171562":"#378ADD",
+  "1005324570":"#D85A30","1005171563":"#BA7517","1005171564":"#D4537E",
+  "1005171565":"#1D9E75"
 };
 
 function fmt(n){if(!n||n===0)return'—';if(n>=1000000)return'$'+Math.round(n/1000000*10)/10+'M';if(n>=1000)return'$'+Math.round(n/1000)+'k';return'$'+n.toLocaleString('es-AR')}
@@ -1087,7 +1087,7 @@ function renderBrandDetail(deals){
 
 // ===================== INIT =====================
 const LOADING_HTML=`<div id="loading-overlay" style="position:fixed;inset:0;background:#F1EFE8;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;gap:16px">
-  <div style="font-size:22px;font-weight:500;color:#1a1a18">Pow · CRM Dashboard</div>
+  <div style="font-size:22px;font-weight:500;color:#1a1a18">Undo · CRM Dashboard</div>
   <div style="display:flex;gap:6px;align-items:center">
     <div class="spin-dot" style="width:8px;height:8px;border-radius:50%;background:#378ADD;animation:spin-fade 1s ease-in-out infinite"></div>
     <div class="spin-dot" style="width:8px;height:8px;border-radius:50%;background:#378ADD;animation:spin-fade 1s ease-in-out .2s infinite"></div>

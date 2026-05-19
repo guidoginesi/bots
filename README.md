@@ -140,7 +140,8 @@ npm run sync-reports
 | `/reports` | Índice de informes |
 | `/reports/login` | Login |
 | `/reports/ceo-scorecard.html` | Ejemplo: CEO Scorecard |
-| `/reports/crm-dashboard.html` | CRM + Funnel · datos desde HubSpot |
+| `/reports/crm-dashboard.html` | CRM + Funnel **Pow** · HubSpot |
+| `/reports/crm-dashboard-undo.html` | CRM + Funnel **Undo** · pipeline propio |
 
 El script `sync-reports` **elimina el login JavaScript del HTML**; la protección real es middleware + cookie `httpOnly`.
 
