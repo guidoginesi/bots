@@ -6,13 +6,21 @@ const DEAL_PROPERTIES = [
   "pipeline",
   "hs_mrr",
   "amount",
+  "hs_tcv",
   "fee_variable",
   "gmv_mensual_estimado",
   "pais_pow",
   "deal_currency_code",
 ];
 
-const LI_PROPERTIES = ["name", "amount", "price", "quantity"];
+const LI_PROPERTIES = [
+  "name",
+  "amount",
+  "price",
+  "quantity",
+  "hs_mrr",
+  "hs_recurring_billing_period",
+];
 
 const UNDO_STAGES = new Set([
   "1005171560",
@@ -48,7 +56,8 @@ export type DashboardDeal = {
   a: number;
   gmv?: number;
   fv?: number;
-  li?: { n: string; a: number }[];
+  li?: { n: string; a: number; ot?: true }[];
+  ot?: number;
 };
 
 export type HubSpotDealsPayload = {
@@ -209,24 +218,37 @@ async function fetchContactsMeta() {
   }
 }
 
+function lineItemAmount(l: HubSpotLineItem): number {
+  return parseFloat(l.properties?.amount || l.properties?.price || "0") || 0;
+}
+
+function isOneTimeLineItem(l: HubSpotLineItem): boolean {
+  const amt = lineItemAmount(l);
+  if (amt <= 0) return false;
+  const liMrr = parseFloat(l.properties?.hs_mrr || "0") || 0;
+  const period = l.properties?.hs_recurring_billing_period;
+  return liMrr <= 0 && !period;
+}
+
 function mapDeal(deal: HubSpotDeal, lineItems: HubSpotLineItem[]): DashboardDeal {
   const p = deal.properties;
   const closedate = p.closedate ? p.closedate.split("T")[0] : null;
   const mrr = parseFloat(p.hs_mrr || p.amount || "0") || 0;
+  const tcv = parseFloat(p.hs_tcv || "0") || 0;
   const gmv = parseFloat(p.gmv_mensual_estimado || "0") || 0;
   const fv = parseFloat(p.fee_variable || "0") || 0;
   const country = p.pais_pow || null;
 
   const li = lineItems
-    .filter(
-      (l) =>
-        l.properties?.name &&
-        parseFloat(l.properties?.amount || l.properties?.price || "0") > 0
-    )
+    .filter((l) => l.properties?.name && lineItemAmount(l) > 0)
     .map((l) => ({
       n: l.properties!.name as string,
-      a: parseFloat(l.properties!.amount || l.properties!.price || "0"),
+      a: lineItemAmount(l),
+      ...(isOneTimeLineItem(l) ? { ot: true as const } : {}),
     }));
+
+  let ot = li.filter((x) => x.ot).reduce((s, x) => s + x.a, 0);
+  if (ot === 0 && mrr <= 0 && tcv > 0) ot = tcv;
 
   return {
     n: p.dealname || "Sin nombre",
@@ -239,6 +261,7 @@ function mapDeal(deal: HubSpotDeal, lineItems: HubSpotLineItem[]): DashboardDeal
     ...(gmv > 0 ? { gmv } : {}),
     ...(fv > 0 ? { fv } : {}),
     ...(li.length ? { li } : {}),
+    ...(ot > 0 ? { ot } : {}),
   };
 }
 

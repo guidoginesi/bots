@@ -506,8 +506,12 @@ function moneyGMV(n){
 }
 // Fee E-Commerce mensual = GMV × fee_variable
 function feeEC(d){return d.gmv&&d.fv?(Math.round(d.gmv*d.fv)):0}
-// Ingreso mensual total = MRR fijo + fee variable
+// Ingreso mensual recurrente = MRR fijo + fee variable
 function totalRevenue(d){return (d.a||0)+feeEC(d)}
+function oneTimeRevenue(d){
+  if((d.ot||0)>0) return d.ot;
+  return (d.li||[]).filter(li=>li.ot).reduce((s,li)=>s+li.a,0);
+}
 // KPIs de ingreso: solo deals cuya fecha de cierre cae en el año objetivo
 function kpiTargetYear(){
   return funnelYear!=='all'?parseInt(funnelYear,10):new Date().getFullYear();
@@ -524,8 +528,13 @@ function remMonthsInKpiYear(d){
   const m=parseInt((d.c||'').split('-')[1],10);
   return Math.max(13-(isNaN(m)?12:m),0);
 }
+function lineItemValInYear(li,d){
+  if(li.ot) return closedInKpiYear(d)?li.a:0;
+  return li.a*remMonthsInKpiYear(d);
+}
 function valorInKpiYear(d){
-  return totalRevenue(d)*remMonthsInKpiYear(d);
+  if(!closedInKpiYear(d)) return 0;
+  return totalRevenue(d)*remMonthsInKpiYear(d)+oneTimeRevenue(d);
 }
 function ini(n){const w=n.trim().split(/\s+/);return((w[0]||'')[0]+(w[1]||'')[0]).toUpperCase()||'?'}
 function fd(d){if(!d)return'';const[y,m,dy]=d.split('-');return`${dy}/${m}/${y}`}
@@ -743,7 +752,7 @@ function renderFunnelBars(deals){
     if(!byStage[d.s])byStage[d.s]={deals:[],count:0,value:0};
     byStage[d.s].deals.push(d);
     byStage[d.s].count++;
-    byStage[d.s].value+=totalRevenue(d);
+    byStage[d.s].value+=totalRevenue(d)+oneTimeRevenue(d);
   });
   const maxCount=Math.max(...FUNNEL_ORDER.map(s=>(byStage[s]?.count||0)),1);
   const maxBarH=140;
@@ -821,18 +830,20 @@ function renderFunnelDealsPanel(deals){
   function dealCard(d,isWonDeal){
     const rev=totalRevenue(d);
     const ec=feeEC(d);
+    const ot=oneTimeRevenue(d);
     const remMonths=remMonthsInKpiYear(d);
-    const valDeal=rev*remMonths;
+    const valDeal=rev*remMonths+ot;
     const metaParts=[];
     if(d.a>0) metaParts.push('MRR: '+money(d.a));
     if(ec>0) metaParts.push('Fee EC: '+money(ec)+` (GMV ${moneyGMV(d.gmv)} × ${(d.fv*100).toFixed(1)}%)`);
+    if(ot>0) metaParts.push('Pago único: '+money(ot));
     return`<div class="deal-row">
       <div class="deal-body">
         <p class="deal-name">${d.n} <span style="font-size:10px;color:#888780">${FLAGS[d.p]||''} ${d.p||''}</span></p>
         <p class="deal-meta">Cierre: ${fd(d.c)}${metaParts.length?' · '+metaParts.join(' · '):''}</p>
       </div>
       <div style="text-align:right;flex-shrink:0;margin-left:12px">
-        <p style="font-size:12px;font-weight:500;color:${isWonDeal?'#0F6E56':'#1a1a18'}">${rev>0?money(rev)+'/mes':'Sin monto'}</p>
+        <p style="font-size:12px;font-weight:500;color:${isWonDeal?'#0F6E56':'#1a1a18'}">${rev>0?money(rev)+'/mes':ot>0?money(ot)+' único':'Sin monto'}</p>
         ${valDeal>0?`<p style="font-size:11px;color:#888780">${targetYear}: ${money(valDeal)}</p>`:''}
       </div>
     </div>`;
@@ -901,7 +912,7 @@ function renderServiceBreakdown(deals){
   scopeDeals = scopeDeals.filter(closedInKpiYear);
 
   // Only show if there's something to break down (has any li or fee EC)
-  const hasData = scopeDeals.some(d => (d.li && d.li.length > 0) || feeEC(d) > 0);
+  const hasData = scopeDeals.some(d => (d.li && d.li.length > 0) || feeEC(d) > 0 || oneTimeRevenue(d) > 0);
   if(!hasData){ card.style.display='none'; return; }
   card.style.display='block';
 
@@ -916,9 +927,9 @@ function renderServiceBreakdown(deals){
     const rm=remMonths(d);
     (d.li||[]).forEach(li=>{
       if(!svcTotals[li.n]) svcTotals[li.n]={mrr:0,ltv:0,val:0,count:0};
-      svcTotals[li.n].mrr  += li.a;
-      svcTotals[li.n].ltv  += li.a*18;
-      svcTotals[li.n].val  += li.a*rm;
+      svcTotals[li.n].mrr  += li.ot?0:li.a;
+      svcTotals[li.n].ltv  += li.ot?li.a:li.a*18;
+      svcTotals[li.n].val  += lineItemValInYear(li,d);
       svcTotals[li.n].count++;
     });
     const ec=feeEC(d);
@@ -1016,10 +1027,11 @@ function renderBrandDetail(deals){
   const dealBlocks=yearDeals.map(d=>{
     const ec=feeEC(d);
     const rev=totalRevenue(d);
+    const ot=oneTimeRevenue(d);
     const rm=remMonths(d);
-    const ltv=rev*18;
-    const val=rev*rm;
-    grandTotal+=rev; grandLTV+=ltv; grandVal+=val;
+    const ltv=rev*18+ot;
+    const val=valorInKpiYear(d);
+    grandTotal+=rev+ot; grandLTV+=ltv; grandVal+=val;
 
     const l=SM[d.s]||d.s;
     const isWon=won(l),isLost=lost(l);
@@ -1029,25 +1041,25 @@ function renderBrandDetail(deals){
     // Build line items for this deal in fixed order
     const allLI=[];
     ROW_ORDER.forEach(name=>{
-      let amt=0;
+      let amt=0; let isOt=false;
       if(name==='Fee E-Commerce') amt=ec;
-      else {const li=(d.li||[]).find(x=>x.n===name); amt=li?li.a:0;}
+      else {const li=(d.li||[]).find(x=>x.n===name); if(li){amt=li.a; isOt=!!li.ot;}}
       if(amt>0){
-        allLI.push({name,amt});
+        allLI.push({name,amt,ot:isOt});
         rowTotals[name]=(rowTotals[name]||0)+amt;
       }
     });
     // Any extra line items not in ROW_ORDER
     (d.li||[]).forEach(li=>{
       if(!ROW_ORDER.includes(li.n)&&li.a>0){
-        allLI.push({name:li.n,amt:li.a});
+        allLI.push({name:li.n,amt:li.a,ot:!!li.ot});
         rowTotals[li.n]=(rowTotals[li.n]||0)+li.a;
       }
     });
 
-    const liRows=allLI.map(({name,amt})=>{
-      const amtLTV=amt*18;
-      const amtVal=amt*rm;
+    const liRows=allLI.map(({name,amt,ot:isOt})=>{
+      const amtLTV=isOt?amt:amt*18;
+      const amtVal=isOt?(closedInKpiYear(d)?amt:0):amt*rm;
       const color=name==='Fee E-Commerce'?'#D85A30':'#185FA5';
       let extra='';
       if(name==='Fee E-Commerce'&&d.gmv&&d.fv)
@@ -1070,7 +1082,7 @@ function renderBrandDetail(deals){
           <p style="font-size:11px;color:#B4B2A9;margin-top:3px">${FLAGS[d.p]||''} ${d.p||''} · Cierre: ${fd(d.c)}</p>
         </td>
         <td style="padding-top:10px;vertical-align:top"><span class="stage-badge" style="background:${stageBg}">${l}</span></td>
-        <td class="num" style="padding-top:10px;vertical-align:top"><span style="font-weight:700;color:${isWon?'#0F6E56':isLost?'#A32D2D':'#1a1a18'}">${rev>0?money(rev):'—'}</span></td>
+        <td class="num" style="padding-top:10px;vertical-align:top"><span style="font-weight:700;color:${isWon?'#0F6E56':isLost?'#A32D2D':'#1a1a18'}">${rev>0?money(rev):ot>0?money(ot)+' único':'—'}</span></td>
         <td class="num" style="padding-top:10px;vertical-align:top;color:#534AB7;font-weight:500">${ltv>0?money(ltv):'—'}</td>
         <td class="num" style="padding-top:10px;vertical-align:top;color:#0F6E56;font-weight:500">${val>0?money(val):'—'}</td>
       </tr>
