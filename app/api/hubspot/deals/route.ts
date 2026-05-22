@@ -31,12 +31,24 @@ export async function GET(request: Request) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  const { searchParams } = new URL(request.url);
+  const fresh =
+    searchParams.has("fresh") ||
+    searchParams.has("_t") ||
+    searchParams.get("nocache") === "1";
+
   try {
     const payload = await fetchHubSpotDealsPayload();
     return Response.json(payload, {
-      headers: {
-        "Cache-Control": "s-maxage=3600, stale-while-revalidate=300",
-      },
+      headers: fresh
+        ? {
+            "Cache-Control": "no-store, no-cache, must-revalidate",
+            "CDN-Cache-Control": "no-store",
+            "Vercel-CDN-Cache-Control": "no-store",
+          }
+        : {
+            "Cache-Control": "s-maxage=3600, stale-while-revalidate=300",
+          },
     });
   } catch (err) {
     console.error(err);

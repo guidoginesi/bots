@@ -1126,7 +1126,7 @@ function hideLoading(){ const el=document.getElementById('loading-overlay'); if(
 async function init(){
   try {
     setLoadingMsg('Cargando deals…');
-    const res = await fetch('/api/hubspot/deals', { credentials: 'same-origin' });
+    const res = await fetch(`/api/hubspot/deals?fresh=1&_t=${Date.now()}`, { credentials: 'same-origin' });
     const data = await res.json().catch(() => ({}));
     if(!res.ok){
       const hint = data.error || `HTTP ${res.status}`;
