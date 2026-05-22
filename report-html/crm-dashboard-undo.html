@@ -508,6 +508,25 @@ function moneyGMV(n){
 function feeEC(d){return d.gmv&&d.fv?(Math.round(d.gmv*d.fv)):0}
 // Ingreso mensual total = MRR fijo + fee variable
 function totalRevenue(d){return (d.a||0)+feeEC(d)}
+// KPIs de ingreso: solo deals cuya fecha de cierre cae en el año objetivo
+function kpiTargetYear(){
+  return funnelYear!=='all'?parseInt(funnelYear,10):new Date().getFullYear();
+}
+function closeYearOf(d){
+  const y=parseInt((d.c||'').split('-')[0],10);
+  return isNaN(y)?null:y;
+}
+function closedInKpiYear(d){
+  return closeYearOf(d)===kpiTargetYear();
+}
+function remMonthsInKpiYear(d){
+  if(!closedInKpiYear(d)) return 0;
+  const m=parseInt((d.c||'').split('-')[1],10);
+  return Math.max(13-(isNaN(m)?12:m),0);
+}
+function valorInKpiYear(d){
+  return totalRevenue(d)*remMonthsInKpiYear(d);
+}
 function ini(n){const w=n.trim().split(/\s+/);return((w[0]||'')[0]+(w[1]||'')[0]).toUpperCase()||'?'}
 function fd(d){if(!d)return'';const[y,m,dy]=d.split('-');return`${dy}/${m}/${y}`}
 function won(l){return l&&l.includes('ganado')}
@@ -762,7 +781,9 @@ function renderFunnelBars(deals){
 function renderFunnelDealsPanel(deals){
   const wonDeals=deals.filter(d=>won(SM[d.s]||d.s));
   const funnelDeals=deals.filter(d=>!won(SM[d.s]||d.s)&&!lost(SM[d.s]||d.s));
-  const kpiDeals = kpiMode==='won' ? wonDeals : funnelDeals;
+  const targetYear=kpiTargetYear();
+  const kpiPool=kpiMode==='won'?wonDeals:funnelDeals;
+  const kpiDeals=kpiPool.filter(closedInKpiYear);
 
   // Update labels
   const mrrLabel   = document.getElementById('f-mrr-label');
@@ -774,32 +795,25 @@ function renderFunnelDealsPanel(deals){
   if(kpiMode==='won'){
     if(mrrLabel)   mrrLabel.textContent='MRR Cerrado';
     if(ltvLabel)   ltvLabel.textContent='LTV 18 meses';
-    if(v2026Label) v2026Label.textContent='Valor generado 2026';
-    if(hint)       hint.textContent='Solo deals cerrados ganados';
+    if(v2026Label) v2026Label.textContent=`Valor generado ${targetYear}`;
+    if(hint)       hint.textContent=`Cierres ganados con fecha de cierre en ${targetYear}`;
     if(mrrSub)     mrrSub.textContent='Fee mensual recurrente';
     if(mrrVal)     mrrVal.className='fkpi-value green';
   } else {
     if(mrrLabel)   mrrLabel.textContent='MRR en Funnel';
     if(ltvLabel)   ltvLabel.textContent='LTV Potencial 18m';
-    if(v2026Label) v2026Label.textContent='Valor potencial 2026';
-    if(hint)       hint.textContent='Pipeline activo · excluye ganados y perdidos';
+    if(v2026Label) v2026Label.textContent=`Valor potencial ${targetYear}`;
+    if(hint)       hint.textContent=`Pipeline activo · cierre estimado en ${targetYear}`;
     if(mrrSub)     mrrSub.textContent='Fee mensual estimado';
     if(mrrVal)     mrrVal.className='fkpi-value amber';
   }
 
   const mrr=kpiDeals.reduce((s,d)=>s+totalRevenue(d),0);
   const ltv18=mrr*18;
-  let val2026=0;
-  kpiDeals.forEach(d=>{
-    const rev=totalRevenue(d);
-    if(!rev)return;
-    const closeYear=parseInt((d.c||'').split('-')[0]);
-    const closeMonth=parseInt((d.c||'').split('-')[1]);
-    if(closeYear<=2026){const startMonth=closeYear===2026?closeMonth:1;val2026+=rev*(13-startMonth);}
-  });
+  const valYear=kpiDeals.reduce((s,d)=>s+valorInKpiYear(d),0);
   document.getElementById('f-mrr').textContent=mrr>0?money(mrr):'—';
   document.getElementById('f-ltv').textContent=ltv18>0?money(ltv18):'—';
-  document.getElementById('f-2026').textContent=val2026>0?money(val2026):'—';
+  document.getElementById('f-2026').textContent=valYear>0?money(valYear):'—';
 
   const panelTitle=document.getElementById('funnel-panel-title');
   const panelDeals=document.getElementById('funnel-won-deals');
@@ -807,10 +821,8 @@ function renderFunnelDealsPanel(deals){
   function dealCard(d,isWonDeal){
     const rev=totalRevenue(d);
     const ec=feeEC(d);
-    const closeYear=parseInt((d.c||'').split('-')[0]);
-    const closeMonth=parseInt((d.c||'').split('-')[1]);
-    const remMonths=isWonDeal?(closeYear===2026?13-closeMonth:closeYear<2026?12:0):0;
-    const val2026d=rev*remMonths;
+    const remMonths=remMonthsInKpiYear(d);
+    const valDeal=rev*remMonths;
     const metaParts=[];
     if(d.a>0) metaParts.push('MRR: '+money(d.a));
     if(ec>0) metaParts.push('Fee EC: '+money(ec)+` (GMV ${moneyGMV(d.gmv)} × ${(d.fv*100).toFixed(1)}%)`);
@@ -821,7 +833,7 @@ function renderFunnelDealsPanel(deals){
       </div>
       <div style="text-align:right;flex-shrink:0;margin-left:12px">
         <p style="font-size:12px;font-weight:500;color:${isWonDeal?'#0F6E56':'#1a1a18'}">${rev>0?money(rev)+'/mes':'Sin monto'}</p>
-        ${val2026d>0?`<p style="font-size:11px;color:#888780">2026: ${money(val2026d)}</p>`:''}
+        ${valDeal>0?`<p style="font-size:11px;color:#888780">${targetYear}: ${money(valDeal)}</p>`:''}
       </div>
     </div>`;
   }
@@ -877,23 +889,20 @@ function renderServiceBreakdown(deals){
   const body  = document.getElementById('service-breakdown-body');
 
   // Etapa clickeada → solo esa etapa; si no, respeta Cierre ganado / Funnel activo
-  const scopeDeals = selectedFunnelStage
+  let scopeDeals = selectedFunnelStage
     ? deals.filter(d => d.s === selectedFunnelStage)
     : kpiMode === 'won'
       ? deals.filter(d => won(SM[d.s] || d.s))
       : deals.filter(d => !won(SM[d.s] || d.s) && !lost(SM[d.s] || d.s));
+  scopeDeals = scopeDeals.filter(closedInKpiYear);
 
   // Only show if there's something to break down (has any li or fee EC)
   const hasData = scopeDeals.some(d => (d.li && d.li.length > 0) || feeEC(d) > 0);
   if(!hasData){ card.style.display='none'; return; }
   card.style.display='block';
 
-  function remMonths(d){
-    const y=parseInt((d.c||'').split('-')[0]);
-    const m=parseInt((d.c||'').split('-')[1]);
-    if(y>2026)return 0; if(y<2026)return 12;
-    return Math.max(13-m,0);
-  }
+  const targetYear=kpiTargetYear();
+  function remMonths(d){ return remMonthsInKpiYear(d); }
 
   // Tally per service
   const svcTotals={};
@@ -959,7 +968,7 @@ function renderServiceBreakdown(deals){
         <th style="padding:8px 12px;font-size:10px;font-weight:600;color:#888780;letter-spacing:.06em;text-transform:uppercase;text-align:left;border-bottom:.5px solid #ECEAE2">Servicio</th>
         <th style="padding:8px 12px;font-size:10px;font-weight:600;color:#888780;letter-spacing:.06em;text-transform:uppercase;text-align:right;border-bottom:.5px solid #ECEAE2">Total / mes</th>
         <th style="padding:8px 12px;font-size:10px;font-weight:600;color:#888780;letter-spacing:.06em;text-transform:uppercase;text-align:right;border-bottom:.5px solid #ECEAE2">LTV 18m</th>
-        <th style="padding:8px 12px;font-size:10px;font-weight:600;color:#888780;letter-spacing:.06em;text-transform:uppercase;text-align:right;border-bottom:.5px solid #ECEAE2">Valor 2026</th>
+        <th style="padding:8px 12px;font-size:10px;font-weight:600;color:#888780;letter-spacing:.06em;text-transform:uppercase;text-align:right;border-bottom:.5px solid #ECEAE2">Valor ${targetYear}</th>
       </tr></thead>
       <tbody>${rows}</tbody>
       <tfoot><tr style="background:#F7F6F2">
@@ -981,17 +990,14 @@ function renderBrandDetail(deals){
   if(!showDetail){card.style.display='none';return;}
   card.style.display='block';
 
-  function remMonths(d){
-    const y=parseInt((d.c||'').split('-')[0]);
-    const m=parseInt((d.c||'').split('-')[1]);
-    if(y>2026)return 0; if(y<2026)return 12;
-    return Math.max(13-m,0);
-  }
+  const targetYear=kpiTargetYear();
+  const yearDeals=deals.filter(closedInKpiYear);
+  function remMonths(d){ return remMonthsInKpiYear(d); }
 
   const empresaLabel = DASHBOARD_BRAND==='pow'?'Pow':'Undo';
   const searchPart = funnelSearch?` · "${funnelSearch}"`:'';
   const curLabel = currency==='ARS'?` · ARS (1 USD = ${arsRate.toLocaleString('es-AR')})`:'· USD';
-  title.textContent=`Apertura de ingresos · ${empresaLabel}${searchPart} ${curLabel} (${deals.length} deal${deals.length!==1?'s':''})`;
+  title.textContent=`Apertura de ingresos · ${empresaLabel}${searchPart} ${curLabel} · cierre ${targetYear} (${yearDeals.length} deal${yearDeals.length!==1?'s':''})`;
 
   // Fixed row order for line items
   const ROW_ORDER=[
@@ -1003,7 +1009,7 @@ function renderBrandDetail(deals){
   let grandTotal=0, grandLTV=0, grandVal=0;
   const rowTotals={};
 
-  const dealBlocks=deals.map(d=>{
+  const dealBlocks=yearDeals.map(d=>{
     const ec=feeEC(d);
     const rev=totalRevenue(d);
     const rm=remMonths(d);
@@ -1090,10 +1096,10 @@ function renderBrandDetail(deals){
         <th>Marca</th><th>Etapa</th>
         <th class="num">Total / mes</th>
         <th class="num">LTV 18m</th>
-        <th class="num">Valor 2026</th>
+        <th class="num">Valor ${targetYear}</th>
       </tr></thead>
       <tbody>${dealBlocks}</tbody>
-      ${deals.length>1?`<tfoot>
+      ${yearDeals.length>1?`<tfoot>
         ${totalLIRows}
         <tr class="bdt-total">
           <td colspan="2">TOTAL</td>
@@ -1153,8 +1159,12 @@ async function init(){
     if(data.fetchedAt){
       const d=new Date(data.fetchedAt);
       const fmt=d.toLocaleString('es-AR',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
+      document.querySelectorAll('#dash-version,.dash-version').forEach(el=>{
+        el.textContent=`Actualizado ${fmt}`;
+      });
       document.querySelectorAll('.meta').forEach(el=>{
-        el.textContent=el.textContent.replace(/\d{1,2} mayo \d{4}/,fmt.replace(',',''));
+        if(!el.querySelector('#dash-version,.dash-version'))
+          el.textContent=el.textContent.replace(/\d{1,2} mayo \d{4}/,fmt.replace(',',''));
       });
     }
   } catch(err){
