@@ -4,8 +4,8 @@ from pathlib import Path
 import re
 
 ROOT = Path(__file__).resolve().parents[1]
-POW = ROOT / "public/reports/crm-dashboard.html"
-UNDO = ROOT / "public/reports/crm-dashboard-undo.html"
+POW = ROOT / "report-html/crm-dashboard.html"
+UNDO = ROOT / "report-html/crm-dashboard-undo.html"
 
 MARCA_BLOCK = """    <motion class="filter-row">
       <span class="filter-label">MARCA</span>

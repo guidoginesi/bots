@@ -1125,8 +1125,13 @@ async function init(){
   try {
     setLoadingMsg('Cargando deals…');
     const res = await fetch('/api/hubspot/deals', { credentials: 'same-origin' });
-    if(!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
+    const data = await res.json().catch(() => ({}));
+    if(!res.ok){
+      const hint = data.error || `HTTP ${res.status}`;
+      if(res.status===401) throw new Error('Sesión expirada — volvé a Informes e iniciá sesión');
+      if(res.status===500 && /HUBSPOT_TOKEN/i.test(hint)) throw new Error('HubSpot no configurado en el servidor');
+      throw new Error(hint);
+    }
 
     if(data.deals && data.deals.length){
       DEALS = data.deals;
