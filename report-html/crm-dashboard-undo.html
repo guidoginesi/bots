@@ -876,10 +876,12 @@ function renderServiceBreakdown(deals){
   const title = document.getElementById('service-breakdown-title');
   const body  = document.getElementById('service-breakdown-body');
 
-  // Todos los deals del funnel (año/país/búsqueda); incluye ganados, activos y perdidos
+  // Etapa clickeada → solo esa etapa; si no, respeta Cierre ganado / Funnel activo
   const scopeDeals = selectedFunnelStage
     ? deals.filter(d => d.s === selectedFunnelStage)
-    : deals;
+    : kpiMode === 'won'
+      ? deals.filter(d => won(SM[d.s] || d.s))
+      : deals.filter(d => !won(SM[d.s] || d.s) && !lost(SM[d.s] || d.s));
 
   // Only show if there's something to break down (has any li or fee EC)
   const hasData = scopeDeals.some(d => (d.li && d.li.length > 0) || feeEC(d) > 0);
@@ -933,7 +935,7 @@ function renderServiceBreakdown(deals){
   } else if(funnelSearch){
     ctxLabel=`Totales por servicio · "${funnelSearch}"`;
   } else {
-    ctxLabel=`Totales por servicio · ${DASHBOARD_BRAND==='pow'?'Pow':'Undo'} · Todos los deals`;
+    ctxLabel=`Totales por servicio · ${DASHBOARD_BRAND==='pow'?'Pow':'Undo'} · ${kpiMode==='won'?'Cierre ganado':'Funnel activo'}`;
   }
   title.textContent=ctxLabel;
 
