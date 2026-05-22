@@ -40,7 +40,13 @@ export async function middleware(request: NextRequest) {
   }
 
   if (authed) {
-    return NextResponse.next();
+    const res = NextResponse.next();
+    if (pathname.startsWith("/reports/") && pathname.endsWith(".html")) {
+      res.headers.set("Cache-Control", "no-store, no-cache, must-revalidate");
+      res.headers.set("CDN-Cache-Control", "no-store");
+      res.headers.set("Vercel-CDN-Cache-Control", "no-store");
+    }
+    return res;
   }
 
   const login = new URL("/login", request.url);

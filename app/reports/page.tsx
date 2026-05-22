@@ -30,7 +30,7 @@ export default function ReportsIndexPage() {
         {reports.map((r) => (
           <Link
             key={r.slug}
-            href={`/reports/${r.file}`}
+            href={`/reports/${r.file}?v=20260522`}
             className={`${styles.card} ${styles.reportCard}`}
           >
             <span className={styles.cardName}>{r.title}</span>

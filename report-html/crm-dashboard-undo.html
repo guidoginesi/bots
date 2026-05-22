@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <title>CRM Dashboard · Undo</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
@@ -177,7 +178,7 @@ h1{font-size:21px;font-weight:500;color:#1a1a18}
   <div class="view active" id="view-crm">
   <div class="wrap">
     <div class="header">
-      <div><h1>CRM Dashboard · Undo</h1><p class="meta">Andres Acerenza · HubSpot Portal 48113030 · 15 mayo 2026</p></div>
+      <div><h1>CRM Dashboard · Undo</h1><p class="meta">Andres Acerenza · HubSpot Portal 48113030 · <span id="dash-version">v2026-05-22</span></p></div>
       <a class="btn-link" href="https://app.hubspot.com/contacts/48113030/deals" target="_blank">Abrir en HubSpot ↗</a>
     </div>
     <div class="filter-row">
@@ -220,7 +221,7 @@ h1{font-size:21px;font-weight:500;color:#1a1a18}
   <div class="view" id="view-funnel">
   <div class="wrap">
     <div class="header">
-      <div><h1>Funnel de Ventas · Undo</h1><p class="meta">Pipeline Undo · Medido en valor de negocio · 15 mayo 2026</p></div>
+      <div><h1>Funnel de Ventas · Undo</h1><p class="meta">Pipeline Undo · Medido en valor de negocio · <span class="dash-version">v2026-05-22</span></p></div>
       <a class="btn-link" href="https://app.hubspot.com/contacts/48113030/deals" target="_blank">Abrir en HubSpot ↗</a>
     </div>
 
@@ -857,21 +858,28 @@ const SVC_COLORS={
   'E-mail Marketing':{bg:'#EEF0FE', name:'#4B44CC', bar:'#7F77DD'},
   'Fee Fijo Link Up':{bg:'#FFF5EB', name:'#854F0B', bar:'#D85A30'},
   'Fee E-Commerce':  {bg:'#EDFAF4', name:'#0F6E56', bar:'#1D9E75'},
+  'Fee Servicio Paid Media':      {bg:'#EBF3FC', name:'#185FA5', bar:'#5BA3E8'},
+  'Fee Servicio E-mail Marketing':{bg:'#EEF0FE', name:'#4B44CC', bar:'#9B94E8'},
+  'Fee Servicio SEO':             {bg:'#F3EEFF', name:'#6B4FBB', bar:'#9B7FE8'},
+  'Fee Fijo E-Commerce':          {bg:'#EDFAF4', name:'#0F6E56', bar:'#3BC99A'},
+  'Fee OMS':                      {bg:'#FFF0F6', name:'#9E4060', bar:'#D4537E'},
+  'Desarrollo - Set Up':          {bg:'#F7F6F2', name:'#5F5E5A', bar:'#888780'},
 };
-const SVC_ORDER=['Paid Media','E-mail Marketing','Fee Fijo Link Up','Fee E-Commerce'];
+const SVC_ORDER=[
+  'Paid Media','E-mail Marketing','Fee Fijo Link Up','Fee E-Commerce',
+  'Fee Servicio Paid Media','Fee Servicio E-mail Marketing','Fee Servicio SEO',
+  'Fee Fijo E-Commerce','Fee OMS','Desarrollo - Set Up'
+];
 
 function renderServiceBreakdown(deals){
   const card  = document.getElementById('service-breakdown-card');
   const title = document.getElementById('service-breakdown-title');
   const body  = document.getElementById('service-breakdown-body');
 
-  // Determine scope: stage click overrides kpiMode; otherwise use kpiMode
-  const isFiltered = selectedFunnelStage || funnelSearch;
+  // Todos los deals del funnel (año/país/búsqueda); incluye ganados, activos y perdidos
   const scopeDeals = selectedFunnelStage
     ? deals.filter(d => d.s === selectedFunnelStage)
-    : kpiMode==='won'
-      ? deals.filter(d=>won(SM[d.s]||d.s))
-      : deals.filter(d=>!won(SM[d.s]||d.s)&&!lost(SM[d.s]||d.s));
+    : deals;
 
   // Only show if there's something to break down (has any li or fee EC)
   const hasData = scopeDeals.some(d => (d.li && d.li.length > 0) || feeEC(d) > 0);
@@ -908,21 +916,24 @@ function renderServiceBreakdown(deals){
   });
 
   // Cards grid
-  const active=SVC_ORDER.filter(s=>svcTotals[s]&&svcTotals[s].mrr>0);
+  const active=[
+    ...SVC_ORDER.filter(s=>svcTotals[s]&&svcTotals[s].mrr>0),
+    ...Object.keys(svcTotals).filter(s=>!SVC_ORDER.includes(s)&&svcTotals[s].mrr>0).sort(),
+  ];
   if(!active.length){ card.style.display='none'; return; }
   const maxMrr=Math.max(...active.map(s=>svcTotals[s].mrr));
   const totalMrr=active.reduce((s,k)=>s+svcTotals[k].mrr,0);
   const grandLtv=active.reduce((s,k)=>s+svcTotals[k].ltv,0);
   const grandVal=active.reduce((s,k)=>s+svcTotals[k].val,0);
 
-  let ctxLabel = kpiMode==='won' ? 'Totales por servicio · Cierre ganado' : 'Totales por servicio · Funnel activo';
+  let ctxLabel;
   if(selectedFunnelStage){
     const l=SM[selectedFunnelStage]||selectedFunnelStage;
     ctxLabel=`Totales por servicio · ${l}`;
   } else if(funnelSearch){
     ctxLabel=`Totales por servicio · "${funnelSearch}"`;
   } else {
-    ctxLabel=`Totales por servicio · ${DASHBOARD_BRAND==='pow'?'Pow':'Undo'} · ${kpiMode==='won'?'Cierre ganado':'Funnel activo'}`;
+    ctxLabel=`Totales por servicio · ${DASHBOARD_BRAND==='pow'?'Pow':'Undo'} · Todos los deals`;
   }
   title.textContent=ctxLabel;
 
@@ -981,7 +992,11 @@ function renderBrandDetail(deals){
   title.textContent=`Apertura de ingresos · ${empresaLabel}${searchPart} ${curLabel} (${deals.length} deal${deals.length!==1?'s':''})`;
 
   // Fixed row order for line items
-  const ROW_ORDER=['Fee E-Commerce','Paid Media','E-mail Marketing','Fee Fijo Link Up'];
+  const ROW_ORDER=[
+    'Fee E-Commerce','Paid Media','E-mail Marketing','Fee Fijo Link Up',
+    'Fee Servicio Paid Media','Fee Servicio E-mail Marketing','Fee Servicio SEO',
+    'Fee Fijo E-Commerce','Fee OMS','Desarrollo - Set Up'
+  ];
 
   let grandTotal=0, grandLTV=0, grandVal=0;
   const rowTotals={};
@@ -1012,7 +1027,7 @@ function renderBrandDetail(deals){
     });
     // Any extra line items not in ROW_ORDER
     (d.li||[]).forEach(li=>{
-      if(!ROW_ORDER.includes(li.name)&&li.a>0){
+      if(!ROW_ORDER.includes(li.n)&&li.a>0){
         allLI.push({name:li.n,amt:li.a});
         rowTotals[li.n]=(rowTotals[li.n]||0)+li.a;
       }
@@ -1052,7 +1067,11 @@ function renderBrandDetail(deals){
   }).join('');
 
   // Grand total row
-  const totalLIRows=ROW_ORDER.filter(n=>rowTotals[n]>0).map(n=>{
+  const totalLIKeys=[
+    ...ROW_ORDER.filter(n=>rowTotals[n]>0),
+    ...Object.keys(rowTotals).filter(n=>!ROW_ORDER.includes(n)&&rowTotals[n]>0),
+  ];
+  const totalLIRows=totalLIKeys.map(n=>{
     const color=n==='Fee E-Commerce'?'#D85A30':'#185FA5';
     return`<tr style="background:#F7F6F2">
       <td style="padding-left:28px;font-size:12px;color:${color};font-weight:500;border-bottom:.5px solid #ECEAE2">${n}</td>
