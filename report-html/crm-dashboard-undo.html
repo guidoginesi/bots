@@ -842,17 +842,21 @@ function renderFunnelDealsPanel(deals){
     const sid=selectedFunnelStage;
     const label=SM[sid]||sid;
     const col=FUNNEL_COLORS[sid]||'#888780';
-    const stageDealsList=deals.filter(d=>d.s===sid);
+    const stageDealsList=deals.filter(d=>d.s===sid).filter(closedInKpiYear);
     panelTitle.innerHTML=`<span style="display:inline-flex;align-items:center;gap:6px">
       <span style="width:8px;height:8px;border-radius:50%;background:${col};display:inline-block;flex-shrink:0"></span>
       ${label}
-      <span style="font-size:11px;font-weight:400;color:#888780">(${stageDealsList.length} deal${stageDealsList.length!==1?'s':''})</span>
+      <span style="font-size:11px;font-weight:400;color:#888780">(${stageDealsList.length} deal${stageDealsList.length!==1?'s':''} · cierre ${targetYear})</span>
     </span>
     <button onclick="selectFunnelStage('${sid}')" style="font-size:11px;color:#888780;background:none;border:none;cursor:pointer;padding:0">✕ Limpiar</button>`;
-    panelDeals.innerHTML=stageDealsList.length?stageDealsList.map(d=>dealCard(d,won(SM[d.s]||d.s))).join(''):`<p class="empty">Sin deals en esta etapa</p>`;
+    panelDeals.innerHTML=stageDealsList.length?stageDealsList.map(d=>dealCard(d,kpiMode==='won')).join(''):`<p class="empty">Sin deals en esta etapa</p>`;
   } else {
-    panelTitle.innerHTML='Deals cerrados ganados';
-    panelDeals.innerHTML=wonDeals.length?wonDeals.map(d=>dealCard(d,true)).join(''):`<p class="empty">Sin deals cerrados ganados</p>`;
+    const countryPart=funnelCountry!=='all'?` · ${FLAGS[funnelCountry]||''} ${funnelCountry}`:'';
+    const searchPart=funnelSearch?` · "${funnelSearch}"`:'';
+    panelTitle.innerHTML=kpiMode==='won'
+      ?`Deals cerrados ganados · ${targetYear}${countryPart}${searchPart}`
+      :`Pipeline activo · cierre ${targetYear}${countryPart}${searchPart}`;
+    panelDeals.innerHTML=kpiDeals.length?kpiDeals.map(d=>dealCard(d,kpiMode==='won')).join(''):`<p class="empty">Sin deals en esta selección</p>`;
   }
 }
 
