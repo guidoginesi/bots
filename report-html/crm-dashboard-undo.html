@@ -508,9 +508,11 @@ function moneyGMV(n){
 function feeEC(d){return d.gmv&&d.fv?(Math.round(d.gmv*d.fv)):0}
 // Ingreso mensual recurrente = MRR fijo + fee variable
 function totalRevenue(d){return (d.a||0)+feeEC(d)}
+const ONE_TIME_PRODUCT_NAMES=new Set(['Desarrollo - Set Up']);
+function isOneTimeLI(li){return!!(li.ot||ONE_TIME_PRODUCT_NAMES.has(li.n));}
 function oneTimeRevenue(d){
   if((d.ot||0)>0) return d.ot;
-  return (d.li||[]).filter(li=>li.ot).reduce((s,li)=>s+li.a,0);
+  return (d.li||[]).filter(isOneTimeLI).reduce((s,li)=>s+li.a,0);
 }
 // KPIs de ingreso: solo deals cuya fecha de cierre cae en el año objetivo
 function kpiTargetYear(){
@@ -529,7 +531,7 @@ function remMonthsInKpiYear(d){
   return Math.max(13-(isNaN(m)?12:m),0);
 }
 function lineItemValInYear(li,d){
-  if(li.ot) return closedInKpiYear(d)?li.a:0;
+  if(isOneTimeLI(li)) return closedInKpiYear(d)?li.a:0;
   return li.a*remMonthsInKpiYear(d);
 }
 function valorInKpiYear(d){
@@ -927,8 +929,8 @@ function renderServiceBreakdown(deals){
     const rm=remMonths(d);
     (d.li||[]).forEach(li=>{
       if(!svcTotals[li.n]) svcTotals[li.n]={mrr:0,ltv:0,val:0,count:0};
-      svcTotals[li.n].mrr  += li.ot?0:li.a;
-      svcTotals[li.n].ltv  += li.ot?li.a:li.a*18;
+      svcTotals[li.n].mrr  += isOneTimeLI(li)?0:li.a;
+      svcTotals[li.n].ltv  += isOneTimeLI(li)?li.a:li.a*18;
       svcTotals[li.n].val  += lineItemValInYear(li,d);
       svcTotals[li.n].count++;
     });
@@ -942,9 +944,10 @@ function renderServiceBreakdown(deals){
   });
 
   // Cards grid
+  const svcVisible=s=>svcTotals[s]&&(svcTotals[s].mrr>0||svcTotals[s].val>0);
   const active=[
-    ...SVC_ORDER.filter(s=>svcTotals[s]&&svcTotals[s].mrr>0),
-    ...Object.keys(svcTotals).filter(s=>!SVC_ORDER.includes(s)&&svcTotals[s].mrr>0).sort(),
+    ...SVC_ORDER.filter(svcVisible),
+    ...Object.keys(svcTotals).filter(s=>!SVC_ORDER.includes(s)&&svcVisible(s)).sort(),
   ];
   if(!active.length){ card.style.display='none'; return; }
   const maxMrr=Math.max(...active.map(s=>svcTotals[s].mrr));
@@ -1043,7 +1046,7 @@ function renderBrandDetail(deals){
     ROW_ORDER.forEach(name=>{
       let amt=0; let isOt=false;
       if(name==='Fee E-Commerce') amt=ec;
-      else {const li=(d.li||[]).find(x=>x.n===name); if(li){amt=li.a; isOt=!!li.ot;}}
+      else {const li=(d.li||[]).find(x=>x.n===name); if(li){amt=li.a; isOt=isOneTimeLI(li);}}
       if(amt>0){
         allLI.push({name,amt,ot:isOt});
         rowTotals[name]=(rowTotals[name]||0)+amt;
@@ -1052,7 +1055,7 @@ function renderBrandDetail(deals){
     // Any extra line items not in ROW_ORDER
     (d.li||[]).forEach(li=>{
       if(!ROW_ORDER.includes(li.n)&&li.a>0){
-        allLI.push({name:li.n,amt:li.a,ot:!!li.ot});
+        allLI.push({name:li.n,amt:li.a,ot:isOneTimeLI(li)});
         rowTotals[li.n]=(rowTotals[li.n]||0)+li.a;
       }
     });

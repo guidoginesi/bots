@@ -222,9 +222,14 @@ function lineItemAmount(l: HubSpotLineItem): number {
   return parseFloat(l.properties?.amount || l.properties?.price || "0") || 0;
 }
 
+/** Productos one-shot que siempre cuentan en Valor generado (aunque HubSpot marque MRR). */
+const ONE_TIME_LINE_ITEM_NAMES = new Set(["Desarrollo - Set Up"]);
+
 function isOneTimeLineItem(l: HubSpotLineItem): boolean {
   const amt = lineItemAmount(l);
   if (amt <= 0) return false;
+  const name = l.properties?.name?.trim();
+  if (name && ONE_TIME_LINE_ITEM_NAMES.has(name)) return true;
   const liMrr = parseFloat(l.properties?.hs_mrr || "0") || 0;
   const period = l.properties?.hs_recurring_billing_period;
   return liMrr <= 0 && !period;
