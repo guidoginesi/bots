@@ -103,6 +103,11 @@ def patch_pow(t: str) -> str:
         "<h1>Funnel de Ventas</h1><p class=\"meta\">Pipeline Pow ·",
         "<h1>Funnel de Ventas · Pow</h1><p class=\"meta\">Pipeline Pow ·",
     )
+    t = t.replace(
+        "<h1>Real vs Objetivo</h1><p class=\"meta\">Cierre ganado · Comparación contra metas 2026 ·",
+        "<h1>Real vs Objetivo · Pow</h1><p class=\"meta\">Cierre ganado · Comparación contra metas 2026 ·",
+    )
+    t = t.replace('stab-tip">Real vs Objetivo</span>', 'stab-tip">Real vs Objetivo · Pow</span>')
     t = apply_brand_filters(t)
     return t
 
@@ -128,6 +133,11 @@ def patch_undo(t: str) -> str:
         "<h1>Funnel de Ventas</h1><p class=\"meta\">Pipeline Pow ·",
         "<h1>Funnel de Ventas · Undo</h1><p class=\"meta\">Pipeline Undo ·",
     )
+    t = t.replace(
+        "<h1>Real vs Objetivo</h1><p class=\"meta\">Cierre ganado · Comparación contra metas 2026 ·",
+        "<h1>Real vs Objetivo · Undo</h1><p class=\"meta\">Cierre ganado · Comparación contra metas 2026 ·",
+    )
+    t = t.replace('stab-tip">Real vs Objetivo</span>', 'stab-tip">Real vs Objetivo · Undo</span>')
     t = t.replace("sync diario · Pow ·", "sync diario · Undo ·")
     t = re.sub(
         r"const FUNNEL_ORDER=\[[\s\S]*?\];\nconst FUNNEL_COLORS=\{[\s\S]*?\};",

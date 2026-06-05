@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Markova · Comisión e Ingresos · Pow</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#F1EFE8;color:#1a1a18;line-height:1.45}
+.wrap{max-width:1100px;margin:0 auto;padding:2rem 1.5rem 4rem}
+.header{margin-bottom:1.5rem}
+.header h1{font-size:24px;font-weight:600;letter-spacing:-.02em}
+.meta{font-size:12px;color:#888780;margin-top:6px;max-width:720px}
+.badge{display:inline-block;font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;background:#E6F1FB;color:#185FA5;padding:3px 8px;border-radius:4px;margin-bottom:8px}
+.note{font-size:12px;color:#5F5E5A;background:white;border:.5px solid #D3D1C7;border-radius:10px;padding:12px 14px;margin-bottom:1.25rem}
+
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:1.25rem}
+.kpi{background:white;border-radius:10px;padding:.95rem 1rem;border:.5px solid #D3D1C7}
+.kpi-label{font-size:10px;color:#888780;letter-spacing:.05em;text-transform:uppercase;margin-bottom:6px}
+.kpi-value{font-size:22px;font-weight:600;line-height:1.1}
+.kpi-sub{font-size:11px;color:#888780;margin-top:5px}
+.kpi-value.blue{color:#185FA5}.kpi-value.green{color:#0F6E56}.kpi-value.amber{color:#854F0B}.kpi-value.purple{color:#534AB7}
+
+.card{background:white;border:.5px solid #D3D1C7;border-radius:12px;padding:1.1rem 1.25rem;margin-bottom:1rem}
+.card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:8px}
+.card-title{font-size:10px;font-weight:600;color:#888780;letter-spacing:.07em;text-transform:uppercase}
+.chart-box{position:relative;height:280px}
+.chart-box.sm{height:220px}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+@media(max-width:760px){.two-col{grid-template-columns:1fr}}
+
+table{width:100%;border-collapse:collapse;font-size:12px}
+th,td{padding:8px 10px;text-align:right;border-bottom:.5px solid #ECEAE2}
+th:first-child,td:first-child{text-align:left}
+th{font-size:10px;color:#888780;font-weight:600;text-transform:uppercase;letter-spacing:.04em;background:#FAFAF8;position:sticky;top:0}
+tr:hover td{background:#FAFAF8}
+.proj td{color:#B4B2A9;font-style:italic}
+.table-wrap{max-height:360px;overflow:auto;border:.5px solid #ECEAE2;border-radius:8px}
+
+.sim-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;align-items:start}
+@media(max-width:760px){.sim-grid{grid-template-columns:1fr}}
+.sim-controls label{display:block;font-size:11px;color:#5F5E5A;margin-bottom:4px;font-weight:500}
+.sim-controls input[type=range]{width:100%;accent-color:#185FA5;margin:6px 0 14px}
+.rate-display{font-size:32px;font-weight:600;color:#185FA5;line-height:1}
+.rate-compare{display:flex;gap:1.5rem;margin:1rem 0;flex-wrap:wrap}
+.rate-box{flex:1;min-width:120px}
+.rate-box .lbl{font-size:10px;color:#888780;text-transform:uppercase;letter-spacing:.05em}
+.rate-box .val{font-size:20px;font-weight:600;margin-top:4px}
+.delta-pos{color:#A32D2D}.delta-neg{color:#0F6E56}
+.sim-result{background:#FAFAF8;border-radius:10px;padding:1rem;border:.5px solid #ECEAE2}
+.sim-result h3{font-size:13px;font-weight:600;margin-bottom:10px}
+.sim-row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:.5px solid #ECEAE2;font-size:13px}
+.sim-row:last-child{border-bottom:none;font-weight:600;padding-top:10px}
+.pill{font-size:10px;font-weight:600;padding:2px 7px;border-radius:4px;background:#F1EFE8;color:#5F5E5A}
+.sim-month-hdr{font-size:10px;font-weight:600;color:#888780;letter-spacing:.07em;text-transform:uppercase;margin:1.25rem 0 10px}
+.sim-month-note{font-size:11px;color:#B4B2A9;margin-bottom:8px}
+td.delta-neg{color:#0F6E56;font-weight:500}td.delta-pos{color:#A32D2D;font-weight:500}
+.sim-mode{display:flex;gap:8px;margin-bottom:1rem;flex-wrap:wrap}
+.sim-mode-btn{font-size:11px;font-weight:500;padding:6px 12px;border-radius:6px;border:.5px solid #D3D1C7;background:white;cursor:pointer;color:#5F5E5A}
+.sim-mode-btn.active{background:#185FA5;color:white;border-color:#185FA5}
+.sim-panel{display:none}
+.sim-panel.active{display:block}
+.channel-rates{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+@media(max-width:560px){.channel-rates{grid-template-columns:1fr}}
+.channel-rate .rate-display{font-size:26px}
+.channel-rate.main .rate-display{color:#185FA5}
+.channel-rate.outlet .rate-display{color:#534AB7}
+.blended-rate{font-size:12px;color:#888780;margin-top:8px}
+.channel-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:1rem}
+.channel-kpi{background:#FAFAF8;border-radius:8px;padding:.75rem 1rem;border:.5px solid #ECEAE2}
+.channel-kpi .lbl{font-size:10px;color:#888780;text-transform:uppercase;letter-spacing:.05em}
+.channel-kpi .val{font-size:20px;font-weight:600;margin-top:4px}
+.channel-kpi.main .val{color:#185FA5}.channel-kpi.outlet .val{color:#534AB7}
+.channel-note{font-size:11px;color:#888780;margin-bottom:1rem;line-height:1.5}
+.share-bar{display:flex;height:8px;border-radius:4px;overflow:hidden;margin-top:6px;background:#ECEAE2}
+.share-bar span{display:block;height:100%}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="header">
+    <div class="badge">Informe ad-hoc</div>
+    <h1>Markova · Comisión e ingresos históricos</h1>
+    <p class="meta" id="meta"></p>
+  </div>
+  <div class="note" id="note"></div>
+
+  <div class="kpi-grid" id="kpis"></div>
+
+  <div class="two-col">
+    <div class="card">
+      <div class="card-header"><span class="card-title">Ingresos anuales (USD) · 2026 incluye proy.</span></div>
+      <div class="chart-box"><canvas id="chartYear"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-header"><span class="card-title">Tasa de comisión (% sobre ventas con IVA)</span></div>
+      <div class="chart-box"><canvas id="chartRate"></canvas></div>
+    </div>
+  </div>
+
+  <div class="two-col">
+    <div class="card">
+      <div class="card-header"><span class="card-title">Composición ingresos acumulados (USD)</span></div>
+      <div class="chart-box sm"><canvas id="chartSvc"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-header"><span class="card-title">Ingresos mensuales (USD)</span></div>
+      <div class="chart-box sm"><canvas id="chartRev"></canvas></div>
+    </div>
+  </div>
+
+  <div class="card" id="channelSection" style="display:none">
+    <div class="card-header">
+      <span class="card-title">Main vs Outlet · share GMV 2026</span>
+      <span class="pill" id="channelSource"></span>
+    </div>
+    <p class="channel-note" id="channelNote"></p>
+    <div class="channel-kpis" id="channelKpis"></div>
+    <div class="chart-box sm"><canvas id="chartChannel"></canvas></div>
+    <div class="card-header" style="margin-top:1.25rem">
+      <span class="card-title">Comisión variable por canal · 2026</span>
+      <span class="pill">Main + Outlet = comisión total del mes</span>
+    </div>
+    <div class="table-wrap" style="max-height:320px;margin-top:10px">
+      <table>
+        <thead>
+          <tr>
+            <th>Mes</th>
+            <th>GMV Main</th>
+            <th>GMV Outlet</th>
+            <th>Share Main</th>
+            <th>Comisión Main</th>
+            <th>Comisión Outlet</th>
+            <th>Comisión total</th>
+          </tr>
+        </thead>
+        <tbody id="channelCommBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">Detalle mensual</span>
+      <span class="pill" id="tableInfo"></span>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Mes</th>
+            <th>Ingreso USD</th>
+            <th>Ingreso ARS</th>
+            <th>GMV ARS</th>
+            <th>Comisión ARS</th>
+            <th>Tasa %</th>
+            <th>Fee fijo ARS</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">Simulador · impacto reducción de comisión</span>
+      <span class="pill">Cambio aplica desde Jun 2026 (proy.)</span>
+    </div>
+    <div class="sim-grid">
+      <div class="sim-controls">
+        <p style="font-size:13px;color:#5F5E5A;margin-bottom:1rem">
+          Ajustá la tasa de comisión variable (% sobre ventas con IVA). El impacto se calcula mes a mes desde Jun 2026 (proyección POW). Fee fijo y otros servicios no cambian.
+        </p>
+        <div class="sim-mode" id="simMode">
+          <button type="button" class="sim-mode-btn active" data-mode="unified">Tasa unificada</button>
+          <button type="button" class="sim-mode-btn" data-mode="split" id="simModeSplit" style="display:none">Main / Outlet</button>
+        </div>
+        <div class="sim-panel active" id="panelUnified">
+          <label>Tasa de comisión propuesta</label>
+          <div class="rate-display" id="newRateLbl">—</div>
+          <input type="range" id="rateSlider" min="200" max="450" step="5">
+          <div style="display:flex;justify-content:space-between;font-size:11px;color:#B4B2A9">
+            <span>2.00%</span><span>4.50%</span>
+          </div>
+        </div>
+        <div class="sim-panel" id="panelSplit">
+          <div class="channel-rates">
+            <div class="channel-rate main">
+              <label>Main · tasa propuesta</label>
+              <div class="rate-display" id="newRateMainLbl">—</div>
+              <input type="range" id="rateSliderMain" min="200" max="450" step="5">
+              <div style="display:flex;justify-content:space-between;font-size:11px;color:#B4B2A9;margin-bottom:4px">
+                <span>2.00%</span><span>4.50%</span>
+              </div>
+              <div class="lbl" style="font-size:10px;color:#888780">Actual: <span id="curRateMain">—</span></div>
+            </div>
+            <div class="channel-rate outlet">
+              <label>Outlet · tasa propuesta</label>
+              <div class="rate-display" id="newRateOutletLbl">—</div>
+              <input type="range" id="rateSliderOutlet" min="200" max="450" step="5">
+              <div style="display:flex;justify-content:space-between;font-size:11px;color:#B4B2A9;margin-bottom:4px">
+                <span>2.00%</span><span>4.50%</span>
+              </div>
+              <div class="lbl" style="font-size:10px;color:#888780">Actual: <span id="curRateOutlet">—</span></div>
+            </div>
+          </div>
+          <div class="blended-rate" id="blendedRate"></div>
+        </div>
+        <div class="rate-compare">
+          <div class="rate-box">
+            <div class="lbl">Tasa actual</div>
+            <div class="val" id="curRate">—</div>
+          </div>
+          <div class="rate-box">
+            <div class="lbl" id="rateDeltaLbl">Reducción</div>
+            <div class="val delta-pos" id="rateDelta">—</div>
+          </div>
+        </div>
+      </div>
+      <div class="sim-result" id="simResult"></div>
+    </div>
+    <div class="chart-box" style="margin-top:1rem;height:240px"><canvas id="chartSim"></canvas></div>
+    <div class="sim-month-hdr">Comisión mensual con nueva tasa · desde el cambio</div>
+    <p class="sim-month-note" id="simMonthNote"></p>
+    <div class="table-wrap" style="max-height:320px">
+      <table>
+        <thead id="simMonthHead">
+          <tr>
+            <th>Mes</th>
+            <th>Ventas c/IVA</th>
+            <th>Comisión actual</th>
+            <th>Comisión nueva</th>
+            <th>Δ ARS</th>
+            <th>Δ USD eq.</th>
+          </tr>
+        </thead>
+        <tbody id="simMonthBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+const MARKOVA_DATA = /* injected */ {"source":"REGISTRO GASTOS E INGRESOS - POW S.A - [ARCHIVO POW] - 5.xlsx","client":"MARKOVA (Main + Outlet)","note":"Ingresos: INGRESOS | POW C108:FZ119 (fila 118 ARS, 119 USD). GMV y comisión variable: FEE-ECOMMMERCE - NUEVA A17:FW23 (fila 21 ventas con IVA, fila 22 neto sin IVA, fila 23 comisión). Tasa = comisión / ventas con IVA (fila 21), misma base que el reto comercial. Markova Main y Outlet están consolidados en un solo bloque.","lastRealYm":"2026-05","months":[{"ym":"2015-01","ing_ars":0,"ing_usd":0,"gmv_ars":0,"gmv_neto_ars":0,"comm_ars":0,"rate_pct":null,"services_ars":{},"is_projection":false},{"ym":"2015-02","ing_ars":0,"ing_usd":0,"gmv_ars":0,"gmv_neto_ars":0,"comm_ars":0,"rate_pct":null,"services_ars":{},"is_projection":false},{"ym":"2015-03","ing_ars":0,"ing_usd":0,"gmv_ars":0,"gmv_neto_ars":0,"comm_ars":0,"rate_pct":null,"services_ars":{},"is_projection":false},{"ym":"2015-04","ing_ars":0,"ing_usd":0,"gmv_ars":0,"gmv_neto_ars":0,"comm_ars":0,"rate_pct":null,"services_ars":{},"is_projection":false},{"ym":"2015-05","ing_ars":0,"ing_usd":0,"gmv_ars":0,"gmv_neto_ars":0,"comm_ars":0,"rate_pct":null,"services_ars":{},"is_projection":false},{"ym":"2015-06","ing_ars":0,"ing_usd":0,"gmv_ars":0,"gmv_neto_ars":0,"comm_ars":0,"rate_pct":null,"services_ars":{},"is_projection":false},{"ym":"2015-07","ing_ars":0,"ing_usd":0,"gmv_ars":0,"gmv_neto_ars":0,"comm_ars":0,"rate_pct":null,"services_ars":{},"is_projection":false},{"ym":"2015-08","ing_ars":0,"ing_usd":0,"gmv_ars":0,"gmv_neto_ars":0,"comm_ars":0,"rate_pct":null,"services_ars":{},"is_projection":false},{"ym":"2015-09","ing_ars":0,"ing_usd":0,"gmv_ars":0,"gmv_neto_ars":0,"comm_ars":0,"rate_pct":null,"services_ars":{},"is_projection":false},{"ym":"2015-10","ing_ars":0,"ing_usd":0,"gmv_ars":0,"gmv_neto_ars":0,"comm_ars":0,"rate_pct":null,"services_ars":{},"is_projection":false},{"ym":"2015-11","ing_ars":0,"ing_usd":0,"gmv_ars":0,"gmv_neto_ars":0,"comm_ars":0,"rate_pct":null,"services_ars":{},"is_projection":false},{"ym":"2015-12","ing_ars":0,"ing_usd":0,"gmv_ars":0,"gmv_neto_ars":0,"comm_ars":0,"rate_pct":null,"services_ars":{},"is_projection":false},{"ym":"2016-01","ing_ars":0,"ing_usd":0,"gmv_ars":0,"gmv_neto_ars":0,"comm_ars":0,"rate_pct":null,"services_ars":{},"is_projection":false},{"ym":"2016-02","ing_ars":0,"ing_usd":0,"gmv_ars":0,"gmv_neto_ars":0,"comm_ars":0,"rate_pct":null,"services_ars":{},"is_projection":false},{"ym":"2016-03","ing_ars":0,"ing_usd":0,"gmv_ars":0,"gmv_neto_ars":0,"comm_ars":0,"rate_pct":null,"services_ars":{},"is_projection":false},{"ym":"2016-04","ing_ars":0,"ing_usd":0,"gmv_ars":0,"gmv_neto_ars":0,"comm_ars":0,"rate_pct":null,"services_ars":{},"is_projection":false},{"ym":"2016-05","ing_ars":26000.0,"ing_usd":1857.14,"gmv_ars":0,"gmv_neto_ars":0,"comm_ars":0,"rate_pct":null,"services_ars":{"Fee Fijo E-Commerce":5000.0,"Desarrollo Sitio":21000.0},"is_projection":false},{"ym":"2016-06","ing_ars":133209.2,"ing_usd":9380.93,"gmv_ars":501246.0,"gmv_neto_ars":414253.0,"comm_ars":64209.2,"rate_pct":12.81,"services_ars":{"Fee Fijo E-Commerce":20000.0,"Fee E-Commerce":64209.2,"Desarrollo Sitio":49000.0},"is_projection":false},{"ym":"2016-07","ing_ars":150868.88,"ing_usd":9925.58,"gmv_ars":1057417.0,"gmv_neto_ars":873899.0,"comm_ars":130868.88,"rate_pct":12.376,"services_ars":{"Fee Fijo E-Commerce":20000.0,"Fee E-Commerce":130868.88},"is_projection":false},{"ym":"2016-08","ing_ars":94547.43,"ing_usd":6220.23,"gmv_ars":558532.0,"gmv_neto_ars":461596.0,"comm_ars":71547.43,"rate_pct":12.81,"services_ars":{"Fee Fijo E-Commerce":23000.0,"Fee E-Commerce":71547.43},"is_projection":false},{"ym":"2016-09","ing_ars":134963.64,"ing_usd":8937.99,"gmv_ars":913515.0,"gmv_neto_ars":754971.0,"comm_ars":114813.64,"rate_pct":12.568,"services_ars":{"Fee Fijo E-Commerce":20150.0,"Fee E-Commerce":114813.64},"is_projection":false},{"ym":"2016-10","ing_ars":127376.03,"ing_usd":8217.81,"gmv_ars":836121.0,"gmv_neto_ars":691009.0,"comm_ars":106178.83,"rate_pct":12.699,"services_ars":{"Fee Fijo E-Commerce":20000.0,"Fee E-Commerce":106178.83,"Extras":1197.2},"is_projection":false},{"ym":"2016-11","ing_ars":142806.82,"ing_usd":9273.17,"gmv_ars":929166.0,"gmv_neto_ars":767906.0,"comm_ars":116559.82,"rate_pct":12.545,"services_ars":{"Fee Fijo E-Commerce":20000.0,"Fee E-Commerce":116559.82,"Extras":6247.0},"is_projection":false},{"ym":"2016-12","ing_ars":87416.51,"ing_usd":5429.6,"gmv_ars":487179.0,"gmv_neto_ars":402627.0,"comm_ars":62407.26,"rate_pct":12.81,"services_ars":{"Fee Fijo E-Commerce":20000.0,"Fee E-Commerce":62407.26,"Extras":5009.25},"is_projection":false},{"ym":"2017-01","ing_ars":84957.03,"ing_usd":5276.83,"gmv_ars":507084.0,"gmv_neto_ars":419078.0,"comm_ars":64957.03,"rate_pct":12.81,"services_ars":{"Fee Fijo E-Commerce":20000.0,"Fee E-Commerce":64957.03},"is_projection":false},{"ym":"2017-02","ing_ars":131857.22,"ing_usd":8189.89,"gmv_ars":880080.0,"gmv_neto_ars":727339.0,"comm_ars":111083.28,"rate_pct":12.622,"services_ars":{"Fee Fijo E-Commerce":20000.0,"Fee E-Commerce":111083.28,"Extras":773.94},"is_projection":false},{"ym":"2017-03","ing_ars":244398.1,"ing_usd":15566.76,"gmv_ars":1898756.0,"gmv_neto_ars":1569220.0,"comm_ars":219794.0,"rate_pct":11.576,"services_ars":{"Fee Fijo E-Commerce":20000.0,"Fee E-Commerce":219794.0,"Extras":4604.1},"is_projection":false},{"ym":"2017-04","ing_ars":168150.83,"ing_usd":10778.9,"gmv_ars":1188334.0,"gmv_neto_ars":982095.0,"comm_ars":145376.74,"rate_pct":12.234,"services_ars":{"Fee Fijo E-Commerce":20000.0,"Fee E-Commerce":145376.74,"Extras":2774.09},"is_projection":false},{"ym":"2017-05","ing_ars":320643.86,"ing_usd":20554.09,"gmv_ars":2643600.0,"gmv_neto_ars":2184793.0,"comm_ars":293177.58,"rate_pct":11.09,"services_ars":{"Fee Fijo E-Commerce":20000.0,"Fee E-Commerce":293177.58,"Extras":7466.28},"is_projection":false},{"ym":"2017-06","ing_ars":135824.84,"ing_usd":8332.81,"gmv_ars":888671.0,"gmv_neto_ars":734439.0,"comm_ars":110592.51,"rate_pct":12.445,"services_ars":{"Fee Fijo E-Commerce":20000.0,"Fee E-Commerce":110592.51,"Extras":5232.33},"is_projection":false},{"ym":"2017-07","ing_ars":146824.98,"ing_usd":8739.58,"gmv_ars":944554.0,"gmv_neto_ars":780623.0,"comm_ars":117533.11,"rate_pct":12.443,"services_ars":{"Fee Fijo E-Commerce":20000.0,"Fee E-Commerce":117533.11,"Extras":9291.87},"is_projection":false},{"ym":"2017-08","ing_ars":135719.56,"ing_usd":7603.34,"gmv_ars":807449.0,"gmv_neto_ars":667313.0,"comm_ars":102221.99,"rate_pct":12.66,"services_ars":{"Fee Fijo E-Commerce":25000.0,"Fee E-Commerce":102221.99,"Extras":8497.57},"is_projection":false},{"ym":"2017-09","ing_ars":181381.49,"ing_usd":10364.66,"gmv_ars":1225010.0,"gmv_neto_ars":1012405.0,"comm_ars":147661.34,"rate_pct":12.054,"services_ars":{"Fee Fijo E-Commerce":25000.0,"Fee E-Commerce":147661.34,"Extras":8720.15},"is_projection":false},{"ym":"2017-10","ing_ars":261047.09,"ing_usd":14916.98,"gmv_ars":1982162.0,"gmv_neto_ars":1638151.0,"comm_ars":226741.5,"rate_pct":11.439,"services_ars":{"Fee Fijo E-Commerce":25000.0,"Fee E-Commerce":226741.5,"Extras":9305.59},"is_projection":false},{"ym":"2017-11","ing_ars":235984.77,"ing_usd":13220.44,"gmv_ars":1847621.0,"gmv_neto_ars":1526960.0,"comm_ars":213908.9,"rate_pct":11.578,"services_ars":{"Fee Fijo E-Commerce":10000.0,"Fee E-Commerce":213908.9,"Extras":12075.87},"is_projection":false},{"ym":"2017-12","ing_ars":113743.29,"ing_usd":6499.62,"gmv_ars":757562.0,"gmv_neto_ars":626085.0,"comm_ars":96941.29,"rate_pct":12.796,"services_ars":{"Fee Fijo E-Commerce":10000.0,"Fee E-Commerce":96941.29,"Extras":6802.0},"is_projection":false},{"ym":"2018-01","ing_ars":107552.01,"ing_usd":5399.2,"gmv_ars":715764.0,"gmv_neto_ars":591541.0,"comm_ars":90331.01,"rate_pct":12.62,"services_ars":{"Fee Fijo E-Commerce":10000.0,"Fee E-Commerce":90331.01,"Extras":7221.0},"is_projection":false},{"ym":"2018-02","ing_ars":207137.34,"ing_usd":10148.82,"gmv_ars":1595829.0,"gmv_neto_ars":1318867.0,"comm_ars":189659.34,"rate_pct":11.885,"services_ars":{"Fee Fijo E-Commerce":10000.0,"Fee E-Commerce":189659.34,"Extras":7478.0},"is_projection":false},{"ym":"2018-03","ing_ars":327295.41,"ing_usd":15996.84,"gmv_ars":2729834.0,"gmv_neto_ars":2256061.0,"comm_ars":302036.41,"rate_pct":11.064,"services_ars":{"Fee Fijo E-Commerce":10000.0,"Fee E-Commerce":302036.41,"Extras":15259.0},"is_projection":false},{"ym":"2018-04","ing_ars":210090.98,"ing_usd":10042.59,"gmv_ars":2263891.0,"gmv_neto_ars":1870984.0,"comm_ars":193181.98,"rate_pct":8.533,"services_ars":{"Fee E-Commerce":193181.98,"Extras":16909.0},"is_projection":false},{"ym":"2018-05","ing_ars":546133.18,"ing_usd":21400.2,"gmv_ars":6531429.0,"gmv_neto_ars":5397875.0,"comm_ars":510602.18,"rate_pct":7.818,"services_ars":{"Fee E-Commerce":510602.18,"Extras":35531.0},"is_projection":false},{"ym":"2018-06","ing_ars":203959.25,"ing_usd":6878.9,"gmv_ars":2408785.0,"gmv_neto_ars":1990732.0,"comm_ars":203959.25,"rate_pct":8.467,"services_ars":{"Fee E-Commerce":203959.25},"is_projection":false},{"ym":"2018-07","ing_ars":169311.62,"ing_usd":6027.47,"gmv_ars":1942967.0,"gmv_neto_ars":1605758.0,"comm_ars":169311.62,"rate_pct":8.714,"services_ars":{"Fee E-Commerce":169311.62},"is_projection":false},{"ym":"2018-08","ing_ars":137270.27,"ing_usd":3587.83,"gmv_ars":1512189.0,"gmv_neto_ars":1249743.0,"comm_ars":137270.27,"rate_pct":9.078,"services_ars":{"Fee E-Commerce":137270.27},"is_projection":false},{"ym":"2018-09","ing_ars":147670.92,"ing_usd":3520.17,"gmv_ars":1652020.0,"gmv_neto_ars":1365306.0,"comm_ars":147670.92,"rate_pct":8.939,"services_ars":{"Fee E-Commerce":147670.92},"is_projection":false},{"ym":"2018-10","ing_ars":365949.0,"ing_usd":9895.86,"gmv_ars":3931408.0,"gmv_neto_ars":3249097.0,"comm_ars":365949.0,"rate_pct":9.308,"services_ars":{"Fee E-Commerce":365949.0},"is_projection":false},{"ym":"2018-11","ing_ars":206129.7,"ing_usd":5320.85,"gmv_ars":3146636.0,"gmv_neto_ars":2600526.0,"comm_ars":206129.7,"rate_pct":6.551,"services_ars":{"Fee E-Commerce":206129.7},"is_projection":false},{"ym":"2018-12","ing_ars":167742.11,"ing_usd":4402.68,"gmv_ars":1651202.0,"gmv_neto_ars":1364630.0,"comm_ars":167742.11,"rate_pct":10.159,"services_ars":{"Fee E-Commerce":167742.11},"is_projection":false},{"ym":"2019-01","ing_ars":154128.23,"ing_usd":4024.24,"gmv_ars":1491961.0,"gmv_neto_ars":1233026.0,"comm_ars":154128.23,"rate_pct":10.331,"services_ars":{"Fee E-Commerce":154128.23},"is_projection":false},{"ym":"2019-02","ing_ars":343448.61,"ing_usd":8255.98,"gmv_ars":1955257.0,"gmv_neto_ars":1615915.0,"comm_ars":193448.61,"rate_pct":9.894,"services_ars":{"Fee E-Commerce":193448.61,"Desarrollo Sitio":150000.0},"is_projection":false},{"ym":"2019-03","ing_ars":472180.0,"ing_usd":10780.37,"gmv_ars":5564978.0,"gmv_neto_ars":4599155.0,"comm_ars":472180.0,"rate_pct":8.485,"services_ars":{"Fee E-Commerce":472180.0},"is_projection":false},{"ym":"2019-04","ing_ars":324149.35,"ing_usd":7139.85,"gmv_ars":3501180.0,"gmv_neto_ars":2893537.0,"comm_ars":324149.35,"rate_pct":9.258,"services_ars":{"Fee E-Commerce":324149.35},"is_projection":false},{"ym":"2019-05","ing_ars":1068985.43,"ing_usd":23289.44,"gmv_ars":12311069.0,"gmv_neto_ars":10174437.0,"comm_ars":1068985.43,"rate_pct":8.683,"services_ars":{"Fee E-Commerce":1068985.43},"is_projection":false},{"ym":"2019-06","ing_ars":630062.64,"ing_usd":14618.62,"gmv_ars":7119509.0,"gmv_neto_ars":5883892.0,"comm_ars":630062.64,"rate_pct":8.85,"services_ars":{"Fee E-Commerce":630062.64},"is_projection":false},{"ym":"2019-07","ing_ars":592305.84,"ing_usd":12989.16,"gmv_ars":5593249.0,"gmv_neto_ars":4622520.0,"comm_ars":501024.28,"rate_pct":8.958,"services_ars":{"Fee E-Commerce":501024.28,"Desarrollo Sitio":91281.57},"is_projection":false},{"ym":"2019-08","ing_ars":208169.74,"ing_usd":3528.3,"gmv_ars":2129378.0,"gmv_neto_ars":1759817.0,"comm_ars":208169.74,"rate_pct":9.776,"services_ars":{"Fee E-Commerce":208169.74},"is_projection":false},{"ym":"2019-09","ing_ars":563121.51,"ing_usd":9464.23,"gmv_ars":5248058.0,"gmv_neto_ars":4337238.0,"comm_ars":471839.94,"rate_pct":8.991,"services_ars":{"Fee E-Commerce":471839.94,"Desarrollo Sitio":91281.57},"is_projection":false},{"ym":"2019-10","ing_ars":228530.15,"ing_usd":3598.9,"gmv_ars":2370200.0,"gmv_neto_ars":1958843.0,"comm_ars":228530.15,"rate_pct":9.642,"services_ars":{"Fee E-Commerce":228530.15},"is_projection":false},{"ym":"2019-11","ing_ars":1014872.38,"ing_usd":16303.17,"gmv_ars":11825791.0,"gmv_neto_ars":9773381.0,"comm_ars":1014872.38,"rate_pct":8.582,"services_ars":{"Fee E-Commerce":1014872.38},"is_projection":false},{"ym":"2019-12","ing_ars":173233.39,"ing_usd":2546.05,"gmv_ars":1716152.0,"gmv_neto_ars":1418308.0,"comm_ars":173233.39,"rate_pct":10.094,"services_ars":{"Fee E-Commerce":173233.39},"is_projection":false},{"ym":"2020-01","ing_ars":79433.84,"ing_usd":948.01,"gmv_ars":1985835.0,"gmv_neto_ars":1641186.0,"comm_ars":196033.84,"rate_pct":9.872,"services_ars":{"Fee E-Commerce":196033.84,"Desarrollo Sitio":-116600.0},"is_projection":false},{"ym":"2020-02","ing_ars":335241.24,"ing_usd":4145.43,"gmv_ars":4526121.0,"gmv_neto_ars":3740596.0,"comm_ars":335241.24,"rate_pct":7.407,"services_ars":{"Fee E-Commerce":335241.24},"is_projection":false},{"ym":"2020-03","ing_ars":1031683.41,"ing_usd":12001.9,"gmv_ars":14802889.0,"gmv_neto_ars":12233793.0,"comm_ars":1031683.41,"rate_pct":6.969,"services_ars":{"Fee E-Commerce":1031683.41},"is_projection":false},{"ym":"2020-04","ing_ars":1497573.14,"ing_usd":13334.28,"gmv_ars":27202188.0,"gmv_neto_ars":22481147.0,"comm_ars":1497573.14,"rate_pct":5.505,"services_ars":{"Fee E-Commerce":1497573.14},"is_projection":false},{"ym":"2020-05","ing_ars":3125461.0,"ing_usd":29017.37,"gmv_ars":65464426.0,"gmv_neto_ars":54102831.0,"comm_ars":3125461.0,"rate_pct":4.774,"services_ars":{"Fee E-Commerce":3125461.0},"is_projection":false},{"ym":"2020-06","ing_ars":3137278.0,"ing_usd":31207.38,"gmv_ars":65713521.0,"gmv_neto_ars":54308695.0,"comm_ars":3137278.0,"rate_pct":4.774,"services_ars":{"Fee E-Commerce":3137278.0},"is_projection":false},{"ym":"2020-07","ing_ars":4126300.0,"ing_usd":33764.01,"gmv_ars":86562237.0,"gmv_neto_ars":71539039.0,"comm_ars":4126300.0,"rate_pct":4.767,"services_ars":{"Fee E-Commerce":4126300.0},"is_projection":false},{"ym":"2020-08","ing_ars":1375853.81,"ing_usd":11317.38,"gmv_ars":26648912.0,"gmv_neto_ars":22023895.0,"comm_ars":1375853.81,"rate_pct":5.163,"services_ars":{"Fee E-Commerce":1375853.81},"is_projection":false},{"ym":"2020-09","ing_ars":1046044.41,"ing_usd":7536.89,"gmv_ars":17738719.0,"gmv_neto_ars":14660099.0,"comm_ars":1046044.4,"rate_pct":5.897,"services_ars":{"Fee E-Commerce":1046044.41},"is_projection":false},{"ym":"2020-10","ing_ars":1758139.22,"ing_usd":12274.94,"gmv_ars":30100767.0,"gmv_neto_ars":24876667.0,"comm_ars":1758139.22,"rate_pct":5.841,"services_ars":{"Fee E-Commerce":1758139.22},"is_projection":false},{"ym":"2020-11","ing_ars":1875024.74,"ing_usd":12971.46,"gmv_ars":27247316.0,"gmv_neto_ars":22518443.0,"comm_ars":1875024.74,"rate_pct":6.882,"services_ars":{"Fee E-Commerce":1875024.74},"is_projection":false},{"ym":"2020-12","ing_ars":969085.98,"ing_usd":6922.54,"gmv_ars":13879196.0,"gmv_neto_ars":11470410.0,"comm_ars":969085.98,"rate_pct":6.982,"services_ars":{"Fee E-Commerce":969085.98},"is_projection":false},{"ym":"2021-01","ing_ars":1222654.23,"ing_usd":8267.88,"gmv_ars":17620873.0,"gmv_neto_ars":14562705.0,"comm_ars":1222654.23,"rate_pct":6.939,"services_ars":{"Fee E-Commerce":1222654.23},"is_projection":false},{"ym":"2021-02","ing_ars":1154686.58,"ing_usd":8136.18,"gmv_ars":16617936.0,"gmv_neto_ars":13733831.0,"comm_ars":1154686.58,"rate_pct":6.948,"services_ars":{"Fee E-Commerce":1154686.58},"is_projection":false},{"ym":"2021-03","ing_ars":999364.67,"ing_usd":7028.38,"gmv_ars":29583239.0,"gmv_neto_ars":24448958.0,"comm_ars":946174.67,"rate_pct":3.198,"services_ars":{"Fee Fijo E-Commerce":53190.0,"Fee E-Commerce":946174.67},"is_projection":false},{"ym":"2021-04","ing_ars":990805.81,"ing_usd":6510.32,"gmv_ars":29290311.0,"gmv_neto_ars":24206869.0,"comm_ars":936805.81,"rate_pct":3.198,"services_ars":{"Fee Fijo E-Commerce":54000.0,"Fee E-Commerce":936805.81},"is_projection":false},{"ym":"2021-05","ing_ars":2261392.37,"ing_usd":14113.41,"gmv_ars":69003998.0,"gmv_neto_ars":57028098.0,"comm_ars":2206987.37,"rate_pct":3.198,"services_ars":{"Fee Fijo E-Commerce":54405.0,"Fee E-Commerce":2206987.37},"is_projection":false},{"ym":"2021-06","ing_ars":1313934.5,"ing_usd":8032.86,"gmv_ars":39359533.0,"gmv_neto_ars":32528540.0,"comm_ars":1258854.5,"rate_pct":3.198,"services_ars":{"Fee Fijo E-Commerce":55080.0,"Fee E-Commerce":1258854.5},"is_projection":false},{"ym":"2021-07","ing_ars":1059866.77,"ing_usd":6301.6,"gmv_ars":31403151.0,"gmv_neto_ars":25953017.0,"comm_ars":1004381.78,"rate_pct":3.198,"services_ars":{"Fee Fijo E-Commerce":55485.0,"Fee E-Commerce":1004381.78},"is_projection":false},{"ym":"2021-08","ing_ars":854539.66,"ing_usd":5019.03,"gmv_ars":24966479.0,"gmv_neto_ars":20633454.0,"comm_ars":798514.66,"rate_pct":3.198,"services_ars":{"Fee Fijo E-Commerce":56025.0,"Fee E-Commerce":798514.66},"is_projection":false},{"ym":"2021-09","ing_ars":1257785.21,"ing_usd":7186.11,"gmv_ars":37557531.0,"gmv_neto_ars":31039282.0,"comm_ars":1201220.21,"rate_pct":3.198,"services_ars":{"Fee Fijo E-Commerce":56565.0,"Fee E-Commerce":1201220.21},"is_projection":false},{"ym":"2021-10","ing_ars":1011200.81,"ing_usd":5642.23,"gmv_ars":29830902.0,"gmv_neto_ars":24653638.0,"comm_ars":954095.8,"rate_pct":3.198,"services_ars":{"Fee Fijo E-Commerce":57105.0,"Fee E-Commerce":954095.8},"is_projection":false},{"ym":"2021-11","ing_ars":1127955.34,"ing_usd":5619.55,"gmv_ars":33530142.0,"gmv_neto_ars":27710861.0,"comm_ars":1072410.34,"rate_pct":3.198,"services_ars":{"Fee Fijo E-Commerce":58185.0,"Fee E-Commerce":1072410.34,"Extras":-2640.0},"is_projection":false},{"ym":"2021-12","ing_ars":506349.76,"ing_usd":2559.91,"gmv_ars":13970177.0,"gmv_neto_ars":11545601.0,"comm_ars":446814.76,"rate_pct":3.198,"services_ars":{"Fee Fijo E-Commerce":59535.0,"Fee E-Commerce":446814.76},"is_projection":false},{"ym":"2022-01","ing_ars":463201.82,"ing_usd":2169.77,"gmv_ars":11862278.0,"gmv_neto_ars":9803535.0,"comm_ars":379396.82,"rate_pct":3.198,"services_ars":{"Fee Fijo E-Commerce":61155.0,"Fee E-Commerce":379396.82,"Extras":22650.0},"is_projection":false},{"ym":"2022-02","ing_ars":593740.59,"ing_usd":3039.99,"gmv_ars":16602790.0,"gmv_neto_ars":13721314.0,"comm_ars":531014.85,"rate_pct":3.198,"services_ars":{"Fee Fijo E-Commerce":63045.0,"Fee E-Commerce":531014.85,"Extras":-319.26},"is_projection":false},{"ym":"2022-03","ing_ars":1380286.65,"ing_usd":7243.32,"gmv_ars":41109098.0,"gmv_neto_ars":33974461.0,"comm_ars":1314811.65,"rate_pct":3.198,"services_ars":{"Fee Fijo E-Commerce":65475.0,"Fee E-Commerce":1314811.65},"is_projection":false},{"ym":"2022-04","ing_ars":1583278.05,"ing_usd":7686.19,"gmv_ars":46800910.0,"gmv_neto_ars":38678438.0,"comm_ars":1496855.55,"rate_pct":3.198,"services_ars":{"Fee Fijo E-Commerce":67635.0,"Fee E-Commerce":1496855.55,"Extras":18787.5},"is_projection":false},{"ym":"2022-05","ing_ars":1982815.26,"ing_usd":9562.65,"gmv_ars":59795894.0,"gmv_neto_ars":49418095.0,"comm_ars":1912480.26,"rate_pct":3.198,"services_ars":{"Fee Fijo E-Commerce":70335.0,"Fee E-Commerce":1912480.26},"is_projection":false},{"ym":"2022-06","ing_ars":1732611.72,"ing_usd":6941.83,"gmv_ars":51859028.0,"gmv_neto_ars":42858701.0,"comm_ars":1658631.72,"rate_pct":3.198,"services_ars":{"Fee Fijo E-Commerce":73980.0,"Fee E-Commerce":1658631.72},"is_projection":false},{"ym":"2022-07","ing_ars":1468110.67,"ing_usd":5305.59,"gmv_ars":40469987.0,"gmv_neto_ars":33446271.0,"comm_ars":1294370.67,"rate_pct":3.198,"services_ars":{"Fee Fijo E-Commerce":78840.0,"Fee E-Commerce":1294370.67,"Extras":94900.0},"is_projection":false},{"ym":"2022-08","ing_ars":1192192.47,"ing_usd":4211.5,"gmv_ars":34692059.0,"gmv_neto_ars":28671123.0,"comm_ars":1109572.47,"rate_pct":3.198,"services_ars":{"Fee Fijo E-Commerce":82620.0,"Fee E-Commerce":1109572.47},"is_projection":false},{"ym":"2022-09","ing_ars":1665878.28,"ing_usd":5507.4,"gmv_ars":47422410.0,"gmv_neto_ars":39192075.0,"comm_ars":1516733.28,"rate_pct":3.198,"services_ars":{"Fee Fijo E-Commerce":88020.0,"Fee E-Commerce":1516733.28,"Extras":61125.0},"is_projection":false},{"ym":"2022-10","ing_ars":1923164.93,"ing_usd":6551.18,"gmv_ars":57082451.0,"gmv_neto_ars":47175580.0,"comm_ars":1825694.93,"rate_pct":3.198,"services_ars":{"Fee Fijo E-Commerce":97470.0,"Fee E-Commerce":1825694.93},"is_projection":false},{"ym":"2022-11","ing_ars":1799577.55,"ing_usd":5758.46,"gmv_ars":53070617.0,"gmv_neto_ars":43860014.0,"comm_ars":1697382.55,"rate_pct":3.198,"services_ars":{"Fee Fijo E-Commerce":102195.0,"Fee E-Commerce":1697382.55},"is_projection":false},{"ym":"2022-12","ing_ars":1237338.94,"ing_usd":3773.07,"gmv_ars":31732297.0,"gmv_neto_ars":26225039.0,"comm_ars":1014909.01,"rate_pct":3.198,"services_ars":{"Fee Fijo E-Commerce":105030.0,"Fee E-Commerce":1014909.01,"Extras":117399.93},"is_projection":false},{"ym":"2023-01","ing_ars":1304843.97,"ing_usd":3677.59,"gmv_ars":35092938.0,"gmv_neto_ars":29002428.0,"comm_ars":1122393.97,"rate_pct":3.198,"services_ars":{"Fee Fijo E-Commerce":110700.0,"Fee E-Commerce":1122393.97,"Extras":71750.0},"is_projection":false},{"ym":"2023-02","ing_ars":1898273.44,"ing_usd":5310.3,"gmv_ars":51845559.0,"gmv_neto_ars":42847569.0,"comm_ars":1658200.94,"rate_pct":3.198,"services_ars":{"Fee Fijo E-Commerce":118935.0,"Fee E-Commerce":1658200.94,"Extras":121137.5},"is_projection":false},{"ym":"2023-03","ing_ars":2354496.15,"ing_usd":5925.2,"gmv_ars":71053956.0,"gmv_neto_ars":58722278.0,"comm_ars":2272552.15,"rate_pct":3.198,"services_ars":{"Fee Fijo E-Commerce":125820.0,"Fee E-Commerce":2272552.15,"Extras":-43876.0},"is_projection":false},{"ym":"2023-04","ing_ars":3561331.84,"ing_usd":8167.26,"gmv_ars":105703719.0,"gmv_neto_ars":87358445.0,"comm_ars":3380771.84,"rate_pct":3.198,"services_ars":{"Fee Fijo E-Commerce":131760.0,"Fee E-Commerce":3380771.84,"Extras":48800.0},"is_projection":false},{"ym":"2023-05","ing_ars":5610330.03,"ing_usd":12014.07,"gmv_ars":168309125.0,"gmv_neto_ars":139098450.0,"comm_ars":5383110.03,"rate_pct":3.198,"services_ars":{"Fee Fijo E-Commerce":146070.0,"Fee E-Commerce":5383110.03,"Extras":81150.0},"is_projection":false},{"ym":"2023-06","ing_ars":4973265.83,"ing_usd":10306.86,"gmv_ars":150348154.0,"gmv_neto_ars":124254673.0,"comm_ars":4808655.83,"rate_pct":3.198,"services_ars":{"Fee Fijo E-Commerce":150660.0,"Fee E-Commerce":4808655.83,"Extras":13950.0},"is_projection":false},{"ym":"2023-07","ing_ars":7230628.49,"ing_usd":14177.98,"gmv_ars":217903053.0,"gmv_neto_ars":180085168.0,"comm_ars":6969295.99,"rate_pct":3.198,"services_ars":{"Fee Fijo E-Commerce":197370.0,"Fee E-Commerce":6969295.99,"Extras":63962.5},"is_projection":false},{"ym":"2023-08","ing_ars":9587304.11,"ing_usd":14291.7,"gmv_ars":216006217.0,"gmv_neto_ars":178517535.0,"comm_ars":6908628.59,"rate_pct":3.198,"services_ars":{"Fee Fijo E-Commerce":228437.5,"Fee E-Commerce":6908628.59,"Desarrollo Sitio":2369040.0,"Extras":81198.02},"is_projection":false},{"ym":"2023-09","ing_ars":7515737.05,"ing_usd":10721.3,"gmv_ars":226703022.0,"gmv_neto_ars":187357869.0,"comm_ars":7250749.55,"rate_pct":3.198,"services_ars":{"Fee Fijo E-Commerce":228437.5,"Fee E-Commerce":7250749.55,"Extras":36550.0},"is_projection":false},{"ym":"2023-10","ing_ars":5810604.9,"ing_usd":6813.16,"gmv_ars":174064281.0,"gmv_neto_ars":143854778.0,"comm_ars":5567179.9,"rate_pct":3.198,"services_ars":{"Fee Fijo E-Commerce":234062.5,"Fee E-Commerce":5567179.9,"Extras":9362.5},"is_projection":false},{"ym":"2023-11","ing_ars":6278286.86,"ing_usd":7310.36,"gmv_ars":176252543.0,"gmv_neto_ars":145663259.0,"comm_ars":5637168.11,"rate_pct":3.198,"services_ars":{"Fee Fijo E-Commerce":517031.25,"Fee E-Commerce":5637168.11,"Extras":124087.5},"is_projection":false},{"ym":"2023-12","ing_ars":5134418.76,"ing_usd":5160.22,"gmv_ars":138749989.0,"gmv_neto_ars":114669412.0,"comm_ars":4437706.26,"rate_pct":3.198,"services_ars":{"Fee Fijo E-Commerce":527812.5,"Fee E-Commerce":4437706.26,"Extras":168900.0},"is_projection":false},{"ym":"2024-01","ing_ars":6857300.29,"ing_usd":5832.67,"gmv_ars":197566511.0,"gmv_neto_ars":163278108.0,"comm_ars":6318862.79,"rate_pct":3.198,"services_ars":{"Fee Fijo E-Commerce":538437.5,"Fee E-Commerce":6318862.79},"is_projection":false},{"ym":"2024-02","ing_ars":6780749.95,"ing_usd":6568.97,"gmv_ars":194782250.0,"gmv_neto_ars":160977066.0,"comm_ars":6229812.45,"rate_pct":3.198,"services_ars":{"Fee Fijo E-Commerce":550937.5,"Fee E-Commerce":6229812.45},"is_projection":false},{"ym":"2024-03","ing_ars":7933521.34,"ing_usd":7807.89,"gmv_ars":222036058.0,"gmv_neto_ars":183500874.0,"comm_ars":7101483.84,"rate_pct":3.198,"services_ars":{"Fee Fijo E-Commerce":562187.5,"Fee E-Commerce":7101483.84,"Horas adicionales":269850.0},"is_projection":false},{"ym":"2024-04","ing_ars":10607579.76,"ing_usd":10190.87,"gmv_ars":298596570.0,"gmv_neto_ars":246774025.0,"comm_ars":9550154.76,"rate_pct":3.198,"services_ars":{"Fee Fijo E-Commerce":574687.5,"Fee E-Commerce":9550154.76,"Horas adicionales":482737.5},"is_projection":false},{"ym":"2024-05","ing_ars":20901558.34,"ing_usd":17189.77,"gmv_ars":621690620.0,"gmv_neto_ars":513793901.0,"comm_ars":19883823.96,"rate_pct":3.198,"services_ars":{"Fee Fijo E-Commerce":581562.5,"Fee E-Commerce":19883823.96,"Horas adicionales":436171.88},"is_projection":false},{"ym":"2024-06","ing_ars":17569202.81,"ing_usd":13033.92,"gmv_ars":520501266.0,"gmv_neto_ars":430166336.0,"comm_ars":16647437.19,"rate_pct":3.198,"services_ars":{"Fee Fijo E-Commerce":594687.5,"Fee E-Commerce":16647437.19,"Horas adicionales":327078.12},"is_projection":false},{"ym":"2024-07","ing_ars":23922523.24,"ing_usd":18496.84,"gmv_ars":725931941.0,"gmv_neto_ars":599943753.0,"comm_ars":23217823.24,"rate_pct":3.198,"services_ars":{"Fee Fijo E-Commerce":607500.0,"Fee E-Commerce":23217823.24,"Horas adicionales":97200.0},"is_projection":false},{"ym":"2024-08","ing_ars":18430052.42,"ing_usd":14398.93,"gmv_ars":551486497.0,"gmv_neto_ars":455773964.0,"comm_ars":17638452.42,"rate_pct":3.198,"services_ars":{"Fee Fijo E-Commerce":618437.5,"Fee E-Commerce":17638452.42,"Horas adicionales":173162.5},"is_projection":false},{"ym":"2024-09","ing_ars":17077137.62,"ing_usd":14054.91,"gmv_ars":514228899.0,"gmv_neto_ars":424982561.0,"comm_ars":16446825.12,"rate_pct":3.198,"services_ars":{"Fee Fijo E-Commerce":630312.5,"Fee E-Commerce":16446825.12},"is_projection":false},{"ym":"2024-10","ing_ars":16485863.91,"ing_usd":14570.43,"gmv_ars":491296391.0,"gmv_neto_ars":406030075.0,"comm_ars":15713363.91,"rate_pct":3.198,"services_ars":{"Fee Fijo E-Commerce":643750.0,"Fee E-Commerce":15713363.91,"Horas adicionales":128750.0},"is_projection":false},{"ym":"2024-11","ing_ars":15322417.96,"ing_usd":14243.34,"gmv_ars":458505752.0,"gmv_neto_ars":378930374.0,"comm_ars":14664605.46,"rate_pct":3.198,"services_ars":{"Fee Fijo E-Commerce":657812.5,"Fee E-Commerce":14664605.46},"is_projection":false},{"ym":"2024-12","ing_ars":11053242.05,"ing_usd":9443.91,"gmv_ars":323999100.0,"gmv_neto_ars":267767851.0,"comm_ars":10362615.84,"rate_pct":3.198,"services_ars":{"Fee Fijo E-Commerce":636901.21,"Fee E-Commerce":10362615.84,"Horas adicionales":53725.0},"is_projection":false},{"ym":"2025-01","ing_ars":8114164.19,"ing_usd":6966.2,"gmv_ars":233349100.0,"gmv_neto_ars":192850496.0,"comm_ars":7463314.19,"rate_pct":3.198,"services_ars":{"Fee Fijo E-Commerce":542375.0,"Fee E-Commerce":7463314.19,"Horas adicionales":108475.0},"is_projection":false},{"ym":"2025-02","ing_ars":17211429.85,"ing_usd":14010.35,"gmv_ars":519335200.0,"gmv_neto_ars":429202645.0,"comm_ars":16610142.35,"rate_pct":3.198,"services_ars":{"Fee Fijo E-Commerce":546625.0,"Fee E-Commerce":16610142.35,"Horas adicionales":54662.5},"is_projection":false},{"ym":"2025-03","ing_ars":26795301.83,"ing_usd":20392.63,"gmv_ars":816978300.0,"gmv_neto_ars":675188678.0,"comm_ars":26129801.83,"rate_pct":3.198,"services_ars":{"Fee Fijo E-Commerce":605000.0,"Fee E-Commerce":26129801.83,"Horas adicionales":60500.0},"is_projection":false},{"ym":"2025-04","ing_ars":27193401.77,"ing_usd":22979.63,"gmv_ars":829683298.0,"gmv_neto_ars":685688676.0,"comm_ars":26536151.77,"rate_pct":3.198,"services_ars":{"Fee Fijo E-Commerce":597500.0,"Fee E-Commerce":26536151.77,"Horas adicionales":59750.0},"is_projection":false},{"ym":"2025-05","ing_ars":36602340.17,"ing_usd":30713.88,"gmv_ars":1125576398.0,"gmv_neto_ars":930228428.0,"comm_ars":35999840.17,"rate_pct":3.198,"services_ars":{"Fee Fijo E-Commerce":602500.0,"Fee E-Commerce":35999840.17},"is_projection":false},{"ym":"2025-06","ing_ars":33356744.13,"ing_usd":27542.52,"gmv_ars":978247297.0,"gmv_neto_ars":808468840.0,"comm_ars":31287744.13,"rate_pct":3.198,"services_ars":{"Fee Fijo E-Commerce":650000.0,"Fee E-Commerce":31287744.13,"Marketing Digital":1419000.0},"is_projection":false},{"ym":"2025-07","ing_ars":31939016.59,"ing_usd":23488.72,"gmv_ars":931234528.0,"gmv_neto_ars":769615312.0,"comm_ars":29784112.59,"rate_pct":3.198,"services_ars":{"Fee Fijo E-Commerce":672500.0,"Fee E-Commerce":29784112.59,"Marketing Digital":1482404.0},"is_projection":false},{"ym":"2025-08","ing_ars":28818298.03,"ing_usd":21231.45,"gmv_ars":831585539.0,"gmv_neto_ars":687260776.0,"comm_ars":26596992.03,"rate_pct":3.198,"services_ars":{"Fee Fijo E-Commerce":677500.0,"Fee E-Commerce":26596992.03,"Marketing Digital":1543806.0},"is_projection":false},{"ym":"2025-09","ing_ars":20599355.52,"ing_usd":13787.87,"gmv_ars":566266220.0,"gmv_neto_ars":467988611.0,"comm_ars":18111159.26,"rate_pct":3.198,"services_ars":{"Fee Fijo E-Commerce":752500.0,"Fee E-Commerce":18111159.26,"Marketing Digital":1706463.0,"Extras":29233.26},"is_projection":false},{"ym":"2025-10","ing_ars":25243233.78,"ing_usd":17085.56,"gmv_ars":702028100.0,"gmv_neto_ars":580188512.0,"comm_ars":22453295.43,"rate_pct":3.198,"services_ars":{"Fee Fijo E-Commerce":735000.0,"Fee E-Commerce":22453295.43,"Marketing Digital":1674013.0,"Extras":380925.35},"is_projection":false},{"ym":"2025-11","ing_ars":23893041.03,"ing_usd":16183.09,"gmv_ars":718325200.0,"gmv_neto_ars":593657190.0,"comm_ars":22974533.26,"rate_pct":3.198,"services_ars":{"Fee Fijo E-Commerce":745000.0,"Fee E-Commerce":22974533.26,"Extras":173507.78},"is_projection":false},{"ym":"2025-12","ing_ars":15727119.75,"ing_usd":10621.12,"gmv_ars":464053000.0,"gmv_neto_ars":383514876.0,"comm_ars":14842025.7,"rate_pct":3.198,"services_ars":{"Fee Fijo E-Commerce":732500.0,"Fee E-Commerce":14842025.7,"Extras":152594.04},"is_projection":false},{"ym":"2026-01","ing_ars":16450423.85,"ing_usd":11264.94,"gmv_ars":481014340.0,"gmv_neto_ars":397532512.0,"comm_ars":15384508.23,"rate_pct":3.198,"services_ars":{"Fee Fijo E-Commerce":712500.0,"Fee E-Commerce":15384508.23,"Horas adicionales":142500.0,"Extras":210915.62},"is_projection":false},{"ym":"2026-02","ing_ars":24942907.99,"ing_usd":17571.12,"gmv_ars":753091780.0,"gmv_neto_ars":622389901.0,"comm_ars":24086489.16,"rate_pct":3.198,"services_ars":{"Fee Fijo E-Commerce":702500.0,"Fee E-Commerce":24086489.16,"Extras":153918.83},"is_projection":false},{"ym":"2026-03","ing_ars":32269169.24,"ing_usd":22679.41,"gmv_ars":986515022.0,"gmv_neto_ars":815301671.0,"comm_ars":31552174.67,"rate_pct":3.198,"services_ars":{"Fee Fijo E-Commerce":715000.0,"Fee E-Commerce":31552174.67,"Extras":1994.57},"is_projection":false},{"ym":"2026-04","ing_ars":25399860.39,"ing_usd":17609.08,"gmv_ars":772025320.0,"gmv_neto_ars":638037454.0,"comm_ars":24692049.49,"rate_pct":3.198,"services_ars":{"Fee Fijo E-Commerce":707500.0,"Fee E-Commerce":24692049.49,"Extras":310.89},"is_projection":false},{"ym":"2026-05","ing_ars":43629491.12,"ing_usd":30416.12,"gmv_ars":1341449780.0,"gmv_neto_ars":1108636182.0,"comm_ars":42904220.24,"rate_pct":3.198,"services_ars":{"Fee Fijo E-Commerce":725000.0,"Fee E-Commerce":42904220.24,"Extras":270.88},"is_projection":false},{"ym":"2026-06","ing_ars":33496762.54,"ing_usd":21826.55,"gmv_ars":1023323030.0,"gmv_neto_ars":845721513.0,"comm_ars":32729422.54,"rate_pct":3.198,"services_ars":{"Fee Fijo E-Commerce":767340.0,"Fee E-Commerce":32729422.54},"is_projection":true},{"ym":"2026-07","ing_ars":38512213.08,"ing_usd":24606.4,"gmv_ars":1179660831.0,"gmv_neto_ars":974926307.0,"comm_ars":37729648.08,"rate_pct":3.198,"services_ars":{"Fee Fijo E-Commerce":782565.0,"Fee E-Commerce":37729648.08},"is_projection":true},{"ym":"2026-08","ing_ars":34123567.26,"ing_usd":21386.31,"gmv_ars":1041968746.0,"gmv_neto_ars":861131195.0,"comm_ars":33325777.26,"rate_pct":3.198,"services_ars":{"Fee Fijo E-Commerce":797790.0,"Fee E-Commerce":33325777.26},"is_projection":true},{"ym":"2026-09","ing_ars":24110061.83,"ing_usd":14818.31,"gmv_ars":728393090.0,"gmv_neto_ars":601977760.0,"comm_ars":23296539.33,"rate_pct":3.198,"services_ars":{"Fee Fijo E-Commerce":813522.5,"Fee E-Commerce":23296539.33},"is_projection":true},{"ym":"2026-10","ing_ars":29512909.03,"ing_usd":17783.95,"gmv_ars":896811558.0,"gmv_neto_ars":741166577.0,"comm_ars":28683146.53,"rate_pct":3.198,"services_ars":{"Fee Fijo E-Commerce":829762.5,"Fee E-Commerce":28683146.53},"is_projection":true},{"ym":"2026-11","ing_ars":30213989.46,"ing_usd":17856.92,"gmv_ars":918223882.0,"gmv_neto_ars":758862712.0,"comm_ars":29367986.96,"rate_pct":3.198,"services_ars":{"Fee Fijo E-Commerce":846002.5,"Fee E-Commerce":29367986.96},"is_projection":true},{"ym":"2026-12","ing_ars":20244780.79,"ing_usd":11732.7,"gmv_ars":606001480.0,"gmv_neto_ars":500827669.0,"comm_ars":19382030.79,"rate_pct":3.198,"services_ars":{"Fee Fijo E-Commerce":862750.0,"Fee E-Commerce":19382030.79},"is_projection":true}],"by_year":{"2016":{"ing_usd":59242.45,"ing_usd_real":59242.45,"ing_usd_proj":0,"ing_ars":897189,"comm_ars":666585,"gmv_ars":5283176},"2017":{"ing_usd":130043.9,"ing_usd_real":130043.9,"ing_usd_proj":0,"ing_ars":2160533,"comm_ars":1849989,"gmv_ars":15570883},"2018":{"ing_usd":102621.41,"ing_usd_real":102621.41,"ing_usd_proj":0,"ing_ars":2796242,"comm_ars":2683844,"gmv_ars":30081954},"2019":{"ing_usd":116538.31,"ing_usd_real":116538.31,"ing_usd_proj":0,"ing_ars":5773187,"comm_ars":5440624,"gmv_ars":60826782},"2020":{"ing_usd":175441.59,"ing_usd_real":175441.59,"ing_usd_proj":0,"ing_ars":20357119,"comm_ars":20473719,"gmv_ars":381872127},"2021":{"ing_usd":84417.46,"ing_usd_real":84417.46,"ing_usd_proj":0,"ing_ars":13760536,"comm_ars":13203601,"gmv_ars":372734272},"2022":{"ing_usd":67750.95,"ing_usd_real":67750.95,"ing_usd_proj":0,"ing_ars":17022197,"comm_ars":15751854,"gmv_ars":492499819},"2023":{"ing_usd":103876.0,"ing_usd_real":103876.0,"ing_usd_proj":0,"ing_ars":61259521,"comm_ars":55396413,"gmv_ars":1732032556},"2024":{"ing_usd":145832.45,"ing_usd_real":145832.45,"ing_usd_proj":0,"ing_ars":172941150,"comm_ars":163775261,"gmv_ars":5120621855},"2025":{"ing_usd":225003.02,"ing_usd_real":225003.02,"ing_usd_proj":0,"ing_ars":295493447,"comm_ars":278789113,"gmv_ars":8716662180},"2026":{"ing_usd":99540.67,"ing_usd_real":99540.67,"ing_usd_proj":130011.14,"ing_ars":142691853,"comm_ars":138619442,"gmv_ars":4334096242}},"summary":{"months_active":121,"first_month":"2016-05","last_month":"2026-05","total_ing_ars":735152972,"total_ing_usd":1310308.21,"total_comm_ars":696650444,"total_comm_usd_equiv":1224862.88,"total_gmv_ars":21262281846,"avg_comm_rate_pct":3.276,"ytd_2026_usd":99540.67,"ytd_2026_ars":142691853,"ytd_2025_usd":95062.69,"ytd_2025_ars":115916638,"ytd_yoy_usd_pct":4.7,"mrr_3m_usd":23568.0,"comm_mrr_3m_ars":33049481.0,"comm_mrr_3m_usd":23068.0,"ytd_2026_months":5,"mrr_ytd_usd":19908.0,"comm_mrr_ytd_usd":19341.0,"mrr_ytd_2025_usd":19013.0,"current_rate_pct":3.198,"fee_fijo_mrr_ars":725000.0,"services_usd":{"Fee E-Commerce":1224863,"Fee Fijo E-Commerce":51386,"Desarrollo Sitio":14232,"Extras":12120,"Marketing Digital":5674,"Horas adicionales":2033},"comm_share_of_revenue_pct":93.5,"t12_gmv_ars":9525836126,"t12_fixed_ars":8527500,"t12_other_ars":9071857,"t12_revenue_usd":229481.0},"channel_split":{"source":"[Pow] Markova Main vs Outlet.xlsx","note":"Ventas por sitio: revenue en [Pow] Markova Main vs Outlet.xlsx (markova = Main, markova_outlet = Outlet). Share mensual = Main / (Main + Outlet) cuando hay datos en ambos canales; meses sin split confiable usan el promedio YTD real. Comisión por canal = comisión variable total × share GMV del mes.","avg_main_share_pct":77.0,"avg_outlet_share_pct":23.0,"current_rate_main_pct":3.198,"current_rate_outlet_pct":3.198,"ytd_real_months":5,"months":[{"ym":"2026-01","gmv_main":437005668,"gmv_outlet":44008672,"gmv_total":481014340,"main_share_pct":90.9,"outlet_share_pct":9.1,"comm_main_ars":13976958.14,"comm_outlet_ars":1407550.09,"comm_total_ars":15384508.23,"is_projection":false,"is_estimated":false},{"ym":"2026-02","gmv_main":696320286,"gmv_outlet":56771494,"gmv_total":753091780,"main_share_pct":92.5,"outlet_share_pct":7.5,"comm_main_ars":22270739.73,"comm_outlet_ars":1815749.43,"comm_total_ars":24086489.16,"is_projection":false,"is_estimated":false},{"ym":"2026-03","gmv_main":590840836,"gmv_outlet":395674186,"gmv_total":986515022,"main_share_pct":59.9,"outlet_share_pct":40.1,"comm_main_ars":18897140.79,"comm_outlet_ars":12655033.88,"comm_total_ars":31552174.67,"is_projection":false,"is_estimated":false},{"ym":"2026-04","gmv_main":554413182,"gmv_outlet":217612138,"gmv_total":772025320,"main_share_pct":71.8,"outlet_share_pct":28.2,"comm_main_ars":17732057.96,"comm_outlet_ars":6959991.53,"comm_total_ars":24692049.49,"is_projection":false,"is_estimated":false},{"ym":"2026-05","gmv_main":1057276729,"gmv_outlet":284173051,"gmv_total":1341449780,"main_share_pct":78.8,"outlet_share_pct":21.2,"comm_main_ars":33815379.67,"comm_outlet_ars":9088840.57,"comm_total_ars":42904220.24,"is_projection":false,"is_estimated":false},{"ym":"2026-06","gmv_main":787628792,"gmv_outlet":235694238,"gmv_total":1023323030,"main_share_pct":77.0,"outlet_share_pct":23.0,"comm_main_ars":25191102.69,"comm_outlet_ars":7538319.85,"comm_total_ars":32729422.54,"is_projection":true,"is_estimated":true},{"ym":"2026-07","gmv_main":907958492,"gmv_outlet":271702339,"gmv_total":1179660831,"main_share_pct":77.0,"outlet_share_pct":23.0,"comm_main_ars":29039664.17,"comm_outlet_ars":8689983.91,"comm_total_ars":37729648.08,"is_projection":true,"is_estimated":true},{"ym":"2026-08","gmv_main":801979981,"gmv_outlet":239988765,"gmv_total":1041968746,"main_share_pct":77.0,"outlet_share_pct":23.0,"comm_main_ars":25650103.54,"comm_outlet_ars":7675673.72,"comm_total_ars":33325777.26,"is_projection":true,"is_estimated":true},{"ym":"2026-09","gmv_main":560627830,"gmv_outlet":167765260,"gmv_total":728393090,"main_share_pct":77.0,"outlet_share_pct":23.0,"comm_main_ars":17930823.98,"comm_outlet_ars":5365715.35,"comm_total_ars":23296539.33,"is_projection":true,"is_estimated":true},{"ym":"2026-10","gmv_main":690255748,"gmv_outlet":206555810,"gmv_total":896811558,"main_share_pct":77.0,"outlet_share_pct":23.0,"comm_main_ars":22076774.76,"comm_outlet_ars":6606371.77,"comm_total_ars":28683146.53,"is_projection":true,"is_estimated":true},{"ym":"2026-11","gmv_main":706736334,"gmv_outlet":211487548,"gmv_total":918223882,"main_share_pct":77.0,"outlet_share_pct":23.0,"comm_main_ars":22603881.09,"comm_outlet_ars":6764105.87,"comm_total_ars":29367986.96,"is_projection":true,"is_estimated":true},{"ym":"2026-12","gmv_main":466425752,"gmv_outlet":139575728,"gmv_total":606001480,"main_share_pct":77.0,"outlet_share_pct":23.0,"comm_main_ars":14917914.52,"comm_outlet_ars":4464116.27,"comm_total_ars":19382030.79,"is_projection":true,"is_estimated":true}]}};
+const D = typeof MARKOVA_DATA !== 'undefined' ? MARKOVA_DATA : {};
+const S = D.summary || {};
+const REAL = (D.months || []).filter(m => !m.is_projection && m.ing_usd > 0);
+const T12 = REAL.slice(-12);
+const fmtUSD = n => '$' + Math.round(n).toLocaleString('en-US');
+const fmtARS = n => '$' + Math.round(n).toLocaleString('es-AR');
+const fmtPct = n => (n == null ? '—' : n.toFixed(2) + '%');
+const ymLabel = ym => {
+  const [y,m] = ym.split('-');
+  const names = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+  return names[+m-1] + ' ' + y.slice(2);
+};
+
+document.getElementById('meta').textContent =
+  `Fuente: ${D.source || '—'} · Cliente: ${D.client || 'Markova'} · Último mes real: ${D.lastRealYm || '—'} · ${S.first_month || ''} → ${S.last_month || ''} (${S.months_active || 0} meses)`;
+document.getElementById('note').textContent = D.note || '';
+
+const kpis = [
+  { label: 'Ingresos históricos USD', value: fmtUSD(S.total_ing_usd), sub: `${S.months_active} meses`, cls: 'blue' },
+  { label: 'Ingresos históricos ARS', value: fmtARS(S.total_ing_ars), sub: 'Acumulado desde 2016', cls: '' },
+  { label: 'Comisión variable (USD eq.)', value: fmtUSD(S.total_comm_usd_equiv), sub: `${S.comm_share_of_revenue_pct}% del revenue`, cls: 'purple' },
+  { label: 'Tasa comisión actual', value: fmtPct(S.current_rate_pct), sub: `Promedio hist. ${fmtPct(S.avg_comm_rate_pct)}`, cls: 'amber' },
+  { label: 'MRR avg YTD 2026 (USD)', value: fmtUSD(S.mrr_ytd_usd), sub: `${S.ytd_2026_months || 0} meses · Comisión ~${fmtUSD(S.comm_mrr_ytd_usd)}/mes`, cls: 'green' },
+  { label: 'YTD 2026 USD', value: fmtUSD(S.ytd_2026_usd), sub: `YoY ${S.ytd_yoy_usd_pct >= 0 ? '+' : ''}${S.ytd_yoy_usd_pct}% vs 2025`, cls: 'green' },
+];
+document.getElementById('kpis').innerHTML = kpis.map(k =>
+  `<div class="kpi"><div class="kpi-label">${k.label}</div><div class="kpi-value ${k.cls}">${k.value}</div><div class="kpi-sub">${k.sub}</div></div>`
+).join('');
+
+const chartOpts = {
+  responsive: true, maintainAspectRatio: false,
+  plugins: { legend: { labels: { font: { size: 11 }, boxWidth: 12 } } },
+  scales: {
+    x: { ticks: { font: { size: 10 }, maxRotation: 0, autoSkip: true, maxTicksLimit: 14 }, grid: { display: false } },
+    y: { ticks: { font: { size: 10 } }, grid: { color: '#ECEAE2' } }
+  }
+};
+
+const revLabels = REAL.map(m => ymLabel(m.ym));
+new Chart(document.getElementById('chartRev'), {
+  type: 'line',
+  data: {
+    labels: revLabels,
+    datasets: [{
+      label: 'Ingreso total USD',
+      data: REAL.map(m => m.ing_usd),
+      borderColor: '#185FA5', backgroundColor: 'rgba(24,95,165,.08)',
+      fill: true, tension: .3, pointRadius: 0, borderWidth: 2
+    }]
+  },
+  options: { ...chartOpts, plugins: { ...chartOpts.plugins, legend: { display: false } } }
+});
+
+new Chart(document.getElementById('chartRate'), {
+  type: 'line',
+  data: {
+    labels: revLabels,
+    datasets: [{
+      label: 'Tasa %',
+      data: REAL.map(m => m.rate_pct),
+      borderColor: '#854F0B', backgroundColor: 'rgba(133,79,11,.08)',
+      fill: true, tension: .3, pointRadius: 0, borderWidth: 2
+    }]
+  },
+  options: {
+    ...chartOpts,
+    plugins: { ...chartOpts.plugins, legend: { display: false } },
+    scales: { ...chartOpts.scales, y: { ...chartOpts.scales.y, ticks: { ...chartOpts.scales.y.ticks, callback: v => v + '%' } } }
+  }
+});
+
+const svc = S.services_usd || {};
+new Chart(document.getElementById('chartSvc'), {
+  type: 'doughnut',
+  data: {
+    labels: Object.keys(svc),
+    datasets: [{ data: Object.values(svc), backgroundColor: ['#185FA5','#534AB7','#0F6E56','#854F0B','#A32D2D','#888780'] }]
+  },
+  options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { font: { size: 10 }, boxWidth: 10 } } } }
+});
+
+const years = Object.keys(D.by_year || {});
+const yearReal = years.map(y => (D.by_year[y].ing_usd_real ?? D.by_year[y].ing_usd) || 0);
+const yearProj = years.map(y => D.by_year[y].ing_usd_proj || 0);
+new Chart(document.getElementById('chartYear'), {
+  type: 'bar',
+  data: {
+    labels: years,
+    datasets: [
+      {
+        label: 'Real',
+        data: yearReal,
+        backgroundColor: '#185FA5',
+        borderRadius: { topLeft: 0, topRight: 0, bottomLeft: 4, bottomRight: 4 },
+        stack: 'year',
+      },
+      {
+        label: 'Proy',
+        data: yearProj,
+        backgroundColor: 'rgba(55,138,221,0.42)',
+        borderColor: '#378ADD',
+        borderWidth: 1,
+        borderRadius: { topLeft: 4, topRight: 4, bottomLeft: 0, bottomRight: 0 },
+        stack: 'year',
+      },
+    ],
+  },
+  options: {
+    ...chartOpts,
+    plugins: {
+      ...chartOpts.plugins,
+      legend: { display: true, labels: { font: { size: 10 }, boxWidth: 10 } },
+      tooltip: {
+        callbacks: {
+          footer(items) {
+            const i = items[0]?.dataIndex;
+            if (i == null) return '';
+            const real = yearReal[i];
+            const proj = yearProj[i];
+            if (!proj) return '';
+            return `Total ${fmtUSD(real + proj)} (real + proy.)`;
+          },
+        },
+      },
+    },
+    scales: {
+      ...chartOpts.scales,
+      x: { ...chartOpts.scales.x, stacked: true },
+      y: { ...chartOpts.scales.y, stacked: true },
+    },
+  },
+});
+
+// ── Main vs Outlet ──
+const CS = D.channel_split;
+if (CS && CS.months && CS.months.length) {
+  document.getElementById('channelSection').style.display = '';
+  document.getElementById('channelSource').textContent = CS.source || 'Main vs Outlet';
+  document.getElementById('channelNote').textContent = CS.note || '';
+  document.getElementById('channelKpis').innerHTML = `
+    <div class="channel-kpi main">
+      <div class="lbl">Share promedio Main (YTD real)</div>
+      <div class="val">${CS.avg_main_share_pct}%</div>
+      <div class="share-bar"><span style="width:${CS.avg_main_share_pct}%;background:#185FA5"></span><span style="width:${CS.avg_outlet_share_pct}%;background:#534AB7"></span></div>
+    </div>
+    <div class="channel-kpi outlet">
+      <div class="lbl">Share promedio Outlet (YTD real)</div>
+      <div class="val">${CS.avg_outlet_share_pct}%</div>
+      <div class="share-bar"><span style="width:${CS.avg_main_share_pct}%;background:#185FA5"></span><span style="width:${CS.avg_outlet_share_pct}%;background:#534AB7"></span></div>
+    </div>
+    <div class="channel-kpi">
+      <div class="lbl">Meses reales con split</div>
+      <div class="val" style="color:#1a1a18;font-size:18px">${CS.ytd_real_months || '—'}</div>
+      <div style="font-size:11px;color:#888780;margin-top:4px">Ene–May 2026 · fuente ventas por sitio</div>
+    </div>`;
+
+  const chLabels = CS.months.map(m => ymLabel(m.ym) + (m.is_projection ? ' · proy.' : ''));
+  const fmtM = n => '$' + (n / 1e6).toFixed(1) + 'M';
+  new Chart(document.getElementById('chartChannel'), {
+    type: 'bar',
+    data: {
+      labels: chLabels,
+      datasets: [
+        {
+          label: 'Main',
+          data: CS.months.map(m => m.gmv_main),
+          backgroundColor: '#185FA5',
+          stack: 'gmv',
+          borderRadius: { topLeft: 0, topRight: 0, bottomLeft: 4, bottomRight: 4 },
+        },
+        {
+          label: 'Outlet',
+          data: CS.months.map(m => m.gmv_outlet),
+          backgroundColor: '#534AB7',
+          stack: 'gmv',
+          borderRadius: { topLeft: 4, topRight: 4, bottomLeft: 0, bottomRight: 0 },
+        },
+      ],
+    },
+    options: {
+      ...chartOpts,
+      plugins: {
+        ...chartOpts.plugins,
+        tooltip: {
+          callbacks: {
+            label(ctx) {
+              const m = CS.months[ctx.dataIndex];
+              const share = ctx.datasetIndex === 0 ? m.main_share_pct : m.outlet_share_pct;
+              return `${ctx.dataset.label}: ${fmtARS(ctx.raw)} (${share}%)`;
+            },
+            footer(items) {
+              const m = CS.months[items[0]?.dataIndex];
+              if (!m) return '';
+              const est = m.is_estimated ? ' · share estimado' : '';
+              return `Total GMV: ${fmtARS(m.gmv_total)}${est}`;
+            },
+          },
+        },
+      },
+      scales: {
+        ...chartOpts.scales,
+        x: { ...chartOpts.scales.x, stacked: true },
+        y: {
+          ...chartOpts.scales.y,
+          stacked: true,
+          ticks: { ...chartOpts.scales.y.ticks, callback: v => fmtM(v) },
+        },
+      },
+    },
+  });
+
+  document.getElementById('channelCommBody').innerHTML = CS.months.map(m => {
+    const est = m.is_estimated ? ' · est.' : '';
+    return `<tr class="${m.is_projection ? 'proj' : ''}">
+      <td>${ymLabel(m.ym)}${m.is_projection ? ' · proy.' : ''}${est}</td>
+      <td>${fmtARS(m.gmv_main)}</td>
+      <td>${fmtARS(m.gmv_outlet)}</td>
+      <td>${m.main_share_pct}% / ${m.outlet_share_pct}%</td>
+      <td>${fmtARS(m.comm_main_ars)}</td>
+      <td>${fmtARS(m.comm_outlet_ars)}</td>
+      <td>${fmtARS(m.comm_total_ars)}</td>
+    </tr>`;
+  }).join('');
+}
+
+document.getElementById('tableInfo').textContent = `${REAL.length} meses reales`;
+document.getElementById('tableBody').innerHTML = [...(D.months||[])].reverse().map(m => {
+  const fixed = m.services_ars['Fee Fijo E-Commerce'] || 0;
+  return `<tr class="${m.is_projection ? 'proj' : ''}">
+    <td>${ymLabel(m.ym)}${m.is_projection ? ' · proy.' : ''}</td>
+    <td>${m.ing_usd ? fmtUSD(m.ing_usd) : '—'}</td>
+    <td>${m.ing_ars ? fmtARS(m.ing_ars) : '—'}</td>
+    <td>${m.gmv_ars ? fmtARS(m.gmv_ars) : '—'}</td>
+    <td>${m.comm_ars ? fmtARS(m.comm_ars) : '—'}</td>
+    <td>${fmtPct(m.rate_pct)}</td>
+    <td>${fixed ? fmtARS(fixed) : '—'}</td>
+  </tr>`;
+}).join('');
+
+// ── Simulador ──
+const curRate = S.current_rate_pct || 3.20;
+const curRateMain = CS?.current_rate_main_pct ?? curRate;
+const curRateOutlet = CS?.current_rate_outlet_pct ?? curRate;
+const defaultShareMain = (CS?.avg_main_share_pct ?? 77) / 100;
+const CHANNEL_BY_YM = Object.fromEntries((CS?.months || []).map(m => [m.ym, m]));
+const hasChannelSplit = !!(CS?.months?.length);
+
+const toSlider = rate => Math.round(rate * 100 / 5) * 5;
+const fromSlider = val => +val / 100;
+
+const t12Gmv = S.t12_gmv_ars || T12.reduce((a,m) => a + m.gmv_ars, 0);
+const t12Fixed = S.t12_fixed_ars || T12.reduce((a,m) => a + (m.services_ars['Fee Fijo E-Commerce']||0), 0);
+const t12Other = S.t12_other_ars || T12.reduce((a,m) => {
+  return a + Object.entries(m.services_ars).filter(([k]) => k !== 'Fee E-Commerce' && k !== 'Fee Fijo E-Commerce').reduce((s,[,v]) => s+v, 0);
+}, 0);
+const avgFx = T12.reduce((a,m) => a + (m.ing_ars ? m.ing_usd/m.ing_ars : 0), 0) / T12.length;
+const arsToUsd = ars => ars * avgFx;
+const monthlyGmv = t12Gmv / 12;
+const monthlyGmvMain = monthlyGmv * defaultShareMain;
+const monthlyGmvOutlet = monthlyGmv * (1 - defaultShareMain);
+const monthlyFixed = t12Fixed / 12;
+const monthlyOther = t12Other / 12;
+const curCommMonthly = monthlyGmv * curRate / 100;
+const curCommMonthlySplit = monthlyGmvMain * curRateMain / 100 + monthlyGmvOutlet * curRateOutlet / 100;
+const curTotalMonthly = curCommMonthly + monthlyFixed + monthlyOther;
+
+document.getElementById('curRate').textContent = fmtPct(curRate);
+if (hasChannelSplit) {
+  document.getElementById('simModeSplit').style.display = '';
+  document.getElementById('curRateMain').textContent = fmtPct(curRateMain);
+  document.getElementById('curRateOutlet').textContent = fmtPct(curRateOutlet);
+}
+
+const slider = document.getElementById('rateSlider');
+const sliderMain = document.getElementById('rateSliderMain');
+const sliderOutlet = document.getElementById('rateSliderOutlet');
+slider.value = toSlider(curRate);
+sliderMain.value = toSlider(curRateMain);
+sliderOutlet.value = toSlider(curRateOutlet);
+
+let simChart;
+let simMode = 'unified';
+const FORWARD = (D.months || []).filter(m => m.is_projection && m.gmv_ars > 0);
+const FORWARD_CH = FORWARD.map(m => {
+  const ch = CHANNEL_BY_YM[m.ym];
+  if (ch) return { ...m, gmv_main: ch.gmv_main, gmv_outlet: ch.gmv_outlet };
+  return { ...m, gmv_main: m.gmv_ars * defaultShareMain, gmv_outlet: m.gmv_ars * (1 - defaultShareMain) };
+});
+const fmtDeltaARS = n => (n >= 0 ? '+' : '') + fmtARS(n);
+const fmtDeltaUSD = n => (n >= 0 ? '+' : '') + fmtUSD(n);
+const impactCls = n => n < 0 ? 'delta-pos' : n > 0 ? 'delta-neg' : '';
+
+function calcNewComm(m, rates) {
+  if (rates.mode === 'split') {
+    return m.gmv_main * rates.main / 100 + m.gmv_outlet * rates.outlet / 100;
+  }
+  return m.gmv_ars * rates.unified / 100;
+}
+
+function blendedRate(mainRate, outletRate) {
+  return mainRate * defaultShareMain + outletRate * (1 - defaultShareMain);
+}
+
+function getRates() {
+  if (simMode === 'split') {
+    return {
+      mode: 'split',
+      main: fromSlider(sliderMain.value),
+      outlet: fromSlider(sliderOutlet.value),
+    };
+  }
+  return { mode: 'unified', unified: fromSlider(slider.value) };
+}
+
+function forwardImpact(rates) {
+  let totOld = 0, totNew = 0, totDeltaUsd = 0;
+  FORWARD_CH.forEach(m => {
+    const newComm = calcNewComm(m, rates);
+    const oldComm = m.comm_ars || 0;
+    totOld += oldComm;
+    totNew += newComm;
+    const fx = m.ing_ars ? m.ing_usd / m.ing_ars : avgFx;
+    totDeltaUsd += (newComm - oldComm) * fx;
+  });
+  return {
+    totOld,
+    totNew,
+    totDeltaArs: totNew - totOld,
+    totDeltaUsd,
+    label: FORWARD.length
+      ? `${ymLabel(FORWARD[0].ym)}–${ymLabel(FORWARD[FORWARD.length - 1].ym)}`
+      : '—',
+  };
+}
+
+function renderSimMonths(rates) {
+  const note = document.getElementById('simMonthNote');
+  const body = document.getElementById('simMonthBody');
+  const head = document.getElementById('simMonthHead');
+  if (!FORWARD.length) {
+    if (note) note.textContent = 'No hay meses proyectados disponibles.';
+    if (body) body.innerHTML = '';
+    return;
+  }
+  const first = ymLabel(FORWARD[0].ym);
+  const last = ymLabel(FORWARD[FORWARD.length - 1].ym);
+  if (note) {
+    if (rates.mode === 'split') {
+      note.textContent = `${first} → ${last} · Main ${fmtPct(rates.main)} + Outlet ${fmtPct(rates.outlet)} sobre GMV de cada sitio · fee fijo y otros sin cambio`;
+    } else {
+      note.textContent = `${first} → ${last} · comisión = ventas con IVA × ${fmtPct(rates.unified)} · fee fijo y otros sin cambio`;
+    }
+  }
+
+  if (rates.mode === 'split') {
+    head.innerHTML = `<tr>
+      <th>Mes</th><th>GMV Main</th><th>GMV Outlet</th>
+      <th>Com. actual</th><th>Com. Main</th><th>Com. Outlet</th><th>Com. total</th>
+      <th>Δ ARS</th><th>Δ USD eq.</th>
+    </tr>`;
+  } else {
+    head.innerHTML = `<tr>
+      <th>Mes</th><th>Ventas c/IVA</th><th>Comisión actual</th><th>Comisión nueva</th>
+      <th>Δ ARS</th><th>Δ USD eq.</th>
+    </tr>`;
+  }
+
+  const fwd = forwardImpact(rates);
+  const rows = FORWARD_CH.map(m => {
+    const newComm = calcNewComm(m, rates);
+    const oldComm = m.comm_ars || 0;
+    const delta = newComm - oldComm;
+    const fx = m.ing_ars ? m.ing_usd / m.ing_ars : avgFx;
+    const deltaUsd = delta * fx;
+    if (rates.mode === 'split') {
+      const commMain = m.gmv_main * rates.main / 100;
+      const commOutlet = m.gmv_outlet * rates.outlet / 100;
+      return `<tr>
+        <td>${ymLabel(m.ym)}</td>
+        <td>${fmtARS(m.gmv_main)}</td>
+        <td>${fmtARS(m.gmv_outlet)}</td>
+        <td>${fmtARS(oldComm)}</td>
+        <td>${fmtARS(commMain)}</td>
+        <td>${fmtARS(commOutlet)}</td>
+        <td>${fmtARS(newComm)}</td>
+        <td class="${impactCls(delta)}">${fmtDeltaARS(delta)}</td>
+        <td class="${impactCls(deltaUsd)}">${fmtDeltaUSD(deltaUsd)}</td>
+      </tr>`;
+    }
+    return `<tr>
+      <td>${ymLabel(m.ym)}</td>
+      <td>${fmtARS(m.gmv_ars)}</td>
+      <td>${fmtARS(oldComm)}</td>
+      <td>${fmtARS(newComm)}</td>
+      <td class="${impactCls(delta)}">${fmtDeltaARS(delta)}</td>
+      <td class="${impactCls(deltaUsd)}">${fmtDeltaUSD(deltaUsd)}</td>
+    </tr>`;
+  }).join('');
+
+  body.innerHTML = rows + `<tr style="background:#FAFAF8;font-weight:600">
+    <td>Total periodo</td>
+    ${rates.mode === 'split' ? '<td>—</td><td>—</td>' : ''}
+    <td>${fmtARS(fwd.totOld)}</td>
+    ${rates.mode === 'split' ? '<td>—</td><td>—</td>' : ''}
+    <td>${fmtARS(fwd.totNew)}</td>
+    <td class="${impactCls(fwd.totDeltaArs)}">${fmtDeltaARS(fwd.totDeltaArs)}</td>
+    <td class="${impactCls(fwd.totDeltaUsd)}">${fmtDeltaUSD(fwd.totDeltaUsd)}</td>
+  </tr>`;
+}
+
+function runSim() {
+  const rates = getRates();
+  const isSplit = rates.mode === 'split';
+  const effectiveRate = isSplit ? blendedRate(rates.main, rates.outlet) : rates.unified;
+  const newComm = isSplit
+    ? monthlyGmvMain * rates.main / 100 + monthlyGmvOutlet * rates.outlet / 100
+    : monthlyGmv * rates.unified / 100;
+  const curCommRef = isSplit ? curCommMonthlySplit : curCommMonthly;
+  const newTotal = newComm + monthlyFixed + monthlyOther;
+  const deltaComm = newComm - curCommRef;
+  const impact12Usd = arsToUsd(deltaComm * 12);
+  const fwd = forwardImpact(rates);
+  const rateCut = curRate - effectiveRate;
+
+  document.getElementById('newRateLbl').textContent = fmtPct(rates.unified ?? effectiveRate);
+  if (isSplit) {
+    document.getElementById('newRateMainLbl').textContent = fmtPct(rates.main);
+    document.getElementById('newRateOutletLbl').textContent = fmtPct(rates.outlet);
+    document.getElementById('blendedRate').textContent =
+      `Tasa efectiva ponderada (share YTD): ${fmtPct(effectiveRate)} · Main ${fmtPct(curRateMain)} → ${fmtPct(rates.main)} · Outlet ${fmtPct(curRateOutlet)} → ${fmtPct(rates.outlet)}`;
+  }
+
+  document.getElementById('rateDeltaLbl').textContent = isSplit ? 'Δ tasa efectiva' : 'Reducción';
+  document.getElementById('rateDelta').textContent = rateCut > 0 ? `−${rateCut.toFixed(2)} pp` : rateCut < 0 ? `+${Math.abs(rateCut).toFixed(2)} pp` : '0 pp';
+  document.getElementById('rateDelta').className = 'val ' + (rateCut > 0 ? 'delta-pos' : rateCut < 0 ? 'delta-neg' : '');
+
+  const rateLabel = isSplit
+    ? `Main ${fmtPct(rates.main)} · Outlet ${fmtPct(rates.outlet)}`
+    : fmtPct(rates.unified);
+
+  document.getElementById('simResult').innerHTML = fwd && FORWARD.length ? `
+    <h3>Impacto desde el cambio · ${fwd.label}</h3>
+    <div class="sim-row"><span>Comisión variable actual (periodo)</span><span>${fmtARS(fwd.totOld)}</span></div>
+    <div class="sim-row"><span>Comisión variable nueva (${rateLabel})</span><span>${fmtARS(fwd.totNew)}</span></div>
+    <div class="sim-row"><span>Impacto Jun–Dic 2026 (USD)</span><span class="${impactCls(fwd.totDeltaUsd)}">${fmtDeltaUSD(fwd.totDeltaUsd)}</span></div>
+    <div class="sim-row"><span>Impacto Jun–Dic 2026 (ARS)</span><span class="${impactCls(fwd.totDeltaArs)}">${fmtDeltaARS(fwd.totDeltaArs)}</span></div>
+    <div class="sim-row" style="font-weight:400;color:#888780;font-size:12px;padding-top:8px;border-top:.5px solid #ECEAE2">
+      <span>Ref. T12 (prom. mensual comisión)</span><span>${fmtARS(newComm)}/mes vs ${fmtARS(curCommRef)}/mes</span>
+    </div>
+    <div class="sim-row"><span>Impacto a 12 meses (USD)</span><span class="${impactCls(impact12Usd)}">${fmtDeltaUSD(impact12Usd)} <span style="font-weight:400;color:#B4B2A9;font-size:11px">· extrap. T12</span></span></div>
+  ` : `
+    <h3>Sin meses proyectados</h3>
+    <p style="font-size:13px;color:#888780">No hay proyección post-${D.lastRealYm || 'último real'} para simular el cambio.</p>
+  `;
+
+  const chartRates = [];
+  const totals = [];
+  for (let r = 2.0; r <= 4.5; r += 0.1) {
+    chartRates.push(r.toFixed(1) + '%');
+    totals.push(arsToUsd(monthlyGmv * r / 100 + monthlyFixed + monthlyOther));
+  }
+
+  if (simChart) simChart.destroy();
+  const highlightIdx = chartRates.findIndex(l => parseFloat(l) === +effectiveRate.toFixed(1));
+
+  simChart = new Chart(document.getElementById('chartSim'), {
+    type: 'line',
+    data: {
+      labels: chartRates,
+      datasets: [
+        {
+          label: isSplit ? 'Ingreso USD (tasa efectiva equiv.)' : 'Ingreso mensual USD',
+          data: totals,
+          borderColor: '#185FA5',
+          tension: .3,
+          pointRadius: 0,
+          borderWidth: 2,
+        },
+        {
+          label: 'Escenario actual',
+          data: chartRates.map(() => arsToUsd(curTotalMonthly)),
+          borderColor: '#B4B2A9',
+          borderDash: [4, 4],
+          pointRadius: 0,
+          borderWidth: 1.5,
+        },
+        {
+          label: 'Propuesta',
+          data: chartRates.map((l, i) => i === highlightIdx ? arsToUsd(newTotal) : null),
+          borderColor: '#A32D2D',
+          pointRadius: 6,
+          pointHoverRadius: 8,
+          showLine: false,
+        },
+      ],
+    },
+    options: {
+      ...chartOpts,
+      scales: {
+        ...chartOpts.scales,
+        x: {
+          ...chartOpts.scales.x,
+          title: {
+            display: true,
+            text: isSplit ? 'Tasa efectiva equivalente %' : 'Tasa comisión %',
+            font: { size: 11 },
+          },
+        },
+      },
+    },
+  });
+  renderSimMonths(rates);
+}
+
+document.getElementById('simMode').addEventListener('click', e => {
+  const btn = e.target.closest('[data-mode]');
+  if (!btn) return;
+  simMode = btn.dataset.mode;
+  document.querySelectorAll('.sim-mode-btn').forEach(b => b.classList.toggle('active', b === btn));
+  document.getElementById('panelUnified').classList.toggle('active', simMode === 'unified');
+  document.getElementById('panelSplit').classList.toggle('active', simMode === 'split');
+  runSim();
+});
+
+slider.addEventListener('input', runSim);
+sliderMain.addEventListener('input', runSim);
+sliderOutlet.addEventListener('input', runSim);
+runSim();
+</script>
+</body>
+</html>

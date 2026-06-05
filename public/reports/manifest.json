@@ -10,13 +10,19 @@
       "slug": "crm-dashboard",
       "file": "crm-dashboard.html",
       "title": "CRM Dashboard · Pow",
-      "description": "Pipeline HubSpot Pow · funnel Pow · sync diario"
+      "description": "Pipeline comercial · Pow"
     },
     {
       "slug": "crm-dashboard-undo",
       "file": "crm-dashboard-undo.html",
       "title": "CRM Dashboard · Undo",
-      "description": "Pipeline HubSpot Undo · funnel Undo · sync diario"
+      "description": "Pipeline comercial · Undo"
+    },
+    {
+      "slug": "markova-comision",
+      "file": "markova-comision-report.html",
+      "title": "Markova · Comisión e ingresos",
+      "description": "Main vs Outlet · simulador de comisión · Jun 2026"
     }
   ]
 }
