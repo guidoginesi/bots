@@ -15,16 +15,18 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .badge{display:inline-block;font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;background:#E6F1FB;color:#185FA5;padding:3px 8px;border-radius:4px;margin-bottom:8px}
 .note{font-size:12px;color:#5F5E5A;background:white;border:.5px solid #D3D1C7;border-radius:10px;padding:12px 14px;margin-bottom:1.25rem}
 
-.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));grid-template-rows:auto auto auto;gap:10px;margin-bottom:1.25rem}
-.kpi{grid-row:span 3;display:grid;grid-template-rows:subgrid;gap:6px 0;background:white;border-radius:10px;padding:.95rem 1rem;border:.5px solid #D3D1C7}
-.kpi-label{font-size:10px;color:#888780;letter-spacing:.05em;text-transform:uppercase;line-height:1.35;align-self:end}
-.kpi-value{font-size:22px;font-weight:600;line-height:1.1;align-self:start}
-.kpi-sub{font-size:11px;color:#888780;line-height:1.35;align-self:start}
+.kpi-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));grid-template-rows:auto auto auto;gap:8px;margin-bottom:1.25rem}
+.kpi{grid-row:span 3;display:grid;grid-template-rows:subgrid;gap:5px 0;background:white;border-radius:10px;padding:.8rem .7rem;border:.5px solid #D3D1C7;min-width:0}
+.kpi-label{font-size:10px;color:#888780;letter-spacing:.02em;text-transform:uppercase;line-height:1.2;align-self:end;white-space:nowrap;min-width:0;width:100%;overflow:hidden}
+.kpi-value{font-size:20px;font-weight:600;line-height:1.1;align-self:start;white-space:nowrap;letter-spacing:-.02em;min-width:0;width:100%;overflow:hidden}
+.kpi-sub{font-size:10px;color:#888780;line-height:1.3;align-self:start}
 .kpi-value.blue{color:#185FA5}.kpi-value.green{color:#0F6E56}.kpi-value.amber{color:#854F0B}.kpi-value.purple{color:#534AB7}
+@media(max-width:900px){.kpi-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:520px){.kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @supports not (grid-template-rows:subgrid){
   .kpi-grid{grid-template-rows:none}
   .kpi{grid-row:auto;display:flex;flex-direction:column}
-  .kpi-label{min-height:2.75em;margin-bottom:6px}
+  .kpi-label{min-height:auto;margin-bottom:6px}
   .kpi-sub{margin-top:5px}
 }
 
@@ -270,7 +272,7 @@ document.getElementById('note').textContent = D.note || '';
 const kpis = [
   { label: 'Ingresos históricos USD', value: fmtUSD(S.total_ing_usd), sub: `${S.months_active} meses`, cls: 'blue' },
   { label: 'Ingresos históricos ARS', value: fmtARS(S.total_ing_ars), sub: 'Acumulado desde 2016', cls: '' },
-  { label: 'Comisión variable (USD eq.)', value: fmtUSD(S.total_comm_usd_equiv), sub: `${S.comm_share_of_revenue_pct}% del revenue`, cls: 'purple' },
+  { label: 'Comisión var. USD eq.', value: fmtUSD(S.total_comm_usd_equiv), sub: `${S.comm_share_of_revenue_pct}% del revenue`, cls: 'purple' },
   { label: 'Tasa comisión actual', value: fmtPct(S.current_rate_pct), sub: `Promedio hist. ${fmtPct(S.avg_comm_rate_pct)}`, cls: 'amber' },
   { label: 'MRR avg YTD 2026 (USD)', value: fmtUSD(S.mrr_ytd_usd), sub: `${S.ytd_2026_months || 0} meses · Comisión ~${fmtUSD(S.comm_mrr_ytd_usd)}/mes`, cls: 'green' },
   { label: 'YTD 2026 USD', value: fmtUSD(S.ytd_2026_usd), sub: `YoY ${S.ytd_yoy_usd_pct >= 0 ? '+' : ''}${S.ytd_yoy_usd_pct}% vs 2025`, cls: 'green' },
@@ -278,6 +280,32 @@ const kpis = [
 document.getElementById('kpis').innerHTML = kpis.map(k =>
   `<div class="kpi"><div class="kpi-label">${k.label}</div><div class="kpi-value ${k.cls}">${k.value}</div><div class="kpi-sub">${k.sub}</div></div>`
 ).join('');
+
+function kpiInnerWidth(el) {
+  const box = el.closest('.kpi');
+  if (!box) return el.clientWidth;
+  const cs = getComputedStyle(box);
+  return box.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+}
+
+function fitKpiEl(els, max, min, step) {
+  if (!els.length) return;
+  let size = max;
+  const apply = s => els.forEach(el => { el.style.fontSize = s + 'px'; });
+  const overflows = () => els.some(el => el.scrollWidth > kpiInnerWidth(el) + 1);
+  apply(size);
+  while (overflows() && size > min) {
+    size -= step;
+    apply(size);
+  }
+}
+
+function fitKpiGrid() {
+  fitKpiEl([...document.querySelectorAll('#kpis .kpi-label')], 10, 6, 0.25);
+  fitKpiEl([...document.querySelectorAll('#kpis .kpi-value')], 22, 12, 0.5);
+}
+requestAnimationFrame(() => requestAnimationFrame(fitKpiGrid));
+window.addEventListener('resize', fitKpiGrid);
 
 const chartOpts = {
   responsive: true, maintainAspectRatio: false,
