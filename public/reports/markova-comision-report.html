@@ -15,12 +15,18 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .badge{display:inline-block;font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;background:#E6F1FB;color:#185FA5;padding:3px 8px;border-radius:4px;margin-bottom:8px}
 .note{font-size:12px;color:#5F5E5A;background:white;border:.5px solid #D3D1C7;border-radius:10px;padding:12px 14px;margin-bottom:1.25rem}
 
-.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:1.25rem}
-.kpi{background:white;border-radius:10px;padding:.95rem 1rem;border:.5px solid #D3D1C7}
-.kpi-label{font-size:10px;color:#888780;letter-spacing:.05em;text-transform:uppercase;margin-bottom:6px}
-.kpi-value{font-size:22px;font-weight:600;line-height:1.1}
-.kpi-sub{font-size:11px;color:#888780;margin-top:5px}
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));grid-template-rows:auto auto auto;gap:10px;margin-bottom:1.25rem}
+.kpi{grid-row:span 3;display:grid;grid-template-rows:subgrid;gap:6px 0;background:white;border-radius:10px;padding:.95rem 1rem;border:.5px solid #D3D1C7}
+.kpi-label{font-size:10px;color:#888780;letter-spacing:.05em;text-transform:uppercase;line-height:1.35;align-self:end}
+.kpi-value{font-size:22px;font-weight:600;line-height:1.1;align-self:start}
+.kpi-sub{font-size:11px;color:#888780;line-height:1.35;align-self:start}
 .kpi-value.blue{color:#185FA5}.kpi-value.green{color:#0F6E56}.kpi-value.amber{color:#854F0B}.kpi-value.purple{color:#534AB7}
+@supports not (grid-template-rows:subgrid){
+  .kpi-grid{grid-template-rows:none}
+  .kpi{grid-row:auto;display:flex;flex-direction:column}
+  .kpi-label{min-height:2.75em;margin-bottom:6px}
+  .kpi-sub{margin-top:5px}
+}
 
 .card{background:white;border:.5px solid #D3D1C7;border-radius:12px;padding:1.1rem 1.25rem;margin-bottom:1rem}
 .card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:8px}
@@ -248,7 +254,7 @@ const D = typeof MARKOVA_DATA !== 'undefined' ? MARKOVA_DATA : {};
 const S = D.summary || {};
 const REAL = (D.months || []).filter(m => !m.is_projection && m.ing_usd > 0);
 const T12 = REAL.slice(-12);
-const fmtUSD = n => '$' + Math.round(n).toLocaleString('en-US');
+const fmtUSD = n => 'U$D ' + Math.round(n).toLocaleString('en-US');
 const fmtARS = n => '$' + Math.round(n).toLocaleString('es-AR');
 const fmtPct = n => (n == null ? '—' : n.toFixed(2) + '%');
 const ymLabel = ym => {
@@ -533,7 +539,12 @@ const FORWARD_CH = FORWARD.map(m => {
   return { ...m, gmv_main: m.gmv_ars * defaultShareMain, gmv_outlet: m.gmv_ars * (1 - defaultShareMain) };
 });
 const fmtDeltaARS = n => (n >= 0 ? '+' : '') + fmtARS(n);
-const fmtDeltaUSD = n => (n >= 0 ? '+' : '') + fmtUSD(n);
+const fmtDeltaUSD = n => {
+  const v = Math.round(n);
+  if (v === 0) return 'U$D 0';
+  if (v > 0) return '+U$D ' + v.toLocaleString('en-US');
+  return 'U$D ' + v.toLocaleString('en-US');
+};
 const impactCls = n => n < 0 ? 'delta-pos' : n > 0 ? 'delta-neg' : '';
 
 function calcNewComm(m, rates) {
@@ -693,7 +704,7 @@ function runSim() {
     <div class="sim-row" style="font-weight:400;color:#888780;font-size:12px;padding-top:8px;border-top:.5px solid #ECEAE2">
       <span>Ref. T12 (prom. mensual comisión)</span><span>${fmtARS(newComm)}/mes vs ${fmtARS(curCommRef)}/mes</span>
     </div>
-    <div class="sim-row"><span>Impacto a 12 meses (USD)</span><span class="${impactCls(impact12Usd)}">${fmtDeltaUSD(impact12Usd)} <span style="font-weight:400;color:#B4B2A9;font-size:11px">· extrap. T12</span></span></div>
+    <div class="sim-row"><span>Impacto a 12 meses (USD)</span><span class="${impactCls(impact12Usd)}">${fmtDeltaUSD(impact12Usd)}</span></div>
   ` : `
     <h3>Sin meses proyectados</h3>
     <p style="font-size:13px;color:#888780">No hay proyección post-${D.lastRealYm || 'último real'} para simular el cambio.</p>
