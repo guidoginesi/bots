@@ -83,9 +83,58 @@ td.delta-neg{color:#0F6E56;font-weight:500}td.delta-pos{color:#A32D2D;font-weigh
 .channel-note{font-size:11px;color:#888780;margin-bottom:1rem;line-height:1.5}
 .share-bar{display:flex;height:8px;border-radius:4px;overflow:hidden;margin-top:6px;background:#ECEAE2}
 .share-bar span{display:block;height:100%}
+
+/* ── Report top bar (inyectado) ── */
+body.has-report-topbar{padding-top:40px!important;box-sizing:border-box}
+#report-topbar{
+  position:fixed;top:0;left:0;right:0;z-index:10000;height:40px;
+  display:flex;align-items:center;gap:10px;padding:0 16px;
+  background:#1a1a18;color:#D3D1C7;
+  border-bottom:.5px solid #2C2C2A;
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  font-size:12px;font-weight:500;
+}
+#report-topbar a{color:#D3D1C7;text-decoration:none}
+#report-topbar a:hover{color:#fff}
+.rtb-back{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:4px 10px;margin-left:-6px;border-radius:6px;
+  transition:background .12s,color .12s;
+}
+.rtb-back:hover{background:#2C2C2A}
+.rtb-crumb{display:inline-flex;align-items:center;gap:8px;min-width:0;color:#888780}
+.rtb-crumb-link{color:#888780!important}
+.rtb-crumb-link:hover{color:#D3D1C7!important}
+.rtb-sep{color:#5F5E5A;user-select:none}
+.rtb-current{color:#F1EFE8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@media(max-width:520px){
+  .rtb-crumb .rtb-crumb-link{display:none}
+  .rtb-crumb .rtb-sep:first-of-type{display:none}
+}
+
 </style>
 </head>
-<body>
+<body class="has-report-topbar">
+<nav id="report-topbar" aria-label="Navegación del informe">
+  <a class="rtb-back" href="/reports" data-reports-back>← Informes</a>
+  <span class="rtb-crumb" aria-label="Ubicación">
+    <a class="rtb-crumb-link" href="/" data-app-home>Pow</a>
+    <span class="rtb-sep" aria-hidden="true">/</span>
+    <a class="rtb-crumb-link" href="/reports" data-reports-home>Informes</a>
+    <span class="rtb-sep" aria-hidden="true">/</span>
+    <span class="rtb-current">Markova · Comisión e ingresos</span>
+  </span>
+</nav>
+<script>
+(function(){
+  var p=location.pathname;
+  var reportsHome='/reports';
+  if(p.indexOf('/reports/')===-1&&!/^\/reports\/?$/.test(p))reportsHome='/reports/';
+  var app=document.querySelector('[data-app-home]');
+  if(app)app.href='/';
+  document.querySelectorAll('[data-reports-home],[data-reports-back]').forEach(function(a){a.href=reportsHome;});
+})();
+</script>
 <div class="wrap">
   <div class="header">
     <div class="badge">Informe ad-hoc</div>

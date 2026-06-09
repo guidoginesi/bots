@@ -138,6 +138,10 @@ def patch_undo(t: str) -> str:
         "<h1>Real vs Objetivo · Undo</h1><p class=\"meta\">Cierre ganado · Comparación contra metas 2026 ·",
     )
     t = t.replace('stab-tip">Real vs Objetivo</span>', 'stab-tip">Real vs Objetivo · Undo</span>')
+    t = t.replace(
+        '<span class="rtb-current">CRM Dashboard · Pow</span>',
+        '<span class="rtb-current">CRM Dashboard · Undo</span>',
+    )
     t = t.replace("sync diario · Pow ·", "sync diario · Undo ·")
     t = re.sub(
         r"const FUNNEL_ORDER=\[[\s\S]*?\];\nconst FUNNEL_COLORS=\{[\s\S]*?\};",

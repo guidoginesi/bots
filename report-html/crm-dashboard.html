@@ -218,6 +218,14 @@ h1{font-size:21px;font-weight:500;color:#1a1a18}
 .svc-sort-up,.svc-sort-down{font-size:7px;color:#D3D1C7;line-height:1}
 .svc-sort-up.active,.svc-sort-down.active{color:#378ADD}
 
+.svc-group-row{cursor:pointer}
+.svc-group-row:hover td{background:#F3F2EE!important}
+.svc-child-row td:first-child{padding-left:32px!important}
+.svc-expand-icon{display:inline-block;width:14px;font-size:9px;color:#888780;flex-shrink:0;transition:transform .15s}
+.svc-expand-icon.open{transform:rotate(90deg)}
+.svc-child-count{font-size:11px;color:#B4B2A9;font-weight:400;margin-left:4px}
+.svc-peso{font-variant-numeric:tabular-nums;color:#5F5E5A}
+
 .empty{font-size:13px;color:#B4B2A9;padding:1rem 0;text-align:center}
 .footer{font-size:11px;color:#B4B2A9;text-align:center;margin-top:.5rem;padding-bottom:1rem}
 
@@ -235,9 +243,58 @@ h1{font-size:21px;font-weight:500;color:#1a1a18}
 .bdt .dash{color:#B4B2A9}
 .bdt-total td{background:#F7F6F2;font-weight:600;font-size:12px}
 .stage-badge{font-size:10px;padding:2px 7px;border-radius:4px;background:#F1EFE8;color:#5F5E5A;white-space:nowrap}
+
+/* ── Report top bar (inyectado) ── */
+body.has-report-topbar{padding-top:40px!important;box-sizing:border-box}
+#report-topbar{
+  position:fixed;top:0;left:0;right:0;z-index:10000;height:40px;
+  display:flex;align-items:center;gap:10px;padding:0 16px;
+  background:#1a1a18;color:#D3D1C7;
+  border-bottom:.5px solid #2C2C2A;
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  font-size:12px;font-weight:500;
+}
+#report-topbar a{color:#D3D1C7;text-decoration:none}
+#report-topbar a:hover{color:#fff}
+.rtb-back{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:4px 10px;margin-left:-6px;border-radius:6px;
+  transition:background .12s,color .12s;
+}
+.rtb-back:hover{background:#2C2C2A}
+.rtb-crumb{display:inline-flex;align-items:center;gap:8px;min-width:0;color:#888780}
+.rtb-crumb-link{color:#888780!important}
+.rtb-crumb-link:hover{color:#D3D1C7!important}
+.rtb-sep{color:#5F5E5A;user-select:none}
+.rtb-current{color:#F1EFE8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@media(max-width:520px){
+  .rtb-crumb .rtb-crumb-link{display:none}
+  .rtb-crumb .rtb-sep:first-of-type{display:none}
+}
+
 </style>
 </head>
-<body>
+<body class="has-report-topbar">
+<nav id="report-topbar" aria-label="Navegación del informe">
+  <a class="rtb-back" href="/reports" data-reports-back>← Informes</a>
+  <span class="rtb-crumb" aria-label="Ubicación">
+    <a class="rtb-crumb-link" href="/" data-app-home>Pow</a>
+    <span class="rtb-sep" aria-hidden="true">/</span>
+    <a class="rtb-crumb-link" href="/reports" data-reports-home>Informes</a>
+    <span class="rtb-sep" aria-hidden="true">/</span>
+    <span class="rtb-current">CRM Dashboard · Pow</span>
+  </span>
+</nav>
+<script>
+(function(){
+  var p=location.pathname;
+  var reportsHome='/reports';
+  if(p.indexOf('/reports/')===-1&&!/^\/reports\/?$/.test(p))reportsHome='/reports/';
+  var app=document.querySelector('[data-app-home]');
+  if(app)app.href='/';
+  document.querySelectorAll('[data-reports-home],[data-reports-back]').forEach(function(a){a.href=reportsHome;});
+})();
+</script>
 
 <div class="main" id="main-scroll">
 
@@ -388,7 +445,7 @@ h1{font-size:21px;font-weight:500;color:#1a1a18}
     <div class="card" id="service-breakdown-card" style="margin-top:1rem;display:none">
       <div class="card-header">
         <p class="card-title" id="service-breakdown-title">Totales por servicio</p>
-        <span class="hint">Fee Fijo E-Commerce = monto fijo · Fee E-Commerce (variable) = GMV × %</span>
+        <span class="hint">Grupos expandibles · Clic en fila para ver detalle · Peso = % del LTV 18m total</span>
       </div>
       <div id="service-breakdown-body"></div>
     </div>
@@ -472,7 +529,7 @@ h1{font-size:21px;font-weight:500;color:#1a1a18}
     <div class="card" id="obj-service-breakdown-card" style="margin-top:1rem">
       <div class="card-header">
         <p class="card-title" id="obj-service-breakdown-title">Totales por servicio</p>
-        <span class="hint">Fee Fijo E-Commerce = monto fijo · Fee E-Commerce (variable) = GMV × %</span>
+        <span class="hint">Grupos expandibles · Clic en fila para ver detalle · Peso = % del LTV 18m total</span>
       </div>
       <div id="obj-service-breakdown-body"></div>
     </div>
@@ -1186,10 +1243,76 @@ const SVC_COLORS={
   'E-mail Marketing':{bg:'#EEF0FE', name:'#4B44CC', bar:'#7F77DD'},
   'Fee E-Commerce (variable)':{bg:'#FFF8EB', name:'#854F0B', bar:'#D85A30'},
 };
+const SVC_GROUP_DEFS=[
+  {id:'ec',        label:'Fee Fijo + Variable',              keys:['Fee Fijo E-Commerce',FEE_EC_VAR_KEY], color:{bar:'#D85A30',name:'#854F0B'}},
+  {id:'productos', label:'Fee Productos (Link Up - OMS)',    keys:['Fee Fijo Link Up'], match:n=>/\boms\b/i.test(n), color:{bar:'#6B7280',name:'#374151'}},
+  {id:'marketing', label:'Fee Marketing (Paid + eMail)',     keys:['Paid Media','Fee Servicio Paid Media','E-mail Marketing','Fee Servicio E-mail Marketing'], match:n=>/(paid media|e-mail marketing)/i.test(n), color:{bar:'#378ADD',name:'#185FA5'}},
+  {id:'setup',     label:'Fee Set Up',                       match:n=>/set[\s-]?up/i.test(n), color:{bar:'#888780',name:'#5F5E5A'}},
+];
 let objSvcSort={col:'mrr',dir:'desc'};
 let funnelSvcSort={col:'mrr',dir:'desc'};
+let funnelSvcExpanded=new Set();
+let objSvcExpanded=new Set();
 let _objSvcDeals=null;
 let _funnelSvcScopeDeals=null;
+
+function svcGroupForKey(key){
+  if(key==='Sin desglose') return '_other';
+  for(const g of SVC_GROUP_DEFS){
+    if(g.keys&&g.keys.includes(key)) return g.id;
+    if(g.match&&g.match(key)) return g.id;
+  }
+  return '_other';
+}
+
+function buildServiceGroups(data){
+  const groups={};
+  SVC_GROUP_DEFS.forEach(g=>{
+    groups[g.id]={...g,items:[],totals:{mrr:0,ltv:0,val:0,count:0}};
+  });
+  groups._other={id:'_other',label:'Otros / Sin desglose',color:{bar:'#888780',name:'#5F5E5A'},items:[],totals:{mrr:0,ltv:0,val:0,count:0}};
+  data.active.forEach(key=>{
+    const gid=svcGroupForKey(key);
+    const g=groups[gid]||groups._other;
+    g.items.push(key);
+    const t=data.svcTotals[key];
+    g.totals.mrr+=t.mrr;
+    g.totals.ltv+=t.ltv;
+    g.totals.val+=t.val;
+    g.totals.count+=t.count;
+  });
+  const ordered=SVC_GROUP_DEFS.filter(g=>groups[g.id].items.length).map(g=>groups[g.id]);
+  if(groups._other.items.length) ordered.push(groups._other);
+  return ordered;
+}
+
+function fmtPeso(part,total){
+  if(!total||!part) return '—';
+  return (part/total*100).toFixed(1).replace('.',',')+'%';
+}
+
+function svcPesoLabel(t,data){
+  if(t.ltv>0&&data.grandLtv>0) return fmtPeso(t.ltv,data.grandLtv);
+  return '—';
+}
+
+function svcPesoSortValue(t,data){
+  if(t.ltv>0&&data.grandLtv>0) return t.ltv/data.grandLtv;
+  return 0;
+}
+
+function toggleSvcGroupExpand(groupId,ctx){
+  const set=ctx==='funnel'?funnelSvcExpanded:objSvcExpanded;
+  if(set.has(groupId)) set.delete(groupId);
+  else set.add(groupId);
+  if(ctx==='funnel'&&_funnelSvcScopeDeals){
+    const body=document.getElementById('service-breakdown-body');
+    const result=buildServiceBreakdownTable(_funnelSvcScopeDeals,funnelSvcSort,'setFunnelSvcSort',null,'funnel');
+    if(result&&body) body.innerHTML=result.html;
+  }else if(ctx==='obj'&&_objSvcDeals){
+    renderObjetivoServiceBreakdown(_objSvcDeals);
+  }
+}
 
 function toggleSvcSort(state,col){
   if(state.col===col) state.dir=state.dir==='desc'?'asc':'desc';
@@ -1205,7 +1328,7 @@ function setFunnelSvcSort(col){
   toggleSvcSort(funnelSvcSort,col);
   if(_funnelSvcScopeDeals){
     const body=document.getElementById('service-breakdown-body');
-    const result=buildServiceBreakdownTable(_funnelSvcScopeDeals,funnelSvcSort,'setFunnelSvcSort');
+    const result=buildServiceBreakdownTable(_funnelSvcScopeDeals,funnelSvcSort,'setFunnelSvcSort',null,'funnel');
     if(result&&body) body.innerHTML=result.html;
   }
 }
@@ -1259,18 +1382,6 @@ function computeServiceBreakdown(scopeDeals, serviceFilter=null){
   return {svcTotals,active,totalMrr,grandLtv,grandVal};
 }
 
-function sortServiceActive(active,svcTotals,sort){
-  const mult=sort.dir==='asc'?1:-1;
-  return [...active].sort((a,b)=>{
-    if(sort.col==='name'){
-      return mult*svcLabel(a).localeCompare(svcLabel(b),'es',{sensitivity:'base'});
-    }
-    const va=svcTotals[a][sort.col]||0;
-    const vb=svcTotals[b][sort.col]||0;
-    return mult*(va-vb);
-  });
-}
-
 function svcSortArrows(col,sort){
   const on=sort.col===col;
   const upCls=on&&sort.dir==='asc'?' active':'';
@@ -1284,29 +1395,78 @@ function svcSortTh(col,label,align,sort,setSortFn){
   return`<th class="svc-sort-th${alignCls}" style="${alignStyle}" onclick="${setSortFn}('${col}')"><span class="svc-sort-inner"><span class="svc-sort-label">${label}</span>${svcSortArrows(col,sort)}</span></th>`;
 }
 
-function serviceBreakdownTableHtml(data,sort,setSortFn){
-  const sorted=sortServiceActive(data.active,data.svcTotals,sort);
-  const rows=sorted.map((s,i)=>{
-    const t=data.svcTotals[s];
-    const col=SVC_COLORS[s]||{bar:'#888780',name:'#5F5E5A'};
-    const shade=i%2===0?'#FAFAF8':'#FFFFFF';
-    return`<tr style="background:${shade}">
-      <td style="padding:10px 12px;font-size:13px;font-weight:500;color:${col.name};border-bottom:.5px solid #F1EFE8;display:flex;align-items:center;gap:8px">
-        <span style="width:8px;height:8px;border-radius:50%;background:${col.bar};flex-shrink:0;display:inline-block"></span>${svcLabel(s)}
+function sortServiceGroups(groups,data,sort){
+  const mult=sort.dir==='asc'?1:-1;
+  return [...groups].sort((a,b)=>{
+    if(sort.col==='name'){
+      const ia=SVC_GROUP_DEFS.findIndex(g=>g.id===a.id);
+      const ib=SVC_GROUP_DEFS.findIndex(g=>g.id===b.id);
+      const oa=ia>=0?ia:99;
+      const ob=ib>=0?ib:99;
+      return mult*(oa-ob);
+    }
+    if(sort.col==='peso'){
+      return mult*(svcPesoSortValue(a.totals,data)-svcPesoSortValue(b.totals,data));
+    }
+    const va=a.totals[sort.col]||0;
+    const vb=b.totals[sort.col]||0;
+    return mult*(va-vb);
+  });
+}
+
+function svcDetailRowHtml(key,t,data,shade){
+  const col=SVC_COLORS[key]||{bar:'#888780',name:'#5F5E5A'};
+  return`<tr class="svc-child-row" style="background:${shade}">
+    <td style="padding:8px 12px 8px 32px;font-size:12px;font-weight:400;color:${col.name};border-bottom:.5px solid #F1EFE8">
+      <span style="width:8px;height:8px;border-radius:50%;background:${col.bar};flex-shrink:0;display:inline-block;margin-right:8px;vertical-align:middle"></span>${svcLabel(key)}
+    </td>
+    <td style="padding:8px 12px;font-size:12px;color:${col.name};border-bottom:.5px solid #F1EFE8;text-align:right">${t.mrr>0?money(t.mrr):'—'}</td>
+    <td style="padding:8px 12px;font-size:12px;color:#534AB7;border-bottom:.5px solid #F1EFE8;text-align:right">${money(t.ltv)}</td>
+    <td style="padding:8px 12px;font-size:12px;color:#0F6E56;border-bottom:.5px solid #F1EFE8;text-align:right">${t.val>0?money(t.val):'—'}</td>
+    <td style="padding:8px 12px;font-size:12px;border-bottom:.5px solid #F1EFE8;text-align:right" class="svc-peso">${svcPesoLabel(t,data)}</td>
+  </tr>`;
+}
+
+function serviceBreakdownTableHtml(data,sort,setSortFn,ctx){
+  const expanded=ctx==='funnel'?funnelSvcExpanded:objSvcExpanded;
+  const groups=sortServiceGroups(buildServiceGroups(data),data,sort);
+  let rowIdx=0;
+  const rows=groups.map(g=>{
+    const t=g.totals;
+    const col=g.color||{bar:'#888780',name:'#5F5E5A'};
+    const shade=rowIdx%2===0?'#FAFAF8':'#FFFFFF';
+    const isOpen=expanded.has(g.id);
+    const canExpand=g.items.length>0;
+    const expandIcon=canExpand?`<span class="svc-expand-icon${isOpen?' open':''}">▶</span>`:'<span style="width:14px;display:inline-block"></span>';
+    const trCls=canExpand?' class="svc-group-row"':'';
+    const trClick=canExpand?` onclick="toggleSvcGroupExpand('${g.id}','${ctx||'obj'}')"`:'' ;
+    let html=`<tr${trCls}${trClick} style="background:${shade}${canExpand?';cursor:pointer':''}">
+      <td style="padding:10px 12px;font-size:13px;font-weight:600;color:${col.name};border-bottom:.5px solid #F1EFE8">
+        <span style="display:inline-flex;align-items:center;gap:6px">${expandIcon}<span style="width:8px;height:8px;border-radius:50%;background:${col.bar};flex-shrink:0;display:inline-block"></span>${g.label}${canExpand?`<span class="svc-child-count">(${g.items.length})</span>`:''}</span>
       </td>
-      <td style="padding:10px 12px;font-size:13px;font-weight:600;color:${col.name};border-bottom:.5px solid #F1EFE8;text-align:right">${money(t.mrr)}</td>
+      <td style="padding:10px 12px;font-size:13px;font-weight:600;color:${col.name};border-bottom:.5px solid #F1EFE8;text-align:right">${t.mrr>0?money(t.mrr):'—'}</td>
       <td style="padding:10px 12px;font-size:13px;color:#534AB7;border-bottom:.5px solid #F1EFE8;text-align:right">${money(t.ltv)}</td>
       <td style="padding:10px 12px;font-size:13px;color:#0F6E56;border-bottom:.5px solid #F1EFE8;text-align:right">${t.val>0?money(t.val):'—'}</td>
+      <td style="padding:10px 12px;font-size:13px;font-weight:500;border-bottom:.5px solid #F1EFE8;text-align:right" class="svc-peso">${svcPesoLabel(t,data)}</td>
     </tr>`;
+    rowIdx++;
+    if(isOpen&&canExpand){
+      const childSorted=[...g.items].sort((a,b)=>svcLabel(a).localeCompare(svcLabel(b),'es',{sensitivity:'base'}));
+      childSorted.forEach(key=>{
+        html+=svcDetailRowHtml(key,data.svcTotals[key],data,shade);
+      });
+    }
+    return html;
   }).join('');
 
   return`<div style="overflow-x:auto">
     <table style="width:100%;border-collapse:collapse">
       <thead><tr style="background:#F7F6F2">
-        ${svcSortTh('name','Servicio','left',sort,setSortFn)}
+        ${svcSortTh('name','Grupo / Servicio','left',sort,setSortFn)}
         ${svcSortTh('mrr','Total / mes','right',sort,setSortFn)}
         ${svcSortTh('ltv','LTV 18m','right',sort,setSortFn)}
         ${svcSortTh('val','Valor 2026','right',sort,setSortFn)}
+        ${svcSortTh('peso','Peso','right',sort,setSortFn)}
       </tr></thead>
       <tbody>${rows}</tbody>
       <tfoot><tr style="background:#F7F6F2">
@@ -1314,17 +1474,18 @@ function serviceBreakdownTableHtml(data,sort,setSortFn){
         <td style="padding:10px 12px;font-size:12px;font-weight:700;color:#1a1a18;text-align:right;border-top:.5px solid #D3D1C7">${money(data.totalMrr)}</td>
         <td style="padding:10px 12px;font-size:12px;font-weight:600;color:#534AB7;text-align:right;border-top:.5px solid #D3D1C7">${money(data.grandLtv)}</td>
         <td style="padding:10px 12px;font-size:12px;font-weight:600;color:#0F6E56;text-align:right;border-top:.5px solid #D3D1C7">${data.grandVal>0?money(data.grandVal):'—'}</td>
+        <td style="padding:10px 12px;font-size:12px;font-weight:600;color:#5F5E5A;text-align:right;border-top:.5px solid #D3D1C7">100%</td>
       </tr></tfoot>
     </table>
   </div>`;
 }
 
-function buildServiceBreakdownTable(scopeDeals,sort,setSortFn,serviceFilter=null){
+function buildServiceBreakdownTable(scopeDeals,sort,setSortFn,serviceFilter=null,ctx='obj'){
   const data=computeServiceBreakdown(scopeDeals,serviceFilter);
   if(!data) return null;
   const s=sort||{col:'mrr',dir:'desc'};
   const fn=setSortFn||'setObjSvcSort';
-  const html=serviceBreakdownTableHtml(data,s,fn);
+  const html=serviceBreakdownTableHtml(data,s,fn,ctx);
   return {...data,html};
 }
 
@@ -1340,7 +1501,7 @@ function renderServiceBreakdown(deals){
       : deals.filter(d=>!won(SM[d.s]||d.s)&&!lost(SM[d.s]||d.s));
 
   _funnelSvcScopeDeals=scopeDeals;
-  const result = buildServiceBreakdownTable(scopeDeals,funnelSvcSort,'setFunnelSvcSort');
+  const result = buildServiceBreakdownTable(scopeDeals,funnelSvcSort,'setFunnelSvcSort',null,'funnel');
   if(!result){ card.style.display='none'; return; }
   card.style.display='block';
 
@@ -1371,7 +1532,7 @@ function renderObjetivoServiceBreakdown(deals){
 
   _objSvcDeals=deals;
   const sf=objServiceFilterActive()?objServices:null;
-  const result = buildServiceBreakdownTable(deals,objSvcSort,'setObjSvcSort',sf);
+  const result = buildServiceBreakdownTable(deals,objSvcSort,'setObjSvcSort',sf,'obj');
   if(!result){
     body.innerHTML=`<p class="empty">Sin desglose por servicio en los ${deals.length} deal${deals.length!==1?'s':''} filtrados</p>`;
     return null;

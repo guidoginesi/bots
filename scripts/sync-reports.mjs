@@ -9,6 +9,7 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import { execSync } from "child_process";
+import { injectReportTopbar } from "../../app-directorio/report-topbar.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(__dirname, "..");
@@ -93,7 +94,10 @@ for (const entry of SOURCES) {
     continue;
   }
   const raw = fs.readFileSync(entry.source, "utf8");
-  const cleaned = stripEmbeddedAuth(raw);
+  const cleaned = injectReportTopbar(stripEmbeddedAuth(raw), {
+    title: entry.title,
+    force: true,
+  });
   const dest = path.join(OUT_DIR, entry.file);
   fs.writeFileSync(dest, cleaned);
   manifest.reports.push({

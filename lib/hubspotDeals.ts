@@ -11,6 +11,10 @@ const DEAL_PROPERTIES = [
   "gmv_mensual_estimado",
   "pais_pow",
   "deal_currency_code",
+  "hs_line_item_global_term_hs_recurring_billing_start_date",
+  "hs_line_item_global_term_hs_recurring_billing_start_date_enabled",
+  "fecha_fee_ecommerce",
+  "hs_priority",
 ];
 
 const LI_PROPERTIES = [
@@ -20,6 +24,8 @@ const LI_PROPERTIES = [
   "quantity",
   "hs_mrr",
   "hs_recurring_billing_period",
+  "hs_recurring_billing_start_date",
+  "recurringbillingfrequency",
 ];
 
 const UNDO_STAGES = new Set([
@@ -54,10 +60,11 @@ export type DashboardDeal = {
   b: "pow" | "undo";
   p: string | null;
   a: number;
+  pri?: string | null;
   gmv?: number;
   fv?: number;
-  li?: { n: string; a: number; ot?: true }[];
-  ot?: number;
+  ec_bc?: string;
+  li?: { n: string; a: number; bc?: string; once?: true }[];
 };
 
 export type HubSpotDealsPayload = {
@@ -218,42 +225,98 @@ async function fetchContactsMeta() {
   }
 }
 
-function lineItemAmount(l: HubSpotLineItem): number {
-  return parseFloat(l.properties?.amount || l.properties?.price || "0") || 0;
+function lineItemRecurringSignals(l: HubSpotLineItem) {
+  const freq = (l.properties?.recurringbillingfrequency || "").trim();
+  const period = (l.properties?.hs_recurring_billing_period || "").trim();
+  const mrr = parseFloat(l.properties?.hs_mrr || "0") || 0;
+  return {
+    freq,
+    period,
+    mrr,
+    isRecurring: !!(freq || period || mrr > 0),
+  };
 }
 
-/** Productos one-shot que siempre cuentan en Valor generado (aunque HubSpot marque MRR). */
-const ONE_TIME_LINE_ITEM_NAMES = new Set(["Desarrollo - Set Up"]);
+function lineItemNetAmount(l: HubSpotLineItem): number {
+  const amount = parseFloat(l.properties?.amount || "0") || 0;
+  if (amount > 0) return amount;
+  const price = parseFloat(l.properties?.price || "0") || 0;
+  const qty = parseFloat(l.properties?.quantity || "1") || 1;
+  return price > 0 ? price * qty : 0;
+}
+
+function lineItemAmount(l: HubSpotLineItem): number {
+  const sig = lineItemRecurringSignals(l);
+  if (sig.isRecurring && sig.mrr > 0) return sig.mrr;
+  return lineItemNetAmount(l);
+}
+
+function parseHubSpotDate(value: string | null | undefined): string | null {
+  if (!value) return null;
+  return value.split("T")[0] || null;
+}
+
+function lineItemBillingStart(l: HubSpotLineItem): string | null {
+  return parseHubSpotDate(l.properties?.hs_recurring_billing_start_date);
+}
 
 function isOneTimeLineItem(l: HubSpotLineItem): boolean {
-  const amt = lineItemAmount(l);
-  if (amt <= 0) return false;
-  const name = l.properties?.name?.trim();
-  if (name && ONE_TIME_LINE_ITEM_NAMES.has(name)) return true;
-  const liMrr = parseFloat(l.properties?.hs_mrr || "0") || 0;
-  const period = l.properties?.hs_recurring_billing_period;
-  return liMrr <= 0 && !period;
+  if (lineItemNetAmount(l) <= 0 && lineItemRecurringSignals(l).mrr <= 0) return false;
+  return !lineItemRecurringSignals(l).isRecurring;
+}
+
+function isVariableFeeLineItemName(name: string): boolean {
+  const n = name.toLowerCase();
+  return /fee e-?commerce/.test(n) && !/fijo/.test(n);
+}
+
+function ecBillingDateFromDeal(
+  p: Record<string, string | null | undefined>,
+  lineItems: HubSpotLineItem[]
+): string | null {
+  const customStart = parseHubSpotDate(p.fecha_fee_ecommerce);
+  if (customStart) return customStart;
+
+  const globalEnabled =
+    p.hs_line_item_global_term_hs_recurring_billing_start_date_enabled;
+  const globalStart = parseHubSpotDate(
+    p.hs_line_item_global_term_hs_recurring_billing_start_date
+  );
+  if (globalStart && globalEnabled !== "false") return globalStart;
+
+  for (const l of lineItems) {
+    const name = l.properties?.name?.trim() || "";
+    if (!isVariableFeeLineItemName(name)) continue;
+    const bc = lineItemBillingStart(l);
+    if (bc) return bc;
+  }
+
+  return null;
 }
 
 function mapDeal(deal: HubSpotDeal, lineItems: HubSpotLineItem[]): DashboardDeal {
   const p = deal.properties;
-  const closedate = p.closedate ? p.closedate.split("T")[0] : null;
+  const closedate = parseHubSpotDate(p.closedate);
   const mrr = parseFloat(p.hs_mrr || p.amount || "0") || 0;
-  const tcv = parseFloat(p.hs_tcv || "0") || 0;
   const gmv = parseFloat(p.gmv_mensual_estimado || "0") || 0;
   const fv = parseFloat(p.fee_variable || "0") || 0;
   const country = p.pais_pow || null;
 
   const li = lineItems
     .filter((l) => l.properties?.name && lineItemAmount(l) > 0)
-    .map((l) => ({
-      n: l.properties!.name as string,
-      a: lineItemAmount(l),
-      ...(isOneTimeLineItem(l) ? { ot: true as const } : {}),
-    }));
+    .map((l) => {
+      const bc = lineItemBillingStart(l);
+      const once = isOneTimeLineItem(l);
+      return {
+        n: l.properties!.name as string,
+        a: lineItemAmount(l),
+        ...(bc ? { bc } : {}),
+        ...(once ? { once: true as const } : {}),
+      };
+    });
 
-  let ot = li.filter((x) => x.ot).reduce((s, x) => s + x.a, 0);
-  if (ot === 0 && mrr <= 0 && tcv > 0) ot = tcv;
+  const ec_bc =
+    gmv > 0 && fv > 0 ? ecBillingDateFromDeal(p, lineItems) : null;
 
   return {
     n: p.dealname || "Sin nombre",
@@ -263,10 +326,11 @@ function mapDeal(deal: HubSpotDeal, lineItems: HubSpotLineItem[]): DashboardDeal
     b: getBrand(deal),
     p: country,
     a: mrr,
+    ...(p.hs_priority ? { pri: p.hs_priority } : {}),
     ...(gmv > 0 ? { gmv } : {}),
     ...(fv > 0 ? { fv } : {}),
+    ...(ec_bc ? { ec_bc } : {}),
     ...(li.length ? { li } : {}),
-    ...(ot > 0 ? { ot } : {}),
   };
 }
 
