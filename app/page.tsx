@@ -7,7 +7,7 @@ export default function HomeLanding() {
     <main className={styles.layout}>
       <header className={styles.header}>
         <div>
-          <h1>POW</h1>
+          <h1>Pow</h1>
           <p>Panel interno</p>
         </div>
         <LogoutButton />
@@ -18,7 +18,7 @@ export default function HomeLanding() {
           <span className={styles.hubLabel}>Automatización</span>
           <span className={styles.hubTitle}>Bots</span>
           <p className={styles.cardDesc}>
-            Administración de webhooks, Asana y Google Chat.
+            Webhooks, Asana y Google Chat.
           </p>
         </Link>
 
@@ -26,7 +26,7 @@ export default function HomeLanding() {
           <span className={styles.hubLabel}>Análisis</span>
           <span className={styles.hubTitle}>Informes</span>
           <p className={styles.cardDesc}>
-            CEO Scorecard, CRM Pow, CRM Undo y más.
+            CEO Scorecard, CRM Pow/Undo, Markova y más.
           </p>
         </Link>
       </div>

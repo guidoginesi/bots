@@ -1,12 +1,38 @@
 .layout {
   min-height: 100vh;
-  padding: 40px 24px;
-  max-width: 860px;
+  padding: 3rem 1.5rem 4rem;
+  max-width: 720px;
   margin: 0 auto;
 }
 
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 1.5rem;
+  font-size: 12px;
+}
+
+.breadcrumb a {
+  color: var(--text-muted);
+  text-decoration: none;
+}
+
+.breadcrumb a:hover {
+  color: var(--text);
+}
+
+.breadcrumbSep {
+  color: var(--text-faint);
+}
+
+.breadcrumbHere {
+  color: var(--text);
+  font-weight: 500;
+}
+
 .header {
-  margin-bottom: 32px;
+  margin-bottom: 2rem;
   display: flex;
   justify-content: space-between;
   align-items: flex-end;
@@ -21,13 +47,17 @@
 }
 
 .reportsLink {
-  font-size: 13px;
+  font-size: 12px;
   color: var(--text-muted);
   text-decoration: none;
   font-weight: 500;
 }
 
 .reportsLink:hover {
+  color: var(--text);
+}
+
+.reportsLinkActive {
   color: var(--text);
 }
 
@@ -53,8 +83,8 @@
 }
 
 .reportCard:hover {
-  border-color: #d1d5db;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+  border-color: #B4B2A9;
+  box-shadow: var(--shadow-hover);
 }
 
 /* ── Login (misma estética que Bots) ───────────────── */
@@ -116,8 +146,8 @@
 
 .loginInput:focus {
   outline: none;
-  border-color: #9ca3af;
-  box-shadow: 0 0 0 3px rgba(17, 24, 39, 0.06);
+  border-color: #B4B2A9;
+  box-shadow: 0 0 0 3px rgba(26, 26, 24, 0.06);
 }
 
 .loginBtn {
@@ -135,7 +165,7 @@
 }
 
 .loginBtn:hover:not(:disabled) {
-  background: #374151;
+  background: #2C2C2A;
 }
 
 .loginBtn:disabled {
@@ -153,7 +183,7 @@
 .hubGrid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 16px;
+  gap: 12px;
 }
 
 @media (max-width: 560px) {
@@ -165,8 +195,8 @@
 .hubCard {
   text-decoration: none;
   color: inherit;
-  padding: 24px;
-  min-height: 140px;
+  padding: 1.25rem;
+  min-height: 132px;
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -174,32 +204,34 @@
 }
 
 .hubCard:hover {
-  border-color: #d1d5db;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  border-color: #B4B2A9;
+  box-shadow: var(--shadow-hover);
 }
 
 .hubLabel {
-  font-size: 12px;
-  font-weight: 500;
+  font-size: 10px;
+  font-weight: 600;
   color: var(--text-muted);
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.06em;
 }
 
 .hubTitle {
   font-size: 20px;
   font-weight: 600;
   color: var(--text);
+  letter-spacing: -0.02em;
 }
 
 .header h1 {
-  font-size: 22px;
+  font-size: 28px;
   font-weight: 600;
   color: var(--text);
+  letter-spacing: -0.02em;
 }
 
 .header p {
-  font-size: 14px;
+  font-size: 13px;
   color: var(--text-muted);
   margin-top: 4px;
 }
@@ -207,14 +239,14 @@
 /* ── Bot card ─────────────────────────────────────── */
 .grid {
   display: grid;
-  gap: 16px;
+  gap: 10px;
 }
 
 .card {
   background: var(--surface);
-  border: 1px solid var(--border);
+  border: 0.5px solid var(--border);
   border-radius: var(--radius);
-  padding: 20px 24px;
+  padding: 1.1rem 1.25rem;
   box-shadow: var(--shadow);
   display: flex;
   flex-direction: column;
@@ -243,6 +275,7 @@
 .cardName {
   font-size: 15px;
   font-weight: 600;
+  letter-spacing: -0.01em;
 }
 
 .badge {
@@ -263,9 +296,14 @@
 }
 
 .cardDesc {
-  font-size: 13px;
+  font-size: 12px;
   color: var(--text-muted);
+  line-height: 1.45;
   margin-bottom: 10px;
+}
+
+.reportCard .cardDesc {
+  margin-bottom: 0;
 }
 
 .cardMeta {

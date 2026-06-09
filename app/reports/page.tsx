@@ -10,15 +10,18 @@ export default function ReportsIndexPage() {
 
   return (
     <main className={styles.layout}>
+      <nav className={styles.breadcrumb} aria-label="Navegación">
+        <Link href="/">Pow</Link>
+        <span className={styles.breadcrumbSep}>/</span>
+        <span className={styles.breadcrumbHere}>Informes</span>
+      </nav>
+
       <header className={styles.header}>
         <div>
-          <h1>Dashboards</h1>
-          <p>Informes internos</p>
+          <h1>Informes</h1>
+          <p>Dashboards internos</p>
         </div>
         <div className={styles.headerActions}>
-          <Link href="/" className={styles.reportsLink}>
-            Inicio
-          </Link>
           <Link href="/bots" className={styles.reportsLink}>
             Bots
           </Link>
@@ -30,7 +33,7 @@ export default function ReportsIndexPage() {
         {reports.map((r) => (
           <Link
             key={r.slug}
-            href={`/reports/${r.file}?v=20260522`}
+            href={`/reports/${r.file}`}
             className={`${styles.card} ${styles.reportCard}`}
           >
             <span className={styles.cardName}>{r.title}</span>
@@ -40,7 +43,7 @@ export default function ReportsIndexPage() {
       </div>
 
       {reports.length === 0 && (
-        <p className={styles.loading}>No hay dashboards publicados.</p>
+        <p className={styles.loading}>No hay informes publicados.</p>
       )}
     </main>
   );
