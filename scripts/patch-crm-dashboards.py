@@ -130,6 +130,10 @@ def patch_undo(t: str) -> str:
     t = re.sub(r"<h1>CRM Dashboard[^<]*</h1>", "<h1>CRM Dashboard · Undo</h1>", t, count=1)
     t = re.sub(r"<title>CRM Dashboard[^<]*</title>", "<title>CRM Dashboard · Undo</title>", t, count=1)
     t = t.replace(
+        "<h1>Funnel de Ventas · Pow</h1><p class=\"meta\">Pipeline Pow ·",
+        "<h1>Funnel de Ventas · Undo</h1><p class=\"meta\">Pipeline Undo ·",
+    )
+    t = t.replace(
         "<h1>Funnel de Ventas</h1><p class=\"meta\">Pipeline Pow ·",
         "<h1>Funnel de Ventas · Undo</h1><p class=\"meta\">Pipeline Undo ·",
     )
@@ -143,6 +147,8 @@ def patch_undo(t: str) -> str:
         '<span class="rtb-current">CRM Dashboard · Undo</span>',
     )
     t = t.replace("sync diario · Pow ·", "sync diario · Undo ·")
+    t = t.replace("HubSpot MCP · Pow · Portal", "HubSpot MCP · Undo · Portal")
+    t = t.replace("Pow · CRM Dashboard", "Undo · CRM Dashboard")
     t = re.sub(
         r"const FUNNEL_ORDER=\[[\s\S]*?\];\nconst FUNNEL_COLORS=\{[\s\S]*?\};",
         UNDO_FUNNEL,

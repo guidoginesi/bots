@@ -345,7 +345,7 @@ body.has-report-topbar{padding-top:40px!important;box-sizing:border-box}
       </div>
       <div id="crm-deals"></div>
     </div>
-    <p class="footer">Datos en tiempo real vía HubSpot MCP · Pow · Portal 48113030</p>
+    <p class="footer">Datos en tiempo real vía HubSpot MCP · Undo · Portal 48113030</p>
   </div>
   </div>
 
@@ -353,7 +353,7 @@ body.has-report-topbar{padding-top:40px!important;box-sizing:border-box}
   <div class="view active" id="view-funnel">
   <div class="wrap">
     <div class="header">
-      <div><h1>Funnel de Ventas · Pow</h1><p class="meta">Pipeline Pow · Medido en valor de negocio · <span class="dash-version">15 mayo 2026</span></p></div>
+      <div><h1>Funnel de Ventas · Undo</h1><p class="meta">Pipeline Undo · Medido en valor de negocio · <span class="dash-version">15 mayo 2026</span></p></div>
       <a class="btn-link" href="https://app.hubspot.com/contacts/48113030/deals" target="_blank">Abrir en HubSpot ↗</a>
     </div>
 
@@ -464,7 +464,7 @@ body.has-report-topbar{padding-top:40px!important;box-sizing:border-box}
       <div id="brand-detail-body"></div>
     </div>
 
-    <p class="footer">Datos en tiempo real vía HubSpot MCP · Pow · Portal 48113030</p>
+    <p class="footer">Datos en tiempo real vía HubSpot MCP · Undo · Portal 48113030</p>
   </div>
   </div>
 
@@ -554,7 +554,7 @@ body.has-report-topbar{padding-top:40px!important;box-sizing:border-box}
       <div id="obj-won-deals"></div>
     </div>
 
-    <p class="footer">Datos en tiempo real vía HubSpot MCP · Pow · Portal 48113030</p>
+    <p class="footer">Datos en tiempo real vía HubSpot MCP · Undo · Portal 48113030</p>
   </div>
   </div>
 
@@ -673,7 +673,12 @@ let DEALS=[
   // Closed won
   {n:"Arredo",s:"closedwon",c:"2025-12-31",o:"1302677373",b:"pow",p:"Argentina",a:0},
   {n:"Volta Bikes",s:"closedwon",c:"2025-02-12",o:"1302677373",b:"pow",p:"Argentina",a:0},
-  {n:"Longchamp",s:"closedwon",c:"2025-05-07",o:"1302677373",b:"pow",p:"Argentina",a:2600,li:[{n:"Paid Media",a:1500},{n:"E-mail Marketing",a:1100}]},
+  {n:"Longchamp",s:"closedwon",c:"2025-05-07",o:"1302677373",b:"pow",p:"Argentina",a:3600,li:[
+    {n:"Fee Fijo E-Commerce",a:1000},
+    {n:"Fee Servicio Paid Media",a:1100},
+    {n:"Fee Servicio E-mail Marketing",a:1500},
+    {n:"Desarrollo - Set Up",a:10000,once:true}
+  ]},
   {n:"Cerini",s:"closedwon",c:"2026-04-21",o:"1302677373",b:"pow",p:"Argentina",li:[
     {n:"Fee Servicio Paid Media",a:2350,bc:"2026-08-01"},
     {n:"Fee Servicio E-mail Marketing",a:1670,bc:"2026-08-01"},
@@ -2264,7 +2269,7 @@ function renderObjetivo() {
 
 // ===================== INIT =====================
 const LOADING_HTML=`<div id="loading-overlay" style="position:fixed;inset:0;background:#F1EFE8;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;gap:16px">
-  <div style="font-size:22px;font-weight:500;color:#1a1a18">Pow · CRM Dashboard</div>
+  <div style="font-size:22px;font-weight:500;color:#1a1a18">Undo · CRM Dashboard</div>
   <div style="display:flex;gap:6px;align-items:center">
     <div class="spin-dot" style="width:8px;height:8px;border-radius:50%;background:#378ADD;animation:spin-fade 1s ease-in-out infinite"></div>
     <div class="spin-dot" style="width:8px;height:8px;border-radius:50%;background:#378ADD;animation:spin-fade 1s ease-in-out .2s infinite"></div>
