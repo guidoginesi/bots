@@ -23,6 +23,12 @@
       "file": "markova-comision-report.html",
       "title": "Markova · Comisión e ingresos",
       "description": "Main vs Outlet · simulador de comisión · Jun 2026"
+    },
+    {
+      "slug": "crecimiento-ars",
+      "file": "reporte-crecimiento-ingresos-egresos-ars.html",
+      "title": "Crecimiento ARS · Ingresos vs egresos",
+      "description": "Gap de crecimiento nominal · sueldos ~70% egresos · Jun 2026"
     }
   ]
 }

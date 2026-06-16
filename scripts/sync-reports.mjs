@@ -47,6 +47,19 @@ const SOURCES = [
     title: "Markova · Comisión e ingresos",
     description: "Main vs Outlet · simulador de comisión · Jun 2026",
   },
+  {
+    slug: "crecimiento-ars",
+    source: path.join(
+      ROOT,
+      "..",
+      "app-directorio",
+      "reporte-crecimiento-ingresos-egresos-ars.html"
+    ),
+    file: "reporte-crecimiento-ingresos-egresos-ars.html",
+    title: "Crecimiento ARS · Ingresos vs egresos",
+    description: "Gap de crecimiento nominal · sueldos ~70% egresos · Jun 2026",
+    assets: ["reporte-crecimiento-ingresos-egresos-ars.docx"],
+  },
 ];
 
 function stripEmbeddedAuth(html) {
@@ -100,6 +113,18 @@ for (const entry of SOURCES) {
   });
   const dest = path.join(OUT_DIR, entry.file);
   fs.writeFileSync(dest, cleaned);
+  if (entry.assets?.length) {
+    const baseDir = path.dirname(entry.source);
+    for (const asset of entry.assets) {
+      const assetSrc = path.join(baseDir, asset);
+      if (!fs.existsSync(assetSrc)) {
+        console.warn(`⚠️  Asset omitido (no existe): ${assetSrc}`);
+        continue;
+      }
+      fs.copyFileSync(assetSrc, path.join(OUT_DIR, asset));
+      console.log(`✓ ${asset} ← ${path.relative(ROOT, assetSrc)}`);
+    }
+  }
   manifest.reports.push({
     slug: entry.slug,
     file: entry.file,

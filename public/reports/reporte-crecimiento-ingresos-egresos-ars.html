@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Crecimiento ARS · Ingresos vs Egresos · Pow</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#F1EFE8;color:#1a1a18;line-height:1.45}
+.wrap{max-width:960px;margin:0 auto;padding:2rem 1.5rem 4rem}
+.header{margin-bottom:1.5rem}
+.header h1{font-size:24px;font-weight:600;letter-spacing:-.02em}
+.meta{font-size:12px;color:#888780;margin-top:6px;max-width:720px;line-height:1.5}
+.badge{display:inline-block;font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;background:#E6F1FB;color:#185FA5;padding:3px 8px;border-radius:4px;margin-bottom:8px}
+.note{font-size:12px;color:#5F5E5A;background:white;border:.5px solid #D3D1C7;border-radius:10px;padding:12px 14px;margin-bottom:1.25rem;line-height:1.55}
+.note strong{color:#1a1a18}
+.dl-row{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:1.25rem}
+.dl-btn{
+  display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:500;
+  padding:8px 14px;border-radius:8px;border:.5px solid #D3D1C7;background:white;
+  color:#185FA5;text-decoration:none;transition:border-color .15s,box-shadow .15s;
+}
+.dl-btn:hover{border-color:#185FA5;box-shadow:0 2px 8px rgba(24,95,165,.08)}
+
+.card{background:white;border:.5px solid #D3D1C7;border-radius:12px;padding:1.1rem 1.25rem;margin-bottom:1rem}
+.card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:8px}
+.card-title{font-size:10px;font-weight:600;color:#888780;letter-spacing:.07em;text-transform:uppercase}
+.card-title strong{color:#1a1a18;font-size:11px;letter-spacing:-.01em;text-transform:none}
+.card-foot{font-size:12px;color:#888780;margin-top:12px;line-height:1.55}
+.brecha{font-size:12px;color:#5F5E5A;margin-top:12px;padding:10px 12px;background:#FAFAF8;border-radius:8px;border:.5px solid #ECEAE2;line-height:1.55}
+.impl-list{list-style:disc;padding-left:1.25rem;font-size:12px;color:#5F5E5A;line-height:1.55}
+.impl-list li+li{margin-top:6px}
+
+table{width:100%;border-collapse:collapse;font-size:12px}
+th,td{padding:8px 10px;text-align:right;border-bottom:.5px solid #ECEAE2}
+th:first-child,td:first-child{text-align:left}
+th{font-size:10px;color:#888780;font-weight:600;text-transform:uppercase;letter-spacing:.04em;background:#FAFAF8}
+tr:hover td{background:#FAFAF8}
+.pos{color:#0F6E56;font-weight:500}.neg{color:#A32D2D;font-weight:500}
+.gap-hl td{background:#FFF5EB;font-weight:600}
+.gap-hl td:first-child{color:#854F0B}
+.table-wrap{overflow:auto;border:.5px solid #ECEAE2;border-radius:8px}
+.pill{font-size:10px;font-weight:600;padding:2px 7px;border-radius:4px;background:#F1EFE8;color:#5F5E5A}
+
+body.has-report-topbar{padding-top:40px!important;box-sizing:border-box}
+#report-topbar{
+  position:fixed;top:0;left:0;right:0;z-index:10000;height:40px;
+  display:flex;align-items:center;gap:10px;padding:0 16px;
+  background:#1a1a18;color:#D3D1C7;border-bottom:.5px solid #2C2C2A;
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  font-size:12px;font-weight:500;
+}
+#report-topbar a{color:#D3D1C7;text-decoration:none}
+#report-topbar a:hover{color:#fff}
+.rtb-back{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;margin-left:-6px;border-radius:6px;transition:background .12s,color .12s}
+.rtb-back:hover{background:#2C2C2A}
+.rtb-crumb{display:inline-flex;align-items:center;gap:8px;min-width:0;color:#888780}
+.rtb-crumb-link{color:#888780!important}
+.rtb-crumb-link:hover{color:#D3D1C7!important}
+.rtb-sep{color:#5F5E5A;user-select:none}
+.rtb-current{color:#F1EFE8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@media(max-width:520px){
+  .rtb-crumb .rtb-crumb-link{display:none}
+  .rtb-crumb .rtb-sep:first-of-type{display:none}
+}
+</style>
+</head>
+<body class="has-report-topbar">
+<nav id="report-topbar" aria-label="Navegación del informe">
+  <a class="rtb-back" href="/reports" data-reports-back>← Informes</a>
+  <span class="rtb-crumb" aria-label="Ubicación">
+    <a class="rtb-crumb-link" href="/" data-app-home>Pow</a>
+    <span class="rtb-sep" aria-hidden="true">/</span>
+    <a class="rtb-crumb-link" href="/reports" data-reports-home>Informes</a>
+    <span class="rtb-sep" aria-hidden="true">/</span>
+    <span class="rtb-current">Crecimiento ARS · Ingresos vs egresos</span>
+  </span>
+</nav>
+<script>
+(function(){
+  var p=location.pathname;
+  var reportsHome='/reports';
+  if(p.indexOf('/reports/')===-1&&!/^\/reports\/?$/.test(p))reportsHome='/reports/';
+  var app=document.querySelector('[data-app-home]');
+  if(app)app.href='/';
+  document.querySelectorAll('[data-reports-home],[data-reports-back]').forEach(function(a){a.href=reportsHome;});
+})();
+</script>
+
+<div class="wrap">
+  <div class="header">
+    <div class="badge">Informe financiero</div>
+    <h1>Crecimiento en pesos · Ingresos vs egresos</h1>
+    <p class="meta" id="meta"></p>
+  </div>
+
+  <div class="note" id="note"></div>
+
+  <div class="dl-row">
+    <a class="dl-btn" href="reporte-crecimiento-ingresos-egresos-ars.docx" download>
+      ↓ Descargar Word (.docx)
+    </a>
+  </div>
+
+  <div class="card">
+    <div class="card-header"><span class="card-title"><strong>1 · Resumen ejecutivo</strong> · 2025 → 2026 PROY</span></div>
+    <div class="table-wrap"><table id="tbl-summary"></table></div>
+    <div class="brecha" id="brecha"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-header"><span class="card-title"><strong>2 · Gap de crecimiento</strong> · Egresos vs ingresos</span></div>
+    <div class="table-wrap"><table id="tbl-gap"></table></div>
+    <p class="card-foot">Gap = YoY egresos − YoY ingresos. Positivo = los egresos aceleran más que el revenue.</p>
+  </div>
+
+  <div class="card">
+    <div class="card-header"><span class="card-title"><strong>3 · Comparación USD vs ARS</strong> · 2026 PROY</span></div>
+    <div class="table-wrap"><table id="tbl-usd"></table></div>
+  </div>
+
+  <div class="card">
+    <div class="card-header"><span class="card-title"><strong>4 · YTD real</strong> · Ene–Jun 2026 vs 2025</span></div>
+    <div class="table-wrap"><table id="tbl-ytd"></table></div>
+  </div>
+
+  <div class="card">
+    <div class="card-header"><span class="card-title"><strong>5 · Histórico YoY</strong> · ARS vs USD</span></div>
+    <div class="table-wrap"><table id="tbl-history"></table></div>
+  </div>
+
+  <div class="card">
+    <div class="card-header"><span class="card-title"><strong>6 · Sueldos como % de egresos totales</strong></span></div>
+    <div class="table-wrap"><table id="tbl-share"></table></div>
+    <p class="card-foot">Los sueldos representan ~70% de todos los egresos. Por eso la curva de sueldos en ARS es casi paralela a egresos totales.</p>
+  </div>
+
+  <div class="card">
+    <div class="card-header"><span class="card-title"><strong>7 · Implicaciones</strong></span></div>
+    <ul class="impl-list" id="impl"></ul>
+  </div>
+</div>
+
+<script>
+const REPORT_DATA = /* injected */ {"source":"REGISTRO GASTOS E INGRESOS - POW S.A - [ARCHIVO POW] - 5.xlsx","generated":"16/06/2026","summary":{"rev25_ars":2734195551.8,"rev26_ars":3482178433.9000006,"egr25_ars":2306772642.7000003,"egr26_ars":3303734238.3,"sue25_ars":1611248667.4999998,"sue26_ars":2297640170.4,"yoy_i":27.4,"yoy_e":43.2,"yoy_s":42.6,"gap_pp":15.8},"usd_compare":{"rev_usd_yoy":15.8,"egr_usd_yoy":23.3,"rev_ars_yoy":27.4,"egr_ars_yoy":43.2},"ytd":{"rev25_ars":1277410901.9,"rev26_ars":1687178184.9,"egr25_ars":1032774618.0,"egr26_ars":1542241050.0,"sue25_ars":728050719.3,"sue26_ars":1062494674.2,"yoy_i_ars":32.1,"yoy_e_ars":49.3,"yoy_s_ars":45.9,"yoy_i_usd":10.3,"yoy_e_usd":24.4},"history":[{"label":"2021","ing_ars":47.5,"egr_ars":131.6,"sue_ars":175.7,"ing_usd":3.3,"egr_usd":60.3},{"label":"2022","ing_ars":39.6,"egr_ars":82.2,"sue_ars":130.8,"ing_usd":-9.5,"egr_usd":21.4},{"label":"2023","ing_ars":189.3,"egr_ars":166.5,"sue_ars":143.0,"ing_usd":24.3,"egr_usd":11.3},{"label":"2024","ing_ars":176.3,"egr_ars":161.2,"sue_ars":215.6,"ing_usd":41.0,"egr_usd":36.8},{"label":"2025","ing_ars":41.1,"egr_ars":43.8,"sue_ars":43.8,"ing_usd":24.8,"egr_usd":26.5},{"label":"2026 PROY","ing_ars":27.4,"egr_ars":43.2,"sue_ars":42.6,"ing_usd":9.2,"egr_usd":22.6}],"sueldos_share":[{"year":"2024","pct":69.9},{"year":"2025","pct":69.8},{"year":"2026 PROY","pct":69.5}]};
+
+const S = REPORT_DATA;
+const fmtM = n => n >= 1e9 ? `$${(n/1e9).toFixed(2)}B` : `$${Math.round(n/1e6).toLocaleString('es-AR')}M`;
+const fmtP = v => v == null ? '—' : `${v >= 0 ? '+' : ''}${v.toFixed(1)}%`;
+const fmtGap = v => v == null ? '—' : `${v >= 0 ? '+' : ''}${v.toFixed(1)} pp`;
+const gapPP = (egr, ing) => egr == null || ing == null ? null : Math.round((egr - ing) * 10) / 10;
+const clsP = v => v == null ? '' : v >= 0 ? 'pos' : 'neg';
+const clsGap = v => v == null ? '' : v > 0 ? 'neg' : v < 0 ? 'pos' : '';
+
+document.getElementById('meta').textContent =
+  `Fuente: ${S.source} · hoja ESTADO DE RESULTADOS + EGRESOS | POW · Generado ${S.generated}`;
+
+document.getElementById('note').innerHTML =
+  `<strong>Lectura:</strong> el CEO Scorecard muestra cifras en USD. En pesos las tasas son más altas por inflación y devaluación. ` +
+  `Los egresos crecen más rápido que los ingresos — gap de crecimiento ${fmtGap(S.summary.gap_pp)} en 2026 PROY (ARS).`;
+
+function fillTable(id, head, rows, rowClass) {
+  const el = document.getElementById(id);
+  el.innerHTML = `<thead><tr>${head.map(h => `<th>${h}</th>`).join('')}</tr></thead><tbody>${
+    rows.map(r => `<tr${rowClass && rowClass(r) ? ` class="${rowClass(r)}"` : ''}>${r.map(c => {
+      if (typeof c === 'object') return `<td class="${c.cls || ''}">${c.t}</td>`;
+      return `<td>${c}</td>`;
+    }).join('')}</tr>`).join('')
+  }</tbody>`;
+}
+
+fillTable('tbl-summary',
+  ['Concepto', '2025 (ARS)', '2026 PROY (ARS)', 'Crecimiento YoY'],
+  [
+    ['Ingresos', fmtM(S.summary.rev25_ars), fmtM(S.summary.rev26_ars), {t: fmtP(S.summary.yoy_i), cls: clsP(S.summary.yoy_i)}],
+    ['Egresos totales', fmtM(S.summary.egr25_ars), fmtM(S.summary.egr26_ars), {t: fmtP(S.summary.yoy_e), cls: 'neg'}],
+    ['Sueldos', fmtM(S.summary.sue25_ars), fmtM(S.summary.sue26_ars), {t: fmtP(S.summary.yoy_s), cls: 'neg'}],
+  ]
+);
+
+document.getElementById('brecha').textContent =
+  `Gap de crecimiento (egresos − ingresos): ${fmtGap(S.summary.gap_pp)} — ${fmtP(S.summary.yoy_e)} egresos vs ${fmtP(S.summary.yoy_i)} ingresos.`;
+
+fillTable('tbl-gap',
+  ['Período', 'Moneda', 'YoY Ingresos', 'YoY Egresos', 'Gap (Egr − Ing)'],
+  [
+    ['2026 PROY', 'ARS', fmtP(S.summary.yoy_i), fmtP(S.summary.yoy_e), {t: fmtGap(S.summary.gap_pp), cls: clsGap(S.summary.gap_pp)}],
+    ['2026 PROY', 'USD', fmtP(S.usd_compare.rev_usd_yoy), fmtP(S.usd_compare.egr_usd_yoy), {t: fmtGap(gapPP(S.usd_compare.egr_usd_yoy, S.usd_compare.rev_usd_yoy)), cls: clsGap(gapPP(S.usd_compare.egr_usd_yoy, S.usd_compare.rev_usd_yoy))}],
+    ['YTD Ene–Jun', 'ARS', fmtP(S.ytd.yoy_i_ars), fmtP(S.ytd.yoy_e_ars), {t: fmtGap(gapPP(S.ytd.yoy_e_ars, S.ytd.yoy_i_ars)), cls: clsGap(gapPP(S.ytd.yoy_e_ars, S.ytd.yoy_i_ars))}],
+    ['YTD Ene–Jun', 'USD', fmtP(S.ytd.yoy_i_usd), fmtP(S.ytd.yoy_e_usd), {t: fmtGap(gapPP(S.ytd.yoy_e_usd, S.ytd.yoy_i_usd)), cls: clsGap(gapPP(S.ytd.yoy_e_usd, S.ytd.yoy_i_usd))}],
+  ]
+);
+
+fillTable('tbl-usd',
+  ['Concepto', 'YoY USD (Scorecard)', 'YoY ARS (nominal)'],
+  [
+    ['Ingresos', fmtP(S.usd_compare.rev_usd_yoy), {t: fmtP(S.usd_compare.rev_ars_yoy), cls: clsP(S.usd_compare.rev_ars_yoy)}],
+    ['Egresos', fmtP(S.usd_compare.egr_usd_yoy), {t: fmtP(S.usd_compare.egr_ars_yoy), cls: 'neg'}],
+  ]
+);
+
+fillTable('tbl-ytd',
+  ['Concepto', '2025 YTD', '2026 YTD', 'YoY ARS', 'YoY USD'],
+  [
+    ['Ingresos', fmtM(S.ytd.rev25_ars), fmtM(S.ytd.rev26_ars), {t: fmtP(S.ytd.yoy_i_ars), cls: clsP(S.ytd.yoy_i_ars)}, {t: fmtP(S.ytd.yoy_i_usd), cls: clsP(S.ytd.yoy_i_usd)}],
+    ['Egresos', fmtM(S.ytd.egr25_ars), fmtM(S.ytd.egr26_ars), {t: fmtP(S.ytd.yoy_e_ars), cls: 'neg'}, {t: fmtP(S.ytd.yoy_e_usd), cls: 'neg'}],
+    ['Sueldos', fmtM(S.ytd.sue25_ars), fmtM(S.ytd.sue26_ars), {t: fmtP(S.ytd.yoy_s_ars), cls: 'neg'}, '—'],
+  ]
+);
+
+fillTable('tbl-history',
+  ['Año', 'Ing. ARS', 'Egr. ARS', 'Gap ARS', 'Sueldos ARS', 'Ing. USD', 'Egr. USD', 'Gap USD'],
+  S.history.map(r => {
+    const gA = gapPP(r.egr_ars, r.ing_ars);
+    const gU = gapPP(r.egr_usd, r.ing_usd);
+    return [r.label, fmtP(r.ing_ars), fmtP(r.egr_ars), {t: fmtGap(gA), cls: clsGap(gA)}, fmtP(r.sue_ars), fmtP(r.ing_usd), fmtP(r.egr_usd), {t: fmtGap(gU), cls: clsGap(gU)}];
+  })
+);
+
+fillTable('tbl-share',
+  ['Año', 'Sueldos / Egresos'],
+  S.sueldos_share.map(r => [r.year, `${r.pct.toFixed(1)}%`])
+);
+
+document.getElementById('impl').innerHTML = [
+  `Gap de crecimiento 2026 PROY: ${fmtGap(S.summary.gap_pp)} en ARS · ${fmtGap(gapPP(S.usd_compare.egr_usd_yoy, S.usd_compare.rev_usd_yoy))} en USD — los egresos superan al revenue en ritmo nominal.`,
+  `En pesos el negocio factura más (${fmtP(S.summary.yoy_i)} anual · ${fmtP(S.ytd.yoy_i_ars)} YTD), pero gasta mucho más rápido (${fmtP(S.summary.yoy_e)} anual · ${fmtP(S.ytd.yoy_e_ars)} YTD).`,
+  'Sueldos-only es un proxy válido del ~70% de egresos — útil para separar nómina del resto (estructura, tech, bonos).',
+  'La compresión de margen en USD no es solo tipo de cambio: en ARS nominal también hay desbalance estructural.',
+].map(t => `<li>${t}</li>`).join('');
+</script>
+</body>
+</html>
