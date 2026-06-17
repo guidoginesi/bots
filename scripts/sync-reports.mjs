@@ -48,6 +48,13 @@ const SOURCES = [
     description: "Main vs Outlet · simulador de comisión · Jun 2026",
   },
   {
+    slug: "arredo-comision",
+    source: path.join(ROOT, "..", "app-directorio", "arredo-comision-report.html"),
+    file: "arredo-comision-report.html",
+    title: "Arredo · Comisión e ingresos",
+    description: "Simulador tasa única y escalas por GMV · Jun 2026",
+  },
+  {
     slug: "crecimiento-ars",
     source: path.join(
       ROOT,
