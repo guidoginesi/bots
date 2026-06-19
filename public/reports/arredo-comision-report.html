@@ -412,10 +412,10 @@ document.getElementById('note').textContent = D.note || '';
 
 const kpis = [
   { label: 'Ingresos históricos USD', value: fmtUSD(S.total_ing_usd), sub: `${S.months_active} meses`, cls: 'blue' },
-  { label: 'Fee e-comm MRR (3m)', value: fmtUSD(S.fee_ecomm_mrr_3m_usd), sub: `Fijo ${fmtARS(S.fee_fijo_mrr_3m_ars)} + var ~${fmtUSD(S.comm_mrr_3m_usd)}`, cls: 'purple' },
+  { label: 'Avg. Fee E-Comm (3M)', value: fmtUSD(S.fee_ecomm_mrr_3m_usd), sub: `Fijo ${fmtARS(S.fee_fijo_mrr_3m_ars)} + var ~${fmtUSD(S.comm_mrr_3m_usd)}`, cls: 'purple' },
   { label: 'Tasa variable actual', value: fmtPct(S.current_rate_pct), sub: `Tasa total ${fmtPct(S.current_rate_total_pct)} s/ GMV`, cls: 'amber' },
   { label: 'Fee fijo mensual', value: fmtARS(S.fee_fijo_mrr_ars), sub: `${S.fee_fijo_share_of_ecomm_pct}% del fee e-comm · fila 1070`, cls: '' },
-  { label: 'MRR avg YTD 2026 (USD)', value: fmtUSD(S.mrr_ytd_usd), sub: `${S.ytd_2026_months || 0} meses · Fee e-comm ~${fmtUSD(S.fee_ecomm_mrr_3m_usd)}/mes`, cls: 'green' },
+  { label: 'Avg. YTD 2026 (USD)', value: fmtUSD(S.mrr_ytd_usd), sub: `${S.ytd_2026_months || 0} meses · Fee e-comm ~${fmtUSD(S.fee_ecomm_mrr_3m_usd)}`, cls: 'green' },
   { label: 'YTD 2026 USD', value: fmtUSD(S.ytd_2026_usd), sub: S.ytd_yoy_usd_pct != null ? `YoY ${S.ytd_yoy_usd_pct >= 0 ? '+' : ''}${S.ytd_yoy_usd_pct}% vs 2025` : `${S.ytd_2026_months || 0} meses · cliente nuevo`, cls: 'green' },
 ];
 document.getElementById('kpis').innerHTML = kpis.map(k =>
