@@ -302,10 +302,10 @@ body.has-report-topbar{padding-top:40px!important;box-sizing:border-box}
           Ajustá la <strong>comisión variable</strong> (% sobre GMV con IVA) y el <strong>Fee Fijo E-Commerce</strong>. El impacto muestra ambos componentes y el total Fee E-Commerce.
         </p>
         <div class="sim-mode" id="simMode">
-          <button type="button" class="sim-mode-btn active" data-mode="unified">Tasa unificada</button>
-          <button type="button" class="sim-mode-btn" data-mode="tiers">Escalas por GMV</button>
+          <button type="button" class="sim-mode-btn active" data-mode="tiers">Escala actual</button>
+          <button type="button" class="sim-mode-btn" data-mode="unified">Tasa unificada</button>
         </div>
-        <div class="sim-panel active" id="panelUnified">
+        <div class="sim-panel" id="panelUnified">
           <label>Tasa de comisión propuesta</label>
           <div class="rate-display" id="newRateLbl">—</div>
           <input type="range" id="rateSlider" min="400" max="1000" step="5">
@@ -313,7 +313,7 @@ body.has-report-topbar{padding-top:40px!important;box-sizing:border-box}
             <span>4.00%</span><span>10.00%</span>
           </div>
         </div>
-        <div class="sim-panel" id="panelTiers">
+        <div class="sim-panel active" id="panelTiers">
           <p class="tier-note">Definí tramos por GMV mensual (ventas con IVA, ARS). Se aplica la tasa del tramo más alto cuyo mínimo cumple el GMV del mes. Podés editar, agregar o quitar filas.</p>
           <div class="tier-editor">
             <table>
@@ -809,7 +809,7 @@ document.getElementById('curFixedFeeRef').textContent = fmtARS(curFixedFee);
 document.getElementById('projFixedFeeRef').textContent = fmtARS(projFixedAvg);
 
 let simChart;
-let simMode = 'unified';
+let simMode = 'tiers';
 let tierRows = DEFAULT_TIERS.length
   ? DEFAULT_TIERS.map(t => ({ ...t }))
   : [
