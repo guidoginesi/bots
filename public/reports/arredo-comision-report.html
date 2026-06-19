@@ -588,10 +588,19 @@ document.getElementById('commRefIntro').textContent =
   `Fee Fijo E-Commerce (fila 1070) + comisión variable (Fee E-Commerce, % sobre GMV con IVA). ` +
   `Desde Mar 2026 la tasa variable es ~${fmtPct(S.current_rate_pct)}; el contrato define escalas de ${tiers.map(t => fmtPct(t.rate_pct)).join(' a ')}.`;
 
+const commRefLast3 = commReal.slice(-3);
+const commRefFx = m => m.ing_ars ? m.ing_usd / m.ing_ars : 0;
+const commRefAvg = pick => commRefLast3.length
+  ? commRefLast3.reduce((a, m) => a + pick(m), 0) / commRefLast3.length
+  : 0;
+const ecomm3mUsd = commRefAvg(m => m.fee_ecomm_ars * commRefFx(m));
+const fijo3mArs = commRefAvg(m => m.fee_fijo_ars);
+const var3mUsd = commRefAvg(m => m.comm_ars * commRefFx(m));
+
 document.getElementById('commRefKpis').innerHTML = [
-  { lbl: 'Fee e-comm MRR (3m)', val: fmtUSD(S.fee_ecomm_mrr_3m_usd), cls: 'highlight' },
-  { lbl: 'Fee fijo (3m prom.)', val: fmtARS(S.fee_fijo_mrr_3m_ars), cls: '' },
-  { lbl: 'Variable (3m prom.)', val: fmtUSD(S.comm_mrr_3m_usd), cls: '' },
+  { lbl: 'Promedio fee e-comm (3m)', val: `${fmtUSD(ecomm3mUsd)}/mes`, cls: 'highlight' },
+  { lbl: 'Promedio fee fijo (3m)', val: `${fmtARS(fijo3mArs)}/mes`, cls: '' },
+  { lbl: 'Promedio comisión variable (3m)', val: `${fmtUSD(var3mUsd)}/mes`, cls: '' },
   { lbl: 'Tasa variable', val: fmtPct(S.current_rate_pct), cls: 'highlight' },
   { lbl: 'Tasa total s/ GMV', val: fmtPct(S.current_rate_total_pct), cls: 'highlight' },
   { lbl: 'Share fijo / e-comm', val: `${S.fee_fijo_share_of_ecomm_pct}%`, cls: '' },
