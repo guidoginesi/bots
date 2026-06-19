@@ -102,10 +102,12 @@ td.delta-neg{color:#0F6E56;font-weight:500}td.delta-pos{color:#A32D2D;font-weigh
 .tier-col-act{width:36px;text-align:center!important}
 
 .comm-ref-intro{font-size:13px;color:#5F5E5A;line-height:1.55;margin-bottom:1rem;max-width:820px}
-.comm-ref-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:1rem}
-.comm-ref-kpi{background:#FAFAF8;border-radius:8px;padding:.75rem 1rem;border:.5px solid #ECEAE2}
-.comm-ref-kpi .lbl{font-size:10px;color:#888780;text-transform:uppercase;letter-spacing:.04em;white-space:nowrap;line-height:1.2}
-.comm-ref-kpi .val{font-size:20px;font-weight:600;margin-top:4px}
+.comm-ref-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;margin-bottom:1rem}
+@media(max-width:900px){.comm-ref-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:520px){.comm-ref-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.comm-ref-kpi{background:#FAFAF8;border-radius:8px;padding:.75rem 1rem;border:.5px solid #ECEAE2;min-width:0}
+.comm-ref-kpi .lbl{font-size:10px;color:#888780;text-transform:uppercase;letter-spacing:.04em;white-space:nowrap;line-height:1.2;overflow:hidden;text-overflow:ellipsis}
+.comm-ref-kpi .val{font-size:15px;font-weight:600;margin-top:4px;white-space:nowrap;line-height:1.2;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums}
 .comm-ref-kpi.highlight .val{color:#854F0B}
 .comm-ref-cols{
   display:grid;
@@ -598,9 +600,9 @@ const fijo3mArs = commRefAvg(m => m.fee_fijo_ars);
 const var3mUsd = commRefAvg(m => m.comm_ars * commRefFx(m));
 
 document.getElementById('commRefKpis').innerHTML = [
-  { lbl: 'Avg. Fee E-Comm (3M)', val: `${fmtUSD(ecomm3mUsd)}/mes`, cls: 'highlight' },
-  { lbl: 'Avg. Fee Fijo (3M)', val: `${fmtARS(fijo3mArs)}/mes`, cls: '' },
-  { lbl: 'Avg. Com. Variable (3M)', val: `${fmtUSD(var3mUsd)}/mes`, cls: '' },
+  { lbl: 'Avg. Fee E-Comm (3M)', val: fmtUSD(ecomm3mUsd), cls: 'highlight' },
+  { lbl: 'Avg. Fee Fijo (3M)', val: fmtARS(fijo3mArs), cls: '' },
+  { lbl: 'Avg. Com. Variable (3M)', val: fmtUSD(var3mUsd), cls: '' },
   { lbl: 'Var. Rate', val: fmtPct(S.current_rate_pct), cls: 'highlight' },
   { lbl: 'Total Rate / GMV', val: fmtPct(S.current_rate_total_pct), cls: 'highlight' },
   { lbl: 'Fixed Share', val: `${S.fee_fijo_share_of_ecomm_pct}%`, cls: '' },
