@@ -31,6 +31,12 @@
       "description": "Simulador tasa única y escalas por GMV · Jun 2026"
     },
     {
+      "slug": "sweet-comision",
+      "file": "sweet-comision-report.html",
+      "title": "Sweet · Comisión e ingresos",
+      "description": "Simulador tasa única y escalas por GMV · Jun 2026"
+    },
+    {
       "slug": "crecimiento-ars",
       "file": "reporte-crecimiento-ingresos-egresos-ars.html",
       "title": "Crecimiento ARS · Ingresos vs egresos",

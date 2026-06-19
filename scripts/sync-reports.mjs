@@ -55,6 +55,13 @@ const SOURCES = [
     description: "Simulador tasa única y escalas por GMV · Jun 2026",
   },
   {
+    slug: "sweet-comision",
+    source: path.join(ROOT, "..", "app-directorio", "sweet-comision-report.html"),
+    file: "sweet-comision-report.html",
+    title: "Sweet · Comisión e ingresos",
+    description: "Simulador tasa única y escalas por GMV · Jun 2026",
+  },
+  {
     slug: "crecimiento-ars",
     source: path.join(
       ROOT,
