@@ -37,6 +37,12 @@
       "description": "Simulador tasa única y escalas por GMV · Jun 2026"
     },
     {
+      "slug": "ginebra-comision",
+      "file": "ginebra-comision-report.html",
+      "title": "Ginebra · Comisión e ingresos",
+      "description": "Retainer + comisión variable · simulador · Jun 2026"
+    },
+    {
       "slug": "crecimiento-ars",
       "file": "reporte-crecimiento-ingresos-egresos-ars.html",
       "title": "Crecimiento ARS · Ingresos vs egresos",

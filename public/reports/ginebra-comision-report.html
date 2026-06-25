@@ -1,0 +1,1267 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ginebra · Comisión e Ingresos · Pow</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#F1EFE8;color:#1a1a18;line-height:1.45}
+.wrap{max-width:1100px;margin:0 auto;padding:2rem 1.5rem 4rem}
+.header{margin-bottom:1.5rem}
+.header h1{font-size:24px;font-weight:600;letter-spacing:-.02em}
+.meta{font-size:12px;color:#888780;margin-top:6px;max-width:720px}
+.badge{display:inline-block;font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;background:#E6F1FB;color:#185FA5;padding:3px 8px;border-radius:4px;margin-bottom:8px}
+.note{font-size:12px;color:#5F5E5A;background:white;border:.5px solid #D3D1C7;border-radius:10px;padding:12px 14px;margin-bottom:1.25rem}
+
+.kpi-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));grid-template-rows:auto auto auto;gap:8px;margin-bottom:1.25rem}
+.kpi{grid-row:span 3;display:grid;grid-template-rows:subgrid;gap:5px 0;background:white;border-radius:10px;padding:.8rem .7rem;border:.5px solid #D3D1C7;min-width:0}
+.kpi-label{font-size:10px;color:#888780;letter-spacing:.02em;text-transform:uppercase;line-height:1.2;align-self:end;white-space:nowrap;min-width:0;width:100%;overflow:hidden}
+.kpi-value{font-size:20px;font-weight:600;line-height:1.1;align-self:start;white-space:nowrap;letter-spacing:-.02em;min-width:0;width:100%;overflow:hidden}
+.kpi-sub{font-size:10px;color:#888780;line-height:1.3;align-self:start}
+.kpi-value.blue{color:#185FA5}.kpi-value.green{color:#0F6E56}.kpi-value.amber{color:#854F0B}.kpi-value.purple{color:#534AB7}
+@media(max-width:900px){.kpi-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:520px){.kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@supports not (grid-template-rows:subgrid){
+  .kpi-grid{grid-template-rows:none}
+  .kpi{grid-row:auto;display:flex;flex-direction:column}
+  .kpi-label{min-height:auto;margin-bottom:6px}
+  .kpi-sub{margin-top:5px}
+}
+
+.card{background:white;border:.5px solid #D3D1C7;border-radius:12px;padding:1.1rem 1.25rem;margin-bottom:1rem}
+.card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:8px}
+.card-title{font-size:10px;font-weight:600;color:#888780;letter-spacing:.07em;text-transform:uppercase}
+.chart-box{position:relative;height:280px}
+.chart-box.sm{height:220px}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+@media(max-width:760px){.two-col{grid-template-columns:1fr}}
+
+table{width:100%;border-collapse:collapse;font-size:12px}
+th,td{padding:8px 10px;text-align:right;border-bottom:.5px solid #ECEAE2}
+th:first-child,td:first-child{text-align:left}
+th{font-size:10px;color:#888780;font-weight:600;text-transform:uppercase;letter-spacing:.04em;background:#FAFAF8;position:sticky;top:0}
+tr:hover td{background:#FAFAF8}
+.proj td{color:#B4B2A9;font-style:italic}
+.table-wrap{max-height:360px;overflow:auto;border:.5px solid #ECEAE2;border-radius:8px}
+
+.sim-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;align-items:start}
+@media(max-width:760px){.sim-grid{grid-template-columns:1fr}}
+.sim-controls label{display:block;font-size:11px;color:#5F5E5A;margin-bottom:4px;font-weight:500}
+.sim-controls input[type=range]{width:100%;accent-color:#185FA5;margin:6px 0 14px}
+.rate-display{font-size:32px;font-weight:600;color:#185FA5;line-height:1}
+.rate-compare{display:flex;gap:1.5rem;margin:1rem 0;flex-wrap:wrap}
+.rate-box{flex:1;min-width:120px}
+.rate-box .lbl{font-size:10px;color:#888780;text-transform:uppercase;letter-spacing:.05em}
+.rate-box .val{font-size:20px;font-weight:600;margin-top:4px}
+.delta-pos{color:#A32D2D}.delta-neg{color:#0F6E56}
+.sim-result{background:#FAFAF8;border-radius:10px;padding:1rem;border:.5px solid #ECEAE2}
+.sim-result h3{font-size:13px;font-weight:600;margin-bottom:10px}
+.sim-row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:.5px solid #ECEAE2;font-size:13px}
+.sim-row:last-child{border-bottom:none;font-weight:600;padding-top:10px}
+.pill{font-size:10px;font-weight:600;padding:2px 7px;border-radius:4px;background:#F1EFE8;color:#5F5E5A}
+.sim-month-hdr{font-size:10px;font-weight:600;color:#888780;letter-spacing:.07em;text-transform:uppercase;margin:1.25rem 0 10px}
+.sim-fixed-fee{margin-top:1rem;padding-top:1rem;border-top:.5px solid #ECEAE2}
+.sim-fixed-fee label{display:block;font-size:11px;color:#5F5E5A;margin-bottom:4px;font-weight:500}
+.sim-fixed-fee .rate-display{color:#534AB7}
+.sim-fixed-fee input[type=range]{width:100%;accent-color:#534AB7;margin:6px 0 8px}
+td.delta-neg{color:#0F6E56;font-weight:500}td.delta-pos{color:#A32D2D;font-weight:500}
+.sim-mode{display:flex;gap:8px;margin-bottom:1rem;flex-wrap:wrap}
+.sim-mode-btn{font-size:11px;font-weight:500;padding:6px 12px;border-radius:6px;border:.5px solid #D3D1C7;background:white;cursor:pointer;color:#5F5E5A}
+.sim-mode-btn.active{background:#185FA5;color:white;border-color:#185FA5}
+.sim-panel{display:none}
+.sim-panel.active{display:block}
+.channel-rates{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+@media(max-width:560px){.channel-rates{grid-template-columns:1fr}}
+.channel-rate .rate-display{font-size:26px}
+.channel-rate.main .rate-display{color:#185FA5}
+.channel-rate.outlet .rate-display{color:#534AB7}
+.blended-rate{font-size:12px;color:#888780;margin-top:8px}
+.channel-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:1rem}
+.channel-kpi{background:#FAFAF8;border-radius:8px;padding:.75rem 1rem;border:.5px solid #ECEAE2}
+.channel-kpi .lbl{font-size:10px;color:#888780;text-transform:uppercase;letter-spacing:.05em}
+.channel-kpi .val{font-size:20px;font-weight:600;margin-top:4px}
+.channel-kpi.main .val{color:#185FA5}.channel-kpi.outlet .val{color:#534AB7}
+.channel-note{font-size:11px;color:#888780;margin-bottom:1rem;line-height:1.5}
+.tier-editor{margin-top:4px}
+.tier-editor table{font-size:11px;margin-bottom:10px}
+.tier-editor th,.tier-editor td{padding:6px 8px;text-align:left}
+.tier-editor th{background:#FAFAF8}
+.tier-editor input[type=text],.tier-editor input[type=number]{width:100%;padding:5px 7px;border:.5px solid #D3D1C7;border-radius:6px;font-size:11px;font-family:inherit}
+.tier-editor input[type=number]{text-align:right}
+.tier-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.tier-btn{font-size:11px;font-weight:500;padding:6px 12px;border-radius:6px;border:.5px solid #D3D1C7;background:white;cursor:pointer;color:#5F5E5A}
+.tier-btn.primary{background:#185FA5;color:white;border-color:#185FA5}
+.tier-btn.danger{color:#A32D2D;border-color:#E8B4B4}
+.tier-note{font-size:11px;color:#888780;margin-bottom:10px;line-height:1.45}
+.tier-effective{font-size:12px;color:#185FA5;font-weight:600;margin-top:10px}
+.tier-col-rate{width:72px}
+.tier-col-min{width:120px}
+.tier-col-label{min-width:100px}
+.tier-col-act{width:36px;text-align:center!important}
+
+.comm-ref-intro{font-size:13px;color:#5F5E5A;line-height:1.55;margin-bottom:1rem;max-width:820px}
+.comm-ref-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;margin-bottom:1rem}
+@media(max-width:900px){.comm-ref-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:520px){.comm-ref-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.comm-ref-kpi{background:#FAFAF8;border-radius:8px;padding:.75rem 1rem;border:.5px solid #ECEAE2;min-width:0}
+.comm-ref-kpi .lbl{font-size:10px;color:#888780;text-transform:uppercase;letter-spacing:.04em;white-space:nowrap;line-height:1.2;overflow:hidden;text-overflow:ellipsis}
+.comm-ref-kpi .val{font-size:15px;font-weight:600;margin-top:4px;white-space:nowrap;line-height:1.2;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums}
+.comm-ref-kpi.highlight .val{color:#854F0B}
+.comm-ref-cols{display:flex;flex-direction:column;gap:1.25rem}
+.comm-ref-contract-row{
+  background:#FAFAF8;border:.5px solid #ECEAE2;border-radius:10px;
+  padding:1rem 1.15rem;
+}
+.comm-ref-contract-row h3{font-size:12px;font-weight:600;color:#1a1a18;margin:0 0 8px;line-height:1.3}
+.comm-ref-contract-desc{font-size:12px;color:#5F5E5A;line-height:1.5;margin:0 0 12px}
+.comm-ref-contract-split{max-width:520px}
+.comm-ref-contract-split .table-wrap{max-height:none;overflow:visible}
+.comm-ref-detail{min-width:0}
+.comm-ref-detail h3{font-size:12px;font-weight:600;color:#1a1a18;margin:0 0 8px;line-height:1.3}
+.comm-ref-detail p{font-size:12px;color:#5F5E5A;line-height:1.5;margin:0 0 10px}
+.comm-ref-table-full{width:100%;overflow:visible;max-height:none;border:none}
+.comm-ref-table-full table{font-size:11px}
+.comm-ref-table-full th,.comm-ref-table-full td{padding:7px 8px;white-space:nowrap}
+.comm-ref-table-full th:first-child,.comm-ref-table-full td:first-child{position:sticky;left:0;background:inherit;z-index:1}
+.comm-ref-table-full thead th:first-child{background:#FAFAF8}
+.comm-ref-table-full tbody td:first-child{background:white}
+.comm-ref-table-full tr:hover td:first-child{background:#FAFAF8}
+.comm-ref-block{
+  min-width:0;
+}
+.comm-ref-block h3{font-size:12px;font-weight:600;color:#1a1a18;margin:0 0 8px;line-height:1.3}
+.comm-ref-block p{font-size:12px;color:#5F5E5A;line-height:1.5;margin:0 0 10px}
+.comm-ref-block .table-wrap{max-height:none;margin:0}
+.comm-ref-callout{font-size:12px;color:#5F5E5A;background:#FAFAF8;border:.5px solid #ECEAE2;border-radius:8px;padding:10px 12px;line-height:1.5;margin-top:1rem}
+.comm-ref-callout strong{color:#1a1a18;font-weight:600}
+
+.rev-hero{padding:.25rem 0 1.15rem;border-bottom:.5px solid #ECEAE2;margin-bottom:1rem}
+.rev-hero-value{font-size:36px;font-weight:600;color:#185FA5;letter-spacing:-.02em;line-height:1.1}
+.rev-hero-sub{font-size:13px;color:#888780;margin-top:8px;line-height:1.45}
+.rev-bar{display:flex;height:10px;border-radius:5px;overflow:hidden;background:#ECEAE2;margin:1rem 0 .35rem}
+.rev-bar-seg{min-width:2px;transition:width .2s}
+.rev-bar-legend{display:flex;flex-wrap:wrap;gap:8px 14px;margin-bottom:1rem}
+.rev-bar-key{display:inline-flex;align-items:center;gap:5px;font-size:11px;color:#5F5E5A}
+.rev-bar-dot{width:8px;height:8px;border-radius:2px;flex-shrink:0}
+.rev-breakdown table{font-size:12px}
+.rev-breakdown th,.rev-breakdown td{padding:8px 10px}
+.rev-breakdown tfoot td{font-weight:600;background:#FAFAF8;border-top:.5px solid #D3D1C7}
+.rev-share{font-variant-numeric:tabular-nums;color:#888780}
+
+/* ── Report top bar (inyectado) ── */
+body.has-report-topbar{padding-top:40px!important;box-sizing:border-box}
+#report-topbar{
+  position:fixed;top:0;left:0;right:0;z-index:10000;height:40px;
+  display:flex;align-items:center;gap:10px;padding:0 16px;
+  background:#1a1a18;color:#D3D1C7;
+  border-bottom:.5px solid #2C2C2A;
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  font-size:12px;font-weight:500;
+}
+#report-topbar a{color:#D3D1C7;text-decoration:none}
+#report-topbar a:hover{color:#fff}
+.rtb-back{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:4px 10px;margin-left:-6px;border-radius:6px;
+  transition:background .12s,color .12s;
+}
+.rtb-back:hover{background:#2C2C2A}
+.rtb-crumb{display:inline-flex;align-items:center;gap:8px;min-width:0;color:#888780}
+.rtb-crumb-link{color:#888780!important}
+.rtb-crumb-link:hover{color:#D3D1C7!important}
+.rtb-sep{color:#5F5E5A;user-select:none}
+.rtb-current{color:#F1EFE8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@media(max-width:520px){
+  .rtb-crumb .rtb-crumb-link{display:none}
+  .rtb-crumb .rtb-sep:first-of-type{display:none}
+}
+
+</style>
+</head>
+<body class="has-report-topbar">
+<nav id="report-topbar" aria-label="Navegación del informe">
+  <a class="rtb-back" href="/reports" data-reports-back>← Informes</a>
+  <span class="rtb-crumb" aria-label="Ubicación">
+    <a class="rtb-crumb-link" href="/" data-app-home>Pow</a>
+    <span class="rtb-sep" aria-hidden="true">/</span>
+    <a class="rtb-crumb-link" href="/reports" data-reports-home>Informes</a>
+    <span class="rtb-sep" aria-hidden="true">/</span>
+    <span class="rtb-current">Ginebra · Comisión e ingresos</span>
+  </span>
+</nav>
+<script>
+(function(){
+  var p=location.pathname;
+  var reportsHome='/reports';
+  if(p.indexOf('/reports/')===-1&&!/^\/reports\/?$/.test(p))reportsHome='/reports/';
+  var app=document.querySelector('[data-app-home]');
+  if(app)app.href='/';
+  document.querySelectorAll('[data-reports-home],[data-reports-back]').forEach(function(a){a.href=reportsHome;});
+})();
+</script>
+<div class="wrap">
+  <div class="header">
+    <div class="badge">Informe ad-hoc</div>
+    <h1>Ginebra · Comisión e ingresos históricos</h1>
+    <p class="meta" id="meta"></p>
+  </div>
+  <div class="note" id="note"></div>
+
+  <div class="card" id="revenueOverview">
+    <div class="card-header">
+      <span class="card-title">Ingreso total · promedio mensual</span>
+      <span class="pill" id="revOverviewPeriod"></span>
+    </div>
+    <div class="rev-hero">
+      <div class="rev-hero-value" id="revHeroTotal">—</div>
+      <div class="rev-hero-sub" id="revHeroSub">—</div>
+    </div>
+    <div class="rev-bar" id="revBar" aria-hidden="true"></div>
+    <div class="rev-bar-legend" id="revBarLegend"></div>
+    <div class="table-wrap rev-breakdown">
+      <table>
+        <thead>
+          <tr>
+            <th>Servicio</th>
+            <th>Prom. USD/mes</th>
+            <th>Prom. ARS/mes</th>
+            <th>% del total</th>
+          </tr>
+        </thead>
+        <tbody id="revBreakdownBody"></tbody>
+        <tfoot>
+          <tr id="revBreakdownFoot"></tr>
+        </tfoot>
+      </table>
+    </div>
+  </div>
+
+  <div class="kpi-grid" id="kpis"></div>
+
+  <div class="two-col">
+    <div class="card">
+      <div class="card-header"><span class="card-title">Ingresos anuales (USD) · 2026 incluye proy.</span></div>
+      <div class="chart-box"><canvas id="chartYear"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-header"><span class="card-title">Tasa de comisión (% sobre ventas con IVA)</span></div>
+      <div class="chart-box"><canvas id="chartRate"></canvas></div>
+    </div>
+  </div>
+
+  <div class="two-col">
+    <div class="card">
+      <div class="card-header"><span class="card-title">Apertura por servicio · prom. 3 meses (USD)</span></div>
+      <div class="chart-box sm"><canvas id="chartSvc"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-header"><span class="card-title">Ingresos mensuales (USD)</span></div>
+      <div class="chart-box sm"><canvas id="chartRev"></canvas></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">Detalle mensual</span>
+      <span class="pill" id="tableInfo"></span>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Mes</th>
+            <th>Ingreso USD</th>
+            <th>Ingreso ARS</th>
+            <th>GMV ARS</th>
+            <th>Umbral ARS</th>
+            <th>GMV gravado</th>
+            <th>Comisión var. ARS</th>
+            <th>Fee fijo ARS</th>
+            <th>Fee e-comm total</th>
+            <th>Tasa var %</th>
+            <th>Tasa total %</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card" id="commRefSection">
+    <div class="card-header">
+      <span class="card-title">Comisión actual · fijo + variable</span>
+      <span class="pill">Antes de simular</span>
+    </div>
+    <p class="comm-ref-intro" id="commRefIntro"></p>
+    <div class="card-header" style="margin-bottom:0.75rem;padding:0;margin-top:0.5rem">
+      <span class="card-title">Composición mensual · Fee Fijo E-Commerce + variable</span>
+    </div>
+    <div class="chart-box sm" style="margin-bottom:1.25rem"><canvas id="chartFeeComp"></canvas></div>
+    <div class="comm-ref-cols">
+      <div class="comm-ref-contract-row">
+        <h3>Contrato · comisión variable Ginebra</h3>
+        <p class="comm-ref-contract-desc" id="commRefContractDesc">Fee fijo mínimo <strong>USD 3.000</strong> al TC oficial · Paid media <strong>USD 1.500</strong>/mes · Variable: <strong>2%</strong> sobre GMV <strong>por encima del umbral</strong> (base $300M ARS, IPC bimestral) · Tope variable: <strong>USD 8.000</strong>/mes.</p>
+        <div class="comm-ref-contract-split">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Concepto</th>
+                  <th>Valor</th>
+                </tr>
+              </thead>
+              <tbody id="commRefContractBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <div class="comm-ref-detail">
+        <h3>Fee E-Commerce · desglose mensual</h3>
+        <p id="commRefEffective"></p>
+        <div class="table-wrap comm-ref-table-full">
+          <table>
+            <thead>
+              <tr>
+                <th>Mes</th>
+                <th>GMV c/IVA</th>
+                <th>Umbral</th>
+                <th>GMV gravado</th>
+                <th>Fee fijo</th>
+                <th>Variable</th>
+                <th>Total e-comm</th>
+                <th>Tasa total %</th>
+              </tr>
+            </thead>
+            <tbody id="commRefRecentBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div class="comm-ref-callout" id="commRefCallout"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">Simulador · impacto reducción de comisión</span>
+      <span class="pill">Cambio aplica desde Jun 2026 (proy.)</span>
+    </div>
+    <div class="sim-grid">
+      <div class="sim-controls">
+        <p style="font-size:13px;color:#5F5E5A;margin-bottom:1rem">
+          Ajustá la <strong>comisión variable</strong> según el contrato Ginebra (2% sobre GMV gravado, umbral IPC, tope USD 8K) o probá una tasa unificada. También podés modificar el <strong>Fee Fijo E-Commerce</strong>.
+        </p>
+        <div class="sim-mode" id="simMode">
+          <button type="button" class="sim-mode-btn active" data-mode="contract">Contrato Ginebra</button>
+          <button type="button" class="sim-mode-btn" data-mode="unified">Tasa unificada</button>
+        </div>
+        <div class="sim-panel active" id="panelContract">
+          <p class="tier-note">Modelo contractual: <strong id="contractFormula">—</strong>. Podés ajustar la tasa y el umbral del bimestre para simular escenarios.</p>
+          <div class="tier-editor">
+            <table>
+              <tbody>
+                <tr>
+                  <td style="font-size:11px;color:#5F5E5A">Tasa sobre GMV gravado</td>
+                  <td><input type="number" id="contractRateInput" min="0" max="10" step="0.01" value="2.00" style="width:100%;padding:5px 7px;border:.5px solid #D3D1C7;border-radius:6px;font-size:11px"></td>
+                </tr>
+                <tr>
+                  <td style="font-size:11px;color:#5F5E5A">Umbral ARS (bimestre actual)</td>
+                  <td><input type="number" id="contractThresholdInput" min="0" step="1000000" value="300000000" style="width:100%;padding:5px 7px;border:.5px solid #D3D1C7;border-radius:6px;font-size:11px"></td>
+                </tr>
+                <tr>
+                  <td style="font-size:11px;color:#5F5E5A">Tope variable USD/mes</td>
+                  <td><input type="number" id="contractCapInput" min="0" step="100" value="8000" style="width:100%;padding:5px 7px;border:.5px solid #D3D1C7;border-radius:6px;font-size:11px"></td>
+                </tr>
+                <tr>
+                  <td style="font-size:11px;color:#5F5E5A">Fee fijo mín. USD (TC oficial)</td>
+                  <td><input type="number" id="contractMinFeeInput" min="0" step="100" value="3000" style="width:100%;padding:5px 7px;border:.5px solid #D3D1C7;border-radius:6px;font-size:11px"></td>
+                </tr>
+                <tr>
+                  <td style="font-size:11px;color:#5F5E5A">Paid media USD/mes</td>
+                  <td><input type="number" id="contractPaidMediaInput" min="0" step="100" value="1500" style="width:100%;padding:5px 7px;border:.5px solid #D3D1C7;border-radius:6px;font-size:11px"></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="tier-effective" id="contractEffective">—</div>
+        </div>
+        <div class="sim-panel" id="panelUnified">
+          <label>Tasa de comisión propuesta</label>
+          <div class="rate-display" id="newRateLbl">—</div>
+          <input type="range" id="rateSlider" min="400" max="1000" step="5">
+          <div style="display:flex;justify-content:space-between;font-size:11px;color:#B4B2A9">
+            <span>4.00%</span><span>10.00%</span>
+          </div>
+        </div>
+        <div class="sim-fixed-fee">
+          <label>Fee Fijo E-Commerce propuesto · mensual ARS</label>
+          <div class="rate-display" id="newFixedLbl">—</div>
+          <input type="range" id="fixedFeeSlider">
+          <div style="display:flex;justify-content:space-between;font-size:11px;color:#B4B2A9">
+            <span id="fixedFeeMin">—</span><span id="fixedFeeMax">—</span>
+          </div>
+          <div style="font-size:10px;color:#888780;margin-top:6px">
+            Actual Mayo 2026: <span id="curFixedFeeRef">—</span> · Proy. prom. Jun–Dic: <span id="projFixedFeeRef">—</span>
+          </div>
+        </div>
+        <div class="rate-compare">
+          <div class="rate-box">
+            <div class="lbl">Tasa variable actual</div>
+            <div class="val" id="curRate">—</div>
+          </div>
+          <div class="rate-box">
+            <div class="lbl" id="rateDeltaLbl">Reducción variable</div>
+            <div class="val delta-pos" id="rateDelta">—</div>
+          </div>
+          <div class="rate-box">
+            <div class="lbl">Fee fijo actual</div>
+            <div class="val" id="curFixedFeeBox">—</div>
+          </div>
+          <div class="rate-box">
+            <div class="lbl" id="fixedDeltaLbl">Δ fee fijo</div>
+            <div class="val" id="fixedDelta">—</div>
+          </div>
+        </div>
+      </div>
+      <div class="sim-result" id="simResult"></div>
+    </div>
+    <div class="chart-box" style="margin-top:1rem;height:240px"><canvas id="chartSim"></canvas></div>
+    <div class="sim-month-hdr">Fee E-Commerce mensual · fijo + variable · desde el cambio</div>
+    <p class="sim-month-note" id="simMonthNote"></p>
+    <div class="table-wrap" style="max-height:320px">
+      <table>
+        <thead id="simMonthHead">
+          <tr>
+            <th>Mes</th>
+            <th>Ventas c/IVA</th>
+            <th>Comisión actual</th>
+            <th>Comisión nueva</th>
+            <th>Δ ARS</th>
+            <th>Δ USD eq.</th>
+          </tr>
+        </thead>
+        <tbody id="simMonthBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+const GINEBRA_DATA = /* injected */ {"source":"REGISTRO GASTOS E INGRESOS - POW S.A - [ARCHIVO POW] - 5.xlsx","client":"GINEBRA","note":"Ingresos: INGRESOS | POW bloque GINEBRA. Fee Fijo E-Commerce: mínimo USD 3,000 al tipo de cambio oficial. Paid media: USD 1,500/mes (Marketing Digital). Nota: INGRESOS | POW fila 974 = total plataforma ARS (columna C dice Vtex); fila 975 = mismo total en USD. El desglose usa solo líneas de servicio (965–973), sin duplicar filas 974/975. Comisión variable: 2% sobre ventas con IVA por encima del umbral (base $300M ARS, actualizado bimestralmente por IPC). Tope variable: USD 8,000/mes. Fee E-Commerce total = Fee Fijo + variable. GMV/comisión: FEE-ECOMMMERCE - NUEVA. Cliente desde 2024-12.","lastRealYm":"2026-05","months":[{"ym":"2015-01","ing_ars":0.0,"ing_usd":0,"platform_total_ars":0.0,"platform_total_usd":0,"gmv_ars":0,"gmv_neto_ars":0,"comm_ars":0,"fee_fijo_ars":0,"fee_ecomm_ars":0,"rate_pct":null,"rate_total_pct":null,"services_ars":{},"is_projection":false,"threshold_ars":300000000,"gmv_taxable_ars":0,"comm_theoretical_ars":0.0,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":null,"fee_fijo_usd_equiv":null,"fee_fijo_meets_min":null,"paid_media_ars":0,"paid_media_usd_equiv":null,"paid_media_usd_contract":1500,"rate_on_taxable_pct":null,"rate_on_gmv_pct":null},{"ym":"2015-02","ing_ars":0.0,"ing_usd":0,"platform_total_ars":0.0,"platform_total_usd":0,"gmv_ars":0,"gmv_neto_ars":0,"comm_ars":0,"fee_fijo_ars":0,"fee_ecomm_ars":0,"rate_pct":null,"rate_total_pct":null,"services_ars":{},"is_projection":false,"threshold_ars":300000000,"gmv_taxable_ars":0,"comm_theoretical_ars":0.0,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":null,"fee_fijo_usd_equiv":null,"fee_fijo_meets_min":null,"paid_media_ars":0,"paid_media_usd_equiv":null,"paid_media_usd_contract":1500,"rate_on_taxable_pct":null,"rate_on_gmv_pct":null},{"ym":"2015-03","ing_ars":0.0,"ing_usd":0,"platform_total_ars":0.0,"platform_total_usd":0,"gmv_ars":0,"gmv_neto_ars":0,"comm_ars":0,"fee_fijo_ars":0,"fee_ecomm_ars":0,"rate_pct":null,"rate_total_pct":null,"services_ars":{},"is_projection":false,"threshold_ars":300000000,"gmv_taxable_ars":0,"comm_theoretical_ars":0.0,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":null,"fee_fijo_usd_equiv":null,"fee_fijo_meets_min":null,"paid_media_ars":0,"paid_media_usd_equiv":null,"paid_media_usd_contract":1500,"rate_on_taxable_pct":null,"rate_on_gmv_pct":null},{"ym":"2015-04","ing_ars":0.0,"ing_usd":0,"platform_total_ars":0.0,"platform_total_usd":0,"gmv_ars":0,"gmv_neto_ars":0,"comm_ars":0,"fee_fijo_ars":0,"fee_ecomm_ars":0,"rate_pct":null,"rate_total_pct":null,"services_ars":{},"is_projection":false,"threshold_ars":300000000,"gmv_taxable_ars":0,"comm_theoretical_ars":0.0,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":null,"fee_fijo_usd_equiv":null,"fee_fijo_meets_min":null,"paid_media_ars":0,"paid_media_usd_equiv":null,"paid_media_usd_contract":1500,"rate_on_taxable_pct":null,"rate_on_gmv_pct":null},{"ym":"2015-05","ing_ars":0.0,"ing_usd":0,"platform_total_ars":0.0,"platform_total_usd":0,"gmv_ars":0,"gmv_neto_ars":0,"comm_ars":0,"fee_fijo_ars":0,"fee_ecomm_ars":0,"rate_pct":null,"rate_total_pct":null,"services_ars":{},"is_projection":false,"threshold_ars":300000000,"gmv_taxable_ars":0,"comm_theoretical_ars":0.0,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":null,"fee_fijo_usd_equiv":null,"fee_fijo_meets_min":null,"paid_media_ars":0,"paid_media_usd_equiv":null,"paid_media_usd_contract":1500,"rate_on_taxable_pct":null,"rate_on_gmv_pct":null},{"ym":"2015-06","ing_ars":0.0,"ing_usd":0,"platform_total_ars":0.0,"platform_total_usd":0,"gmv_ars":0,"gmv_neto_ars":0,"comm_ars":0,"fee_fijo_ars":0,"fee_ecomm_ars":0,"rate_pct":null,"rate_total_pct":null,"services_ars":{},"is_projection":false,"threshold_ars":300000000,"gmv_taxable_ars":0,"comm_theoretical_ars":0.0,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":null,"fee_fijo_usd_equiv":null,"fee_fijo_meets_min":null,"paid_media_ars":0,"paid_media_usd_equiv":null,"paid_media_usd_contract":1500,"rate_on_taxable_pct":null,"rate_on_gmv_pct":null},{"ym":"2015-07","ing_ars":0.0,"ing_usd":0,"platform_total_ars":0.0,"platform_total_usd":0,"gmv_ars":0,"gmv_neto_ars":0,"comm_ars":0,"fee_fijo_ars":0,"fee_ecomm_ars":0,"rate_pct":null,"rate_total_pct":null,"services_ars":{},"is_projection":false,"threshold_ars":300000000,"gmv_taxable_ars":0,"comm_theoretical_ars":0.0,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":null,"fee_fijo_usd_equiv":null,"fee_fijo_meets_min":null,"paid_media_ars":0,"paid_media_usd_equiv":null,"paid_media_usd_contract":1500,"rate_on_taxable_pct":null,"rate_on_gmv_pct":null},{"ym":"2015-08","ing_ars":0.0,"ing_usd":0,"platform_total_ars":0.0,"platform_total_usd":0,"gmv_ars":0,"gmv_neto_ars":0,"comm_ars":0,"fee_fijo_ars":0,"fee_ecomm_ars":0,"rate_pct":null,"rate_total_pct":null,"services_ars":{},"is_projection":false,"threshold_ars":300000000,"gmv_taxable_ars":0,"comm_theoretical_ars":0.0,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":null,"fee_fijo_usd_equiv":null,"fee_fijo_meets_min":null,"paid_media_ars":0,"paid_media_usd_equiv":null,"paid_media_usd_contract":1500,"rate_on_taxable_pct":null,"rate_on_gmv_pct":null},{"ym":"2015-09","ing_ars":0.0,"ing_usd":0,"platform_total_ars":0.0,"platform_total_usd":0,"gmv_ars":0,"gmv_neto_ars":0,"comm_ars":0,"fee_fijo_ars":0,"fee_ecomm_ars":0,"rate_pct":null,"rate_total_pct":null,"services_ars":{},"is_projection":false,"threshold_ars":300000000,"gmv_taxable_ars":0,"comm_theoretical_ars":0.0,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":null,"fee_fijo_usd_equiv":null,"fee_fijo_meets_min":null,"paid_media_ars":0,"paid_media_usd_equiv":null,"paid_media_usd_contract":1500,"rate_on_taxable_pct":null,"rate_on_gmv_pct":null},{"ym":"2015-10","ing_ars":0.0,"ing_usd":0,"platform_total_ars":0.0,"platform_total_usd":0,"gmv_ars":0,"gmv_neto_ars":0,"comm_ars":0,"fee_fijo_ars":0,"fee_ecomm_ars":0,"rate_pct":null,"rate_total_pct":null,"services_ars":{},"is_projection":false,"threshold_ars":300000000,"gmv_taxable_ars":0,"comm_theoretical_ars":0.0,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":null,"fee_fijo_usd_equiv":null,"fee_fijo_meets_min":null,"paid_media_ars":0,"paid_media_usd_equiv":null,"paid_media_usd_contract":1500,"rate_on_taxable_pct":null,"rate_on_gmv_pct":null},{"ym":"2015-11","ing_ars":0.0,"ing_usd":0,"platform_total_ars":0.0,"platform_total_usd":0,"gmv_ars":0,"gmv_neto_ars":0,"comm_ars":0,"fee_fijo_ars":0,"fee_ecomm_ars":0,"rate_pct":null,"rate_total_pct":null,"services_ars":{},"is_projection":false,"threshold_ars":300000000,"gmv_taxable_ars":0,"comm_theoretical_ars":0.0,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":null,"fee_fijo_usd_equiv":null,"fee_fijo_meets_min":null,"paid_media_ars":0,"paid_media_usd_equiv":null,"paid_media_usd_contract":1500,"rate_on_taxable_pct":null,"rate_on_gmv_pct":null},{"ym":"2015-12","ing_ars":0.0,"ing_usd":0,"platform_total_ars":0.0,"platform_total_usd":0,"gmv_ars":0,"gmv_neto_ars":0,"comm_ars":0,"fee_fijo_ars":0,"fee_ecomm_ars":0,"rate_pct":null,"rate_total_pct":null,"services_ars":{},"is_projection":false,"threshold_ars":300000000,"gmv_taxable_ars":0,"comm_theoretical_ars":0.0,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":null,"fee_fijo_usd_equiv":null,"fee_fijo_meets_min":null,"paid_media_ars":0,"paid_media_usd_equiv":null,"paid_media_usd_contract":1500,"rate_on_taxable_pct":null,"rate_on_gmv_pct":null},{"ym":"2016-01","ing_ars":0.0,"ing_usd":0,"platform_total_ars":0.0,"platform_total_usd":0,"gmv_ars":0,"gmv_neto_ars":0,"comm_ars":0,"fee_fijo_ars":0,"fee_ecomm_ars":0,"rate_pct":null,"rate_total_pct":null,"services_ars":{},"is_projection":false,"threshold_ars":300000000,"gmv_taxable_ars":0,"comm_theoretical_ars":0.0,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":null,"fee_fijo_usd_equiv":null,"fee_fijo_meets_min":null,"paid_media_ars":0,"paid_media_usd_equiv":null,"paid_media_usd_contract":1500,"rate_on_taxable_pct":null,"rate_on_gmv_pct":null},{"ym":"2016-02","ing_ars":0.0,"ing_usd":0,"platform_total_ars":0.0,"platform_total_usd":0,"gmv_ars":0,"gmv_neto_ars":0,"comm_ars":0,"fee_fijo_ars":0,"fee_ecomm_ars":0,"rate_pct":null,"rate_total_pct":null,"services_ars":{},"is_projection":false,"threshold_ars":300000000,"gmv_taxable_ars":0,"comm_theoretical_ars":0.0,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":null,"fee_fijo_usd_equiv":null,"fee_fijo_meets_min":null,"paid_media_ars":0,"paid_media_usd_equiv":null,"paid_media_usd_contract":1500,"rate_on_taxable_pct":null,"rate_on_gmv_pct":null},{"ym":"2016-03","ing_ars":0.0,"ing_usd":0,"platform_total_ars":0.0,"platform_total_usd":0,"gmv_ars":0,"gmv_neto_ars":0,"comm_ars":0,"fee_fijo_ars":0,"fee_ecomm_ars":0,"rate_pct":null,"rate_total_pct":null,"services_ars":{},"is_projection":false,"threshold_ars":300000000,"gmv_taxable_ars":0,"comm_theoretical_ars":0.0,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":null,"fee_fijo_usd_equiv":null,"fee_fijo_meets_min":null,"paid_media_ars":0,"paid_media_usd_equiv":null,"paid_media_usd_contract":1500,"rate_on_taxable_pct":null,"rate_on_gmv_pct":null},{"ym":"2016-04","ing_ars":0.0,"ing_usd":0,"platform_total_ars":0.0,"platform_total_usd":0,"gmv_ars":0,"gmv_neto_ars":0,"comm_ars":0,"fee_fijo_ars":0,"fee_ecomm_ars":0,"rate_pct":null,"rate_total_pct":null,"services_ars":{},"is_projection":false,"threshold_ars":300000000,"gmv_taxable_ars":0,"comm_theoretical_ars":0.0,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":null,"fee_fijo_usd_equiv":null,"fee_fijo_meets_min":null,"paid_media_ars":0,"paid_media_usd_equiv":null,"paid_media_usd_contract":1500,"rate_on_taxable_pct":null,"rate_on_gmv_pct":null},{"ym":"2016-05","ing_ars":0.0,"ing_usd":0,"platform_total_ars":0.0,"platform_total_usd":0,"gmv_ars":0,"gmv_neto_ars":0,"comm_ars":0,"fee_fijo_ars":0,"fee_ecomm_ars":0,"rate_pct":null,"rate_total_pct":null,"services_ars":{},"is_projection":false,"threshold_ars":300000000,"gmv_taxable_ars":0,"comm_theoretical_ars":0.0,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":null,"fee_fijo_usd_equiv":null,"fee_fijo_meets_min":null,"paid_media_ars":0,"paid_media_usd_equiv":null,"paid_media_usd_contract":1500,"rate_on_taxable_pct":null,"rate_on_gmv_pct":null},{"ym":"2016-06","ing_ars":0.0,"ing_usd":0,"platform_total_ars":0.0,"platform_total_usd":0,"gmv_ars":0,"gmv_neto_ars":0,"comm_ars":0,"fee_fijo_ars":0,"fee_ecomm_ars":0,"rate_pct":null,"rate_total_pct":null,"services_ars":{},"is_projection":false,"threshold_ars":300000000,"gmv_taxable_ars":0,"comm_theoretical_ars":0.0,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":null,"fee_fijo_usd_equiv":null,"fee_fijo_meets_min":null,"paid_media_ars":0,"paid_media_usd_equiv":null,"paid_media_usd_contract":1500,"rate_on_taxable_pct":null,"rate_on_gmv_pct":null},{"ym":"2016-07","ing_ars":0.0,"ing_usd":0,"platform_total_ars":0.0,"platform_total_usd":0,"gmv_ars":0,"gmv_neto_ars":0,"comm_ars":0,"fee_fijo_ars":0,"fee_ecomm_ars":0,"rate_pct":null,"rate_total_pct":null,"services_ars":{},"is_projection":false,"threshold_ars":300000000,"gmv_taxable_ars":0,"comm_theoretical_ars":0.0,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":null,"fee_fijo_usd_equiv":null,"fee_fijo_meets_min":null,"paid_media_ars":0,"paid_media_usd_equiv":null,"paid_media_usd_contract":1500,"rate_on_taxable_pct":null,"rate_on_gmv_pct":null},{"ym":"2016-08","ing_ars":0.0,"ing_usd":0,"platform_total_ars":0.0,"platform_total_usd":0,"gmv_ars":0,"gmv_neto_ars":0,"comm_ars":0,"fee_fijo_ars":0,"fee_ecomm_ars":0,"rate_pct":null,"rate_total_pct":null,"services_ars":{},"is_projection":false,"threshold_ars":300000000,"gmv_taxable_ars":0,"comm_theoretical_ars":0.0,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":null,"fee_fijo_usd_equiv":null,"fee_fijo_meets_min":null,"paid_media_ars":0,"paid_media_usd_equiv":null,"paid_media_usd_contract":1500,"rate_on_taxable_pct":null,"rate_on_gmv_pct":null},{"ym":"2016-09","ing_ars":0.0,"ing_usd":0,"platform_total_ars":0.0,"platform_total_usd":0,"gmv_ars":0,"gmv_neto_ars":0,"comm_ars":0,"fee_fijo_ars":0,"fee_ecomm_ars":0,"rate_pct":null,"rate_total_pct":null,"services_ars":{},"is_projection":false,"threshold_ars":300000000,"gmv_taxable_ars":0,"comm_theoretical_ars":0.0,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":null,"fee_fijo_usd_equiv":null,"fee_fijo_meets_min":null,"paid_media_ars":0,"paid_media_usd_equiv":null,"paid_media_usd_contract":1500,"rate_on_taxable_pct":null,"rate_on_gmv_pct":null},{"ym":"2016-10","ing_ars":0.0,"ing_usd":0,"platform_total_ars":0.0,"platform_total_usd":0,"gmv_ars":0,"gmv_neto_ars":0,"comm_ars":0,"fee_fijo_ars":0,"fee_ecomm_ars":0,"rate_pct":null,"rate_total_pct":null,"services_ars":{},"is_projection":false,"threshold_ars":300000000,"gmv_taxable_ars":0,"comm_theoretical_ars":0.0,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":null,"fee_fijo_usd_equiv":null,"fee_fijo_meets_min":null,"paid_media_ars":0,"paid_media_usd_equiv":null,"paid_media_usd_contract":1500,"rate_on_taxable_pct":null,"rate_on_gmv_pct":null},{"ym":"2016-11","ing_ars":0.0,"ing_usd":0,"platform_total_ars":0.0,"platform_total_usd":0,"gmv_ars":0,"gmv_neto_ars":0,"comm_ars":0,"fee_fijo_ars":0,"fee_ecomm_ars":0,"rate_pct":null,"rate_total_pct":null,"services_ars":{},"is_projection":false,"threshold_ars":300000000,"gmv_taxable_ars":0,"comm_theoretical_ars":0.0,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":null,"fee_fijo_usd_equiv":null,"fee_fijo_meets_min":null,"paid_media_ars":0,"paid_media_usd_equiv":null,"paid_media_usd_contract":1500,"rate_on_taxable_pct":null,"rate_on_gmv_pct":null},{"ym":"2016-12","ing_ars":0.0,"ing_usd":0,"platform_total_ars":0.0,"platform_total_usd":0,"gmv_ars":0,"gmv_neto_ars":0,"comm_ars":0,"fee_fijo_ars":0,"fee_ecomm_ars":0,"rate_pct":null,"rate_total_pct":null,"services_ars":{},"is_projection":false,"threshold_ars":300000000,"gmv_taxable_ars":0,"comm_theoretical_ars":0.0,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":null,"fee_fijo_usd_equiv":null,"fee_fijo_meets_min":null,"paid_media_ars":0,"paid_media_usd_equiv":null,"paid_media_usd_contract":1500,"rate_on_taxable_pct":null,"rate_on_gmv_pct":null},{"ym":"2017-01","ing_ars":0.0,"ing_usd":0,"platform_total_ars":0.0,"platform_total_usd":0,"gmv_ars":0,"gmv_neto_ars":0,"comm_ars":0,"fee_fijo_ars":0,"fee_ecomm_ars":0,"rate_pct":null,"rate_total_pct":null,"services_ars":{},"is_projection":false,"threshold_ars":300000000,"gmv_taxable_ars":0,"comm_theoretical_ars":0.0,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":null,"fee_fijo_usd_equiv":null,"fee_fijo_meets_min":null,"paid_media_ars":0,"paid_media_usd_equiv":null,"paid_media_usd_contract":1500,"rate_on_taxable_pct":null,"rate_on_gmv_pct":null},{"ym":"2017-02","ing_ars":0.0,"ing_usd":0,"platform_total_ars":0.0,"platform_total_usd":0,"gmv_ars":0,"gmv_neto_ars":0,"comm_ars":0,"fee_fijo_ars":0,"fee_ecomm_ars":0,"rate_pct":null,"rate_total_pct":null,"services_ars":{},"is_projection":false,"threshold_ars":300000000,"gmv_taxable_ars":0,"comm_theoretical_ars":0.0,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":null,"fee_fijo_usd_equiv":null,"fee_fijo_meets_min":null,"paid_media_ars":0,"paid_media_usd_equiv":null,"paid_media_usd_contract":1500,"rate_on_taxable_pct":null,"rate_on_gmv_pct":null},{"ym":"2017-03","ing_ars":0.0,"ing_usd":0,"platform_total_ars":0.0,"platform_total_usd":0,"gmv_ars":0,"gmv_neto_ars":0,"comm_ars":0,"fee_fijo_ars":0,"fee_ecomm_ars":0,"rate_pct":null,"rate_total_pct":null,"services_ars":{},"is_projection":false,"threshold_ars":300000000,"gmv_taxable_ars":0,"comm_theoretical_ars":0.0,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":null,"fee_fijo_usd_equiv":null,"fee_fijo_meets_min":null,"paid_media_ars":0,"paid_media_usd_equiv":null,"paid_media_usd_contract":1500,"rate_on_taxable_pct":null,"rate_on_gmv_pct":null},{"ym":"2017-04","ing_ars":0.0,"ing_usd":0,"platform_total_ars":0.0,"platform_total_usd":0,"gmv_ars":0,"gmv_neto_ars":0,"comm_ars":0,"fee_fijo_ars":0,"fee_ecomm_ars":0,"rate_pct":null,"rate_total_pct":null,"services_ars":{},"is_projection":false,"threshold_ars":300000000,"gmv_taxable_ars":0,"comm_theoretical_ars":0.0,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":null,"fee_fijo_usd_equiv":null,"fee_fijo_meets_min":null,"paid_media_ars":0,"paid_media_usd_equiv":null,"paid_media_usd_contract":1500,"rate_on_taxable_pct":null,"rate_on_gmv_pct":null},{"ym":"2017-05","ing_ars":0.0,"ing_usd":0,"platform_total_ars":0.0,"platform_total_usd":0,"gmv_ars":0,"gmv_neto_ars":0,"comm_ars":0,"fee_fijo_ars":0,"fee_ecomm_ars":0,"rate_pct":null,"rate_total_pct":null,"services_ars":{},"is_projection":false,"threshold_ars":300000000,"gmv_taxable_ars":0,"comm_theoretical_ars":0.0,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":null,"fee_fijo_usd_equiv":null,"fee_fijo_meets_min":null,"paid_media_ars":0,"paid_media_usd_equiv":null,"paid_media_usd_contract":1500,"rate_on_taxable_pct":null,"rate_on_gmv_pct":null},{"ym":"2017-06","ing_ars":0.0,"ing_usd":0,"platform_total_ars":0.0,"platform_total_usd":0,"gmv_ars":0,"gmv_neto_ars":0,"comm_ars":0,"fee_fijo_ars":0,"fee_ecomm_ars":0,"rate_pct":null,"rate_total_pct":null,"services_ars":{},"is_projection":false,"threshold_ars":300000000,"gmv_taxable_ars":0,"comm_theoretical_ars":0.0,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":null,"fee_fijo_usd_equiv":null,"fee_fijo_meets_min":null,"paid_media_ars":0,"paid_media_usd_equiv":null,"paid_media_usd_contract":1500,"rate_on_taxable_pct":null,"rate_on_gmv_pct":null},{"ym":"2017-07","ing_ars":0.0,"ing_usd":0,"platform_total_ars":0.0,"platform_total_usd":0,"gmv_ars":0,"gmv_neto_ars":0,"comm_ars":0,"fee_fijo_ars":0,"fee_ecomm_ars":0,"rate_pct":null,"rate_total_pct":null,"services_ars":{},"is_projection":false,"threshold_ars":300000000,"gmv_taxable_ars":0,"comm_theoretical_ars":0.0,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":null,"fee_fijo_usd_equiv":null,"fee_fijo_meets_min":null,"paid_media_ars":0,"paid_media_usd_equiv":null,"paid_media_usd_contract":1500,"rate_on_taxable_pct":null,"rate_on_gmv_pct":null},{"ym":"2017-08","ing_ars":0.0,"ing_usd":0,"platform_total_ars":0.0,"platform_total_usd":0,"gmv_ars":0,"gmv_neto_ars":0,"comm_ars":0,"fee_fijo_ars":0,"fee_ecomm_ars":0,"rate_pct":null,"rate_total_pct":null,"services_ars":{},"is_projection":false,"threshold_ars":300000000,"gmv_taxable_ars":0,"comm_theoretical_ars":0.0,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":null,"fee_fijo_usd_equiv":null,"fee_fijo_meets_min":null,"paid_media_ars":0,"paid_media_usd_equiv":null,"paid_media_usd_contract":1500,"rate_on_taxable_pct":null,"rate_on_gmv_pct":null},{"ym":"2017-09","ing_ars":0.0,"ing_usd":0,"platform_total_ars":0.0,"platform_total_usd":0,"gmv_ars":0,"gmv_neto_ars":0,"comm_ars":0,"fee_fijo_ars":0,"fee_ecomm_ars":0,"rate_pct":null,"rate_total_pct":null,"services_ars":{},"is_projection":false,"threshold_ars":300000000,"gmv_taxable_ars":0,"comm_theoretical_ars":0.0,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":null,"fee_fijo_usd_equiv":null,"fee_fijo_meets_min":null,"paid_media_ars":0,"paid_media_usd_equiv":null,"paid_media_usd_contract":1500,"rate_on_taxable_pct":null,"rate_on_gmv_pct":null},{"ym":"2017-10","ing_ars":0.0,"ing_usd":0,"platform_total_ars":0.0,"platform_total_usd":0,"gmv_ars":0,"gmv_neto_ars":0,"comm_ars":0,"fee_fijo_ars":0,"fee_ecomm_ars":0,"rate_pct":null,"rate_total_pct":null,"services_ars":{},"is_projection":false,"threshold_ars":300000000,"gmv_taxable_ars":0,"comm_theoretical_ars":0.0,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":null,"fee_fijo_usd_equiv":null,"fee_fijo_meets_min":null,"paid_media_ars":0,"paid_media_usd_equiv":null,"paid_media_usd_contract":1500,"rate_on_taxable_pct":null,"rate_on_gmv_pct":null},{"ym":"2017-11","ing_ars":0.0,"ing_usd":0,"platform_total_ars":0.0,"platform_total_usd":0,"gmv_ars":0,"gmv_neto_ars":0,"comm_ars":0,"fee_fijo_ars":0,"fee_ecomm_ars":0,"rate_pct":null,"rate_total_pct":null,"services_ars":{},"is_projection":false,"threshold_ars":300000000,"gmv_taxable_ars":0,"comm_theoretical_ars":0.0,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":null,"fee_fijo_usd_equiv":null,"fee_fijo_meets_min":null,"paid_media_ars":0,"paid_media_usd_equiv":null,"paid_media_usd_contract":1500,"rate_on_taxable_pct":null,"rate_on_gmv_pct":null},{"ym":"2017-12","ing_ars":0.0,"ing_usd":0,"platform_total_ars":0.0,"platform_total_usd":0,"gmv_ars":0,"gmv_neto_ars":0,"comm_ars":0,"fee_fijo_ars":0,"fee_ecomm_ars":0,"rate_pct":null,"rate_total_pct":null,"services_ars":{},"is_projection":false,"threshold_ars":300000000,"gmv_taxable_ars":0,"comm_theoretical_ars":0.0,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":null,"fee_fijo_usd_equiv":null,"fee_fijo_meets_min":null,"paid_media_ars":0,"paid_media_usd_equiv":null,"paid_media_usd_contract":1500,"rate_on_taxable_pct":null,"rate_on_gmv_pct":null},{"ym":"2018-01","ing_ars":0.0,"ing_usd":0,"platform_total_ars":0.0,"platform_total_usd":0,"gmv_ars":0,"gmv_neto_ars":0,"comm_ars":0,"fee_fijo_ars":0,"fee_ecomm_ars":0,"rate_pct":null,"rate_total_pct":null,"services_ars":{},"is_projection":false,"threshold_ars":300000000,"gmv_taxable_ars":0,"comm_theoretical_ars":0.0,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":null,"fee_fijo_usd_equiv":null,"fee_fijo_meets_min":null,"paid_media_ars":0,"paid_media_usd_equiv":null,"paid_media_usd_contract":1500,"rate_on_taxable_pct":null,"rate_on_gmv_pct":null},{"ym":"2018-02","ing_ars":0.0,"ing_usd":0,"platform_total_ars":0.0,"platform_total_usd":0,"gmv_ars":0,"gmv_neto_ars":0,"comm_ars":0,"fee_fijo_ars":0,"fee_ecomm_ars":0,"rate_pct":null,"rate_total_pct":null,"services_ars":{},"is_projection":false,"threshold_ars":300000000,"gmv_taxable_ars":0,"comm_theoretical_ars":0.0,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":null,"fee_fijo_usd_equiv":null,"fee_fijo_meets_min":null,"paid_media_ars":0,"paid_media_usd_equiv":null,"paid_media_usd_contract":1500,"rate_on_taxable_pct":null,"rate_on_gmv_pct":null},{"ym":"2018-03","ing_ars":0.0,"ing_usd":0,"platform_total_ars":0.0,"platform_total_usd":0,"gmv_ars":0,"gmv_neto_ars":0,"comm_ars":0,"fee_fijo_ars":0,"fee_ecomm_ars":0,"rate_pct":null,"rate_total_pct":null,"services_ars":{},"is_projection":false,"threshold_ars":300000000,"gmv_taxable_ars":0,"comm_theoretical_ars":0.0,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":null,"fee_fijo_usd_equiv":null,"fee_fijo_meets_min":null,"paid_media_ars":0,"paid_media_usd_equiv":null,"paid_media_usd_contract":1500,"rate_on_taxable_pct":null,"rate_on_gmv_pct":null},{"ym":"2018-04","ing_ars":0.0,"ing_usd":0,"platform_total_ars":0.0,"platform_total_usd":0,"gmv_ars":0,"gmv_neto_ars":0,"comm_ars":0,"fee_fijo_ars":0,"fee_ecomm_ars":0,"rate_pct":null,"rate_total_pct":null,"services_ars":{},"is_projection":false,"threshold_ars":300000000,"gmv_taxable_ars":0,"comm_theoretical_ars":0.0,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":null,"fee_fijo_usd_equiv":null,"fee_fijo_meets_min":null,"paid_media_ars":0,"paid_media_usd_equiv":null,"paid_media_usd_contract":1500,"rate_on_taxable_pct":null,"rate_on_gmv_pct":null},{"ym":"2018-05","ing_ars":0.0,"ing_usd":0,"platform_total_ars":0.0,"platform_total_usd":0,"gmv_ars":0,"gmv_neto_ars":0,"comm_ars":0,"fee_fijo_ars":0,"fee_ecomm_ars":0,"rate_pct":null,"rate_total_pct":null,"services_ars":{},"is_projection":false,"threshold_ars":300000000,"gmv_taxable_ars":0,"comm_theoretical_ars":0.0,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":null,"fee_fijo_usd_equiv":null,"fee_fijo_meets_min":null,"paid_media_ars":0,"paid_media_usd_equiv":null,"paid_media_usd_contract":1500,"rate_on_taxable_pct":null,"rate_on_gmv_pct":null},{"ym":"2018-06","ing_ars":0.0,"ing_usd":0,"platform_total_ars":0.0,"platform_total_usd":0,"gmv_ars":0,"gmv_neto_ars":0,"comm_ars":0,"fee_fijo_ars":0,"fee_ecomm_ars":0,"rate_pct":null,"rate_total_pct":null,"services_ars":{},"is_projection":false,"threshold_ars":300000000,"gmv_taxable_ars":0,"comm_theoretical_ars":0.0,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":null,"fee_fijo_usd_equiv":null,"fee_fijo_meets_min":null,"paid_media_ars":0,"paid_media_usd_equiv":null,"paid_media_usd_contract":1500,"rate_on_taxable_pct":null,"rate_on_gmv_pct":null},{"ym":"2018-07","ing_ars":0.0,"ing_usd":0,"platform_total_ars":0.0,"platform_total_usd":0,"gmv_ars":0,"gmv_neto_ars":0,"comm_ars":0,"fee_fijo_ars":0,"fee_ecomm_ars":0,"rate_pct":null,"rate_total_pct":null,"services_ars":{},"is_projection":false,"threshold_ars":300000000,"gmv_taxable_ars":0,"comm_theoretical_ars":0.0,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":null,"fee_fijo_usd_equiv":null,"fee_fijo_meets_min":null,"paid_media_ars":0,"paid_media_usd_equiv":null,"paid_media_usd_contract":1500,"rate_on_taxable_pct":null,"rate_on_gmv_pct":null},{"ym":"2018-08","ing_ars":0.0,"ing_usd":0,"platform_total_ars":0.0,"platform_total_usd":0,"gmv_ars":0,"gmv_neto_ars":0,"comm_ars":0,"fee_fijo_ars":0,"fee_ecomm_ars":0,"rate_pct":null,"rate_total_pct":null,"services_ars":{},"is_projection":false,"threshold_ars":300000000,"gmv_taxable_ars":0,"comm_theoretical_ars":0.0,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":null,"fee_fijo_usd_equiv":null,"fee_fijo_meets_min":null,"paid_media_ars":0,"paid_media_usd_equiv":null,"paid_media_usd_contract":1500,"rate_on_taxable_pct":null,"rate_on_gmv_pct":null},{"ym":"2018-09","ing_ars":0.0,"ing_usd":0,"platform_total_ars":0.0,"platform_total_usd":0,"gmv_ars":0,"gmv_neto_ars":0,"comm_ars":0,"fee_fijo_ars":0,"fee_ecomm_ars":0,"rate_pct":null,"rate_total_pct":null,"services_ars":{},"is_projection":false,"threshold_ars":300000000,"gmv_taxable_ars":0,"comm_theoretical_ars":0.0,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":null,"fee_fijo_usd_equiv":null,"fee_fijo_meets_min":null,"paid_media_ars":0,"paid_media_usd_equiv":null,"paid_media_usd_contract":1500,"rate_on_taxable_pct":null,"rate_on_gmv_pct":null},{"ym":"2018-10","ing_ars":0.0,"ing_usd":0,"platform_total_ars":0.0,"platform_total_usd":0,"gmv_ars":0,"gmv_neto_ars":0,"comm_ars":0,"fee_fijo_ars":0,"fee_ecomm_ars":0,"rate_pct":null,"rate_total_pct":null,"services_ars":{},"is_projection":false,"threshold_ars":300000000,"gmv_taxable_ars":0,"comm_theoretical_ars":0.0,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":null,"fee_fijo_usd_equiv":null,"fee_fijo_meets_min":null,"paid_media_ars":0,"paid_media_usd_equiv":null,"paid_media_usd_contract":1500,"rate_on_taxable_pct":null,"rate_on_gmv_pct":null},{"ym":"2018-11","ing_ars":0.0,"ing_usd":0,"platform_total_ars":0.0,"platform_total_usd":0,"gmv_ars":0,"gmv_neto_ars":0,"comm_ars":0,"fee_fijo_ars":0,"fee_ecomm_ars":0,"rate_pct":null,"rate_total_pct":null,"services_ars":{},"is_projection":false,"threshold_ars":300000000,"gmv_taxable_ars":0,"comm_theoretical_ars":0.0,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":null,"fee_fijo_usd_equiv":null,"fee_fijo_meets_min":null,"paid_media_ars":0,"paid_media_usd_equiv":null,"paid_media_usd_contract":1500,"rate_on_taxable_pct":null,"rate_on_gmv_pct":null},{"ym":"2018-12","ing_ars":0.0,"ing_usd":0,"platform_total_ars":0.0,"platform_total_usd":0,"gmv_ars":0,"gmv_neto_ars":0,"comm_ars":0,"fee_fijo_ars":0,"fee_ecomm_ars":0,"rate_pct":null,"rate_total_pct":null,"services_ars":{},"is_projection":false,"threshold_ars":300000000,"gmv_taxable_ars":0,"comm_theoretical_ars":0.0,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":null,"fee_fijo_usd_equiv":null,"fee_fijo_meets_min":null,"paid_media_ars":0,"paid_media_usd_equiv":null,"paid_media_usd_contract":1500,"rate_on_taxable_pct":null,"rate_on_gmv_pct":null},{"ym":"2019-01","ing_ars":0.0,"ing_usd":0,"platform_total_ars":0.0,"platform_total_usd":0,"gmv_ars":0,"gmv_neto_ars":0,"comm_ars":0,"fee_fijo_ars":0,"fee_ecomm_ars":0,"rate_pct":null,"rate_total_pct":null,"services_ars":{},"is_projection":false,"threshold_ars":300000000,"gmv_taxable_ars":0,"comm_theoretical_ars":0.0,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":null,"fee_fijo_usd_equiv":null,"fee_fijo_meets_min":null,"paid_media_ars":0,"paid_media_usd_equiv":null,"paid_media_usd_contract":1500,"rate_on_taxable_pct":null,"rate_on_gmv_pct":null},{"ym":"2019-02","ing_ars":0.0,"ing_usd":0,"platform_total_ars":0.0,"platform_total_usd":0,"gmv_ars":0,"gmv_neto_ars":0,"comm_ars":0,"fee_fijo_ars":0,"fee_ecomm_ars":0,"rate_pct":null,"rate_total_pct":null,"services_ars":{},"is_projection":false,"threshold_ars":300000000,"gmv_taxable_ars":0,"comm_theoretical_ars":0.0,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":null,"fee_fijo_usd_equiv":null,"fee_fijo_meets_min":null,"paid_media_ars":0,"paid_media_usd_equiv":null,"paid_media_usd_contract":1500,"rate_on_taxable_pct":null,"rate_on_gmv_pct":null},{"ym":"2019-03","ing_ars":0.0,"ing_usd":0,"platform_total_ars":0.0,"platform_total_usd":0,"gmv_ars":0,"gmv_neto_ars":0,"comm_ars":0,"fee_fijo_ars":0,"fee_ecomm_ars":0,"rate_pct":null,"rate_total_pct":null,"services_ars":{},"is_projection":false,"threshold_ars":300000000,"gmv_taxable_ars":0,"comm_theoretical_ars":0.0,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":null,"fee_fijo_usd_equiv":null,"fee_fijo_meets_min":null,"paid_media_ars":0,"paid_media_usd_equiv":null,"paid_media_usd_contract":1500,"rate_on_taxable_pct":null,"rate_on_gmv_pct":null},{"ym":"2019-04","ing_ars":0.0,"ing_usd":0,"platform_total_ars":0.0,"platform_total_usd":0,"gmv_ars":0,"gmv_neto_ars":0,"comm_ars":0,"fee_fijo_ars":0,"fee_ecomm_ars":0,"rate_pct":null,"rate_total_pct":null,"services_ars":{},"is_projection":false,"threshold_ars":300000000,"gmv_taxable_ars":0,"comm_theoretical_ars":0.0,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":null,"fee_fijo_usd_equiv":null,"fee_fijo_meets_min":null,"paid_media_ars":0,"paid_media_usd_equiv":null,"paid_media_usd_contract":1500,"rate_on_taxable_pct":null,"rate_on_gmv_pct":null},{"ym":"2019-05","ing_ars":0.0,"ing_usd":0,"platform_total_ars":0.0,"platform_total_usd":0,"gmv_ars":0,"gmv_neto_ars":0,"comm_ars":0,"fee_fijo_ars":0,"fee_ecomm_ars":0,"rate_pct":null,"rate_total_pct":null,"services_ars":{},"is_projection":false,"threshold_ars":300000000,"gmv_taxable_ars":0,"comm_theoretical_ars":0.0,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":null,"fee_fijo_usd_equiv":null,"fee_fijo_meets_min":null,"paid_media_ars":0,"paid_media_usd_equiv":null,"paid_media_usd_contract":1500,"rate_on_taxable_pct":null,"rate_on_gmv_pct":null},{"ym":"2019-06","ing_ars":0.0,"ing_usd":0,"platform_total_ars":0.0,"platform_total_usd":0,"gmv_ars":0,"gmv_neto_ars":0,"comm_ars":0,"fee_fijo_ars":0,"fee_ecomm_ars":0,"rate_pct":null,"rate_total_pct":null,"services_ars":{},"is_projection":false,"threshold_ars":300000000,"gmv_taxable_ars":0,"comm_theoretical_ars":0.0,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":null,"fee_fijo_usd_equiv":null,"fee_fijo_meets_min":null,"paid_media_ars":0,"paid_media_usd_equiv":null,"paid_media_usd_contract":1500,"rate_on_taxable_pct":null,"rate_on_gmv_pct":null},{"ym":"2019-07","ing_ars":0.0,"ing_usd":0,"platform_total_ars":0.0,"platform_total_usd":0,"gmv_ars":0,"gmv_neto_ars":0,"comm_ars":0,"fee_fijo_ars":0,"fee_ecomm_ars":0,"rate_pct":null,"rate_total_pct":null,"services_ars":{},"is_projection":false,"threshold_ars":300000000,"gmv_taxable_ars":0,"comm_theoretical_ars":0.0,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":null,"fee_fijo_usd_equiv":null,"fee_fijo_meets_min":null,"paid_media_ars":0,"paid_media_usd_equiv":null,"paid_media_usd_contract":1500,"rate_on_taxable_pct":null,"rate_on_gmv_pct":null},{"ym":"2019-08","ing_ars":0.0,"ing_usd":0,"platform_total_ars":0.0,"platform_total_usd":0,"gmv_ars":0,"gmv_neto_ars":0,"comm_ars":0,"fee_fijo_ars":0,"fee_ecomm_ars":0,"rate_pct":null,"rate_total_pct":null,"services_ars":{},"is_projection":false,"threshold_ars":300000000,"gmv_taxable_ars":0,"comm_theoretical_ars":0.0,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":null,"fee_fijo_usd_equiv":null,"fee_fijo_meets_min":null,"paid_media_ars":0,"paid_media_usd_equiv":null,"paid_media_usd_contract":1500,"rate_on_taxable_pct":null,"rate_on_gmv_pct":null},{"ym":"2019-09","ing_ars":0.0,"ing_usd":0,"platform_total_ars":0.0,"platform_total_usd":0,"gmv_ars":0,"gmv_neto_ars":0,"comm_ars":0,"fee_fijo_ars":0,"fee_ecomm_ars":0,"rate_pct":null,"rate_total_pct":null,"services_ars":{},"is_projection":false,"threshold_ars":300000000,"gmv_taxable_ars":0,"comm_theoretical_ars":0.0,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":null,"fee_fijo_usd_equiv":null,"fee_fijo_meets_min":null,"paid_media_ars":0,"paid_media_usd_equiv":null,"paid_media_usd_contract":1500,"rate_on_taxable_pct":null,"rate_on_gmv_pct":null},{"ym":"2019-10","ing_ars":0.0,"ing_usd":0,"platform_total_ars":0.0,"platform_total_usd":0,"gmv_ars":0,"gmv_neto_ars":0,"comm_ars":0,"fee_fijo_ars":0,"fee_ecomm_ars":0,"rate_pct":null,"rate_total_pct":null,"services_ars":{},"is_projection":false,"threshold_ars":300000000,"gmv_taxable_ars":0,"comm_theoretical_ars":0.0,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":null,"fee_fijo_usd_equiv":null,"fee_fijo_meets_min":null,"paid_media_ars":0,"paid_media_usd_equiv":null,"paid_media_usd_contract":1500,"rate_on_taxable_pct":null,"rate_on_gmv_pct":null},{"ym":"2019-11","ing_ars":0.0,"ing_usd":0,"platform_total_ars":0.0,"platform_total_usd":0,"gmv_ars":0,"gmv_neto_ars":0,"comm_ars":0,"fee_fijo_ars":0,"fee_ecomm_ars":0,"rate_pct":null,"rate_total_pct":null,"services_ars":{},"is_projection":false,"threshold_ars":300000000,"gmv_taxable_ars":0,"comm_theoretical_ars":0.0,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":null,"fee_fijo_usd_equiv":null,"fee_fijo_meets_min":null,"paid_media_ars":0,"paid_media_usd_equiv":null,"paid_media_usd_contract":1500,"rate_on_taxable_pct":null,"rate_on_gmv_pct":null},{"ym":"2019-12","ing_ars":0.0,"ing_usd":0,"platform_total_ars":0.0,"platform_total_usd":0,"gmv_ars":0,"gmv_neto_ars":0,"comm_ars":0,"fee_fijo_ars":0,"fee_ecomm_ars":0,"rate_pct":null,"rate_total_pct":null,"services_ars":{},"is_projection":false,"threshold_ars":300000000,"gmv_taxable_ars":0,"comm_theoretical_ars":0.0,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":null,"fee_fijo_usd_equiv":null,"fee_fijo_meets_min":null,"paid_media_ars":0,"paid_media_usd_equiv":null,"paid_media_usd_contract":1500,"rate_on_taxable_pct":null,"rate_on_gmv_pct":null},{"ym":"2020-01","ing_ars":0.0,"ing_usd":0,"platform_total_ars":0.0,"platform_total_usd":0,"gmv_ars":0,"gmv_neto_ars":0,"comm_ars":0,"fee_fijo_ars":0,"fee_ecomm_ars":0,"rate_pct":null,"rate_total_pct":null,"services_ars":{},"is_projection":false,"threshold_ars":300000000,"gmv_taxable_ars":0,"comm_theoretical_ars":0.0,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":null,"fee_fijo_usd_equiv":null,"fee_fijo_meets_min":null,"paid_media_ars":0,"paid_media_usd_equiv":null,"paid_media_usd_contract":1500,"rate_on_taxable_pct":null,"rate_on_gmv_pct":null},{"ym":"2020-02","ing_ars":0.0,"ing_usd":0,"platform_total_ars":0.0,"platform_total_usd":0,"gmv_ars":0,"gmv_neto_ars":0,"comm_ars":0,"fee_fijo_ars":0,"fee_ecomm_ars":0,"rate_pct":null,"rate_total_pct":null,"services_ars":{},"is_projection":false,"threshold_ars":300000000,"gmv_taxable_ars":0,"comm_theoretical_ars":0.0,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":null,"fee_fijo_usd_equiv":null,"fee_fijo_meets_min":null,"paid_media_ars":0,"paid_media_usd_equiv":null,"paid_media_usd_contract":1500,"rate_on_taxable_pct":null,"rate_on_gmv_pct":null},{"ym":"2020-03","ing_ars":0.0,"ing_usd":0,"platform_total_ars":0.0,"platform_total_usd":0,"gmv_ars":0,"gmv_neto_ars":0,"comm_ars":0,"fee_fijo_ars":0,"fee_ecomm_ars":0,"rate_pct":null,"rate_total_pct":null,"services_ars":{},"is_projection":false,"threshold_ars":300000000,"gmv_taxable_ars":0,"comm_theoretical_ars":0.0,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":null,"fee_fijo_usd_equiv":null,"fee_fijo_meets_min":null,"paid_media_ars":0,"paid_media_usd_equiv":null,"paid_media_usd_contract":1500,"rate_on_taxable_pct":null,"rate_on_gmv_pct":null},{"ym":"2020-04","ing_ars":0.0,"ing_usd":0,"platform_total_ars":0.0,"platform_total_usd":0,"gmv_ars":0,"gmv_neto_ars":0,"comm_ars":0,"fee_fijo_ars":0,"fee_ecomm_ars":0,"rate_pct":null,"rate_total_pct":null,"services_ars":{},"is_projection":false,"threshold_ars":300000000,"gmv_taxable_ars":0,"comm_theoretical_ars":0.0,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":null,"fee_fijo_usd_equiv":null,"fee_fijo_meets_min":null,"paid_media_ars":0,"paid_media_usd_equiv":null,"paid_media_usd_contract":1500,"rate_on_taxable_pct":null,"rate_on_gmv_pct":null},{"ym":"2020-05","ing_ars":0.0,"ing_usd":0,"platform_total_ars":0.0,"platform_total_usd":0,"gmv_ars":0,"gmv_neto_ars":0,"comm_ars":0,"fee_fijo_ars":0,"fee_ecomm_ars":0,"rate_pct":null,"rate_total_pct":null,"services_ars":{},"is_projection":false,"threshold_ars":300000000,"gmv_taxable_ars":0,"comm_theoretical_ars":0.0,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":null,"fee_fijo_usd_equiv":null,"fee_fijo_meets_min":null,"paid_media_ars":0,"paid_media_usd_equiv":null,"paid_media_usd_contract":1500,"rate_on_taxable_pct":null,"rate_on_gmv_pct":null},{"ym":"2020-06","ing_ars":0.0,"ing_usd":0,"platform_total_ars":0.0,"platform_total_usd":0,"gmv_ars":0,"gmv_neto_ars":0,"comm_ars":0,"fee_fijo_ars":0,"fee_ecomm_ars":0,"rate_pct":null,"rate_total_pct":null,"services_ars":{},"is_projection":false,"threshold_ars":300000000,"gmv_taxable_ars":0,"comm_theoretical_ars":0.0,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":null,"fee_fijo_usd_equiv":null,"fee_fijo_meets_min":null,"paid_media_ars":0,"paid_media_usd_equiv":null,"paid_media_usd_contract":1500,"rate_on_taxable_pct":null,"rate_on_gmv_pct":null},{"ym":"2020-07","ing_ars":0.0,"ing_usd":0,"platform_total_ars":0.0,"platform_total_usd":0,"gmv_ars":0,"gmv_neto_ars":0,"comm_ars":0,"fee_fijo_ars":0,"fee_ecomm_ars":0,"rate_pct":null,"rate_total_pct":null,"services_ars":{},"is_projection":false,"threshold_ars":300000000,"gmv_taxable_ars":0,"comm_theoretical_ars":0.0,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":null,"fee_fijo_usd_equiv":null,"fee_fijo_meets_min":null,"paid_media_ars":0,"paid_media_usd_equiv":null,"paid_media_usd_contract":1500,"rate_on_taxable_pct":null,"rate_on_gmv_pct":null},{"ym":"2020-08","ing_ars":0.0,"ing_usd":0,"platform_total_ars":0.0,"platform_total_usd":0,"gmv_ars":0,"gmv_neto_ars":0,"comm_ars":0,"fee_fijo_ars":0,"fee_ecomm_ars":0,"rate_pct":null,"rate_total_pct":null,"services_ars":{},"is_projection":false,"threshold_ars":300000000,"gmv_taxable_ars":0,"comm_theoretical_ars":0.0,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":null,"fee_fijo_usd_equiv":null,"fee_fijo_meets_min":null,"paid_media_ars":0,"paid_media_usd_equiv":null,"paid_media_usd_contract":1500,"rate_on_taxable_pct":null,"rate_on_gmv_pct":null},{"ym":"2020-09","ing_ars":0.0,"ing_usd":0,"platform_total_ars":0.0,"platform_total_usd":0,"gmv_ars":0,"gmv_neto_ars":0,"comm_ars":0,"fee_fijo_ars":0,"fee_ecomm_ars":0,"rate_pct":null,"rate_total_pct":null,"services_ars":{},"is_projection":false,"threshold_ars":300000000,"gmv_taxable_ars":0,"comm_theoretical_ars":0.0,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":null,"fee_fijo_usd_equiv":null,"fee_fijo_meets_min":null,"paid_media_ars":0,"paid_media_usd_equiv":null,"paid_media_usd_contract":1500,"rate_on_taxable_pct":null,"rate_on_gmv_pct":null},{"ym":"2020-10","ing_ars":0.0,"ing_usd":0,"platform_total_ars":0.0,"platform_total_usd":0,"gmv_ars":0,"gmv_neto_ars":0,"comm_ars":0,"fee_fijo_ars":0,"fee_ecomm_ars":0,"rate_pct":null,"rate_total_pct":null,"services_ars":{},"is_projection":false,"threshold_ars":300000000,"gmv_taxable_ars":0,"comm_theoretical_ars":0.0,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":null,"fee_fijo_usd_equiv":null,"fee_fijo_meets_min":null,"paid_media_ars":0,"paid_media_usd_equiv":null,"paid_media_usd_contract":1500,"rate_on_taxable_pct":null,"rate_on_gmv_pct":null},{"ym":"2020-11","ing_ars":0.0,"ing_usd":0,"platform_total_ars":0.0,"platform_total_usd":0,"gmv_ars":0,"gmv_neto_ars":0,"comm_ars":0,"fee_fijo_ars":0,"fee_ecomm_ars":0,"rate_pct":null,"rate_total_pct":null,"services_ars":{},"is_projection":false,"threshold_ars":300000000,"gmv_taxable_ars":0,"comm_theoretical_ars":0.0,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":null,"fee_fijo_usd_equiv":null,"fee_fijo_meets_min":null,"paid_media_ars":0,"paid_media_usd_equiv":null,"paid_media_usd_contract":1500,"rate_on_taxable_pct":null,"rate_on_gmv_pct":null},{"ym":"2020-12","ing_ars":0.0,"ing_usd":0,"platform_total_ars":0.0,"platform_total_usd":0,"gmv_ars":0,"gmv_neto_ars":0,"comm_ars":0,"fee_fijo_ars":0,"fee_ecomm_ars":0,"rate_pct":null,"rate_total_pct":null,"services_ars":{},"is_projection":false,"threshold_ars":300000000,"gmv_taxable_ars":0,"comm_theoretical_ars":0.0,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":null,"fee_fijo_usd_equiv":null,"fee_fijo_meets_min":null,"paid_media_ars":0,"paid_media_usd_equiv":null,"paid_media_usd_contract":1500,"rate_on_taxable_pct":null,"rate_on_gmv_pct":null},{"ym":"2021-01","ing_ars":0.0,"ing_usd":0,"platform_total_ars":0.0,"platform_total_usd":0,"gmv_ars":0,"gmv_neto_ars":0,"comm_ars":0,"fee_fijo_ars":0,"fee_ecomm_ars":0,"rate_pct":null,"rate_total_pct":null,"services_ars":{},"is_projection":false,"threshold_ars":300000000,"gmv_taxable_ars":0,"comm_theoretical_ars":0.0,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":null,"fee_fijo_usd_equiv":null,"fee_fijo_meets_min":null,"paid_media_ars":0,"paid_media_usd_equiv":null,"paid_media_usd_contract":1500,"rate_on_taxable_pct":null,"rate_on_gmv_pct":null},{"ym":"2021-02","ing_ars":0.0,"ing_usd":0,"platform_total_ars":0.0,"platform_total_usd":0,"gmv_ars":0,"gmv_neto_ars":0,"comm_ars":0,"fee_fijo_ars":0,"fee_ecomm_ars":0,"rate_pct":null,"rate_total_pct":null,"services_ars":{},"is_projection":false,"threshold_ars":300000000,"gmv_taxable_ars":0,"comm_theoretical_ars":0.0,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":null,"fee_fijo_usd_equiv":null,"fee_fijo_meets_min":null,"paid_media_ars":0,"paid_media_usd_equiv":null,"paid_media_usd_contract":1500,"rate_on_taxable_pct":null,"rate_on_gmv_pct":null},{"ym":"2021-03","ing_ars":0.0,"ing_usd":0,"platform_total_ars":0.0,"platform_total_usd":0,"gmv_ars":0,"gmv_neto_ars":0,"comm_ars":0,"fee_fijo_ars":0,"fee_ecomm_ars":0,"rate_pct":null,"rate_total_pct":null,"services_ars":{},"is_projection":false,"threshold_ars":300000000,"gmv_taxable_ars":0,"comm_theoretical_ars":0.0,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":null,"fee_fijo_usd_equiv":null,"fee_fijo_meets_min":null,"paid_media_ars":0,"paid_media_usd_equiv":null,"paid_media_usd_contract":1500,"rate_on_taxable_pct":null,"rate_on_gmv_pct":null},{"ym":"2021-04","ing_ars":0.0,"ing_usd":0,"platform_total_ars":0.0,"platform_total_usd":0,"gmv_ars":0,"gmv_neto_ars":0,"comm_ars":0,"fee_fijo_ars":0,"fee_ecomm_ars":0,"rate_pct":null,"rate_total_pct":null,"services_ars":{},"is_projection":false,"threshold_ars":300000000,"gmv_taxable_ars":0,"comm_theoretical_ars":0.0,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":null,"fee_fijo_usd_equiv":null,"fee_fijo_meets_min":null,"paid_media_ars":0,"paid_media_usd_equiv":null,"paid_media_usd_contract":1500,"rate_on_taxable_pct":null,"rate_on_gmv_pct":null},{"ym":"2021-05","ing_ars":0.0,"ing_usd":0,"platform_total_ars":0.0,"platform_total_usd":0,"gmv_ars":0,"gmv_neto_ars":0,"comm_ars":0,"fee_fijo_ars":0,"fee_ecomm_ars":0,"rate_pct":null,"rate_total_pct":null,"services_ars":{},"is_projection":false,"threshold_ars":300000000,"gmv_taxable_ars":0,"comm_theoretical_ars":0.0,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":null,"fee_fijo_usd_equiv":null,"fee_fijo_meets_min":null,"paid_media_ars":0,"paid_media_usd_equiv":null,"paid_media_usd_contract":1500,"rate_on_taxable_pct":null,"rate_on_gmv_pct":null},{"ym":"2021-06","ing_ars":0.0,"ing_usd":0,"platform_total_ars":0.0,"platform_total_usd":0,"gmv_ars":0,"gmv_neto_ars":0,"comm_ars":0,"fee_fijo_ars":0,"fee_ecomm_ars":0,"rate_pct":null,"rate_total_pct":null,"services_ars":{},"is_projection":false,"threshold_ars":300000000,"gmv_taxable_ars":0,"comm_theoretical_ars":0.0,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":null,"fee_fijo_usd_equiv":null,"fee_fijo_meets_min":null,"paid_media_ars":0,"paid_media_usd_equiv":null,"paid_media_usd_contract":1500,"rate_on_taxable_pct":null,"rate_on_gmv_pct":null},{"ym":"2021-07","ing_ars":0.0,"ing_usd":0,"platform_total_ars":0.0,"platform_total_usd":0,"gmv_ars":0,"gmv_neto_ars":0,"comm_ars":0,"fee_fijo_ars":0,"fee_ecomm_ars":0,"rate_pct":null,"rate_total_pct":null,"services_ars":{},"is_projection":false,"threshold_ars":300000000,"gmv_taxable_ars":0,"comm_theoretical_ars":0.0,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":null,"fee_fijo_usd_equiv":null,"fee_fijo_meets_min":null,"paid_media_ars":0,"paid_media_usd_equiv":null,"paid_media_usd_contract":1500,"rate_on_taxable_pct":null,"rate_on_gmv_pct":null},{"ym":"2021-08","ing_ars":0.0,"ing_usd":0,"platform_total_ars":0.0,"platform_total_usd":0,"gmv_ars":0,"gmv_neto_ars":0,"comm_ars":0,"fee_fijo_ars":0,"fee_ecomm_ars":0,"rate_pct":null,"rate_total_pct":null,"services_ars":{},"is_projection":false,"threshold_ars":300000000,"gmv_taxable_ars":0,"comm_theoretical_ars":0.0,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":null,"fee_fijo_usd_equiv":null,"fee_fijo_meets_min":null,"paid_media_ars":0,"paid_media_usd_equiv":null,"paid_media_usd_contract":1500,"rate_on_taxable_pct":null,"rate_on_gmv_pct":null},{"ym":"2021-09","ing_ars":0.0,"ing_usd":0,"platform_total_ars":0.0,"platform_total_usd":0,"gmv_ars":0,"gmv_neto_ars":0,"comm_ars":0,"fee_fijo_ars":0,"fee_ecomm_ars":0,"rate_pct":null,"rate_total_pct":null,"services_ars":{},"is_projection":false,"threshold_ars":300000000,"gmv_taxable_ars":0,"comm_theoretical_ars":0.0,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":null,"fee_fijo_usd_equiv":null,"fee_fijo_meets_min":null,"paid_media_ars":0,"paid_media_usd_equiv":null,"paid_media_usd_contract":1500,"rate_on_taxable_pct":null,"rate_on_gmv_pct":null},{"ym":"2021-10","ing_ars":0.0,"ing_usd":0,"platform_total_ars":0.0,"platform_total_usd":0,"gmv_ars":0,"gmv_neto_ars":0,"comm_ars":0,"fee_fijo_ars":0,"fee_ecomm_ars":0,"rate_pct":null,"rate_total_pct":null,"services_ars":{},"is_projection":false,"threshold_ars":300000000,"gmv_taxable_ars":0,"comm_theoretical_ars":0.0,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":null,"fee_fijo_usd_equiv":null,"fee_fijo_meets_min":null,"paid_media_ars":0,"paid_media_usd_equiv":null,"paid_media_usd_contract":1500,"rate_on_taxable_pct":null,"rate_on_gmv_pct":null},{"ym":"2021-11","ing_ars":0.0,"ing_usd":0,"platform_total_ars":0.0,"platform_total_usd":0,"gmv_ars":0,"gmv_neto_ars":0,"comm_ars":0,"fee_fijo_ars":0,"fee_ecomm_ars":0,"rate_pct":null,"rate_total_pct":null,"services_ars":{},"is_projection":false,"threshold_ars":300000000,"gmv_taxable_ars":0,"comm_theoretical_ars":0.0,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":null,"fee_fijo_usd_equiv":null,"fee_fijo_meets_min":null,"paid_media_ars":0,"paid_media_usd_equiv":null,"paid_media_usd_contract":1500,"rate_on_taxable_pct":null,"rate_on_gmv_pct":null},{"ym":"2021-12","ing_ars":0.0,"ing_usd":0,"platform_total_ars":0.0,"platform_total_usd":0,"gmv_ars":0,"gmv_neto_ars":0,"comm_ars":0,"fee_fijo_ars":0,"fee_ecomm_ars":0,"rate_pct":null,"rate_total_pct":null,"services_ars":{},"is_projection":false,"threshold_ars":300000000,"gmv_taxable_ars":0,"comm_theoretical_ars":0.0,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":null,"fee_fijo_usd_equiv":null,"fee_fijo_meets_min":null,"paid_media_ars":0,"paid_media_usd_equiv":null,"paid_media_usd_contract":1500,"rate_on_taxable_pct":null,"rate_on_gmv_pct":null},{"ym":"2023-01","ing_ars":0.0,"ing_usd":0,"platform_total_ars":0.0,"platform_total_usd":0,"gmv_ars":0,"gmv_neto_ars":0,"comm_ars":0,"fee_fijo_ars":0,"fee_ecomm_ars":0,"rate_pct":null,"rate_total_pct":null,"services_ars":{},"is_projection":false,"threshold_ars":300000000,"gmv_taxable_ars":0,"comm_theoretical_ars":0.0,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":null,"fee_fijo_usd_equiv":null,"fee_fijo_meets_min":null,"paid_media_ars":0,"paid_media_usd_equiv":null,"paid_media_usd_contract":1500,"rate_on_taxable_pct":null,"rate_on_gmv_pct":null},{"ym":"2023-02","ing_ars":0.0,"ing_usd":0,"platform_total_ars":0.0,"platform_total_usd":0,"gmv_ars":0,"gmv_neto_ars":0,"comm_ars":0,"fee_fijo_ars":0,"fee_ecomm_ars":0,"rate_pct":null,"rate_total_pct":null,"services_ars":{},"is_projection":false,"threshold_ars":300000000,"gmv_taxable_ars":0,"comm_theoretical_ars":0.0,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":null,"fee_fijo_usd_equiv":null,"fee_fijo_meets_min":null,"paid_media_ars":0,"paid_media_usd_equiv":null,"paid_media_usd_contract":1500,"rate_on_taxable_pct":null,"rate_on_gmv_pct":null},{"ym":"2023-03","ing_ars":0.0,"ing_usd":0,"platform_total_ars":0.0,"platform_total_usd":0,"gmv_ars":0,"gmv_neto_ars":0,"comm_ars":0,"fee_fijo_ars":0,"fee_ecomm_ars":0,"rate_pct":null,"rate_total_pct":null,"services_ars":{},"is_projection":false,"threshold_ars":300000000,"gmv_taxable_ars":0,"comm_theoretical_ars":0.0,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":null,"fee_fijo_usd_equiv":null,"fee_fijo_meets_min":null,"paid_media_ars":0,"paid_media_usd_equiv":null,"paid_media_usd_contract":1500,"rate_on_taxable_pct":null,"rate_on_gmv_pct":null},{"ym":"2023-04","ing_ars":0.0,"ing_usd":0,"platform_total_ars":0.0,"platform_total_usd":0,"gmv_ars":0,"gmv_neto_ars":0,"comm_ars":0,"fee_fijo_ars":0,"fee_ecomm_ars":0,"rate_pct":null,"rate_total_pct":null,"services_ars":{},"is_projection":false,"threshold_ars":300000000,"gmv_taxable_ars":0,"comm_theoretical_ars":0.0,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":null,"fee_fijo_usd_equiv":null,"fee_fijo_meets_min":null,"paid_media_ars":0,"paid_media_usd_equiv":null,"paid_media_usd_contract":1500,"rate_on_taxable_pct":null,"rate_on_gmv_pct":null},{"ym":"2023-05","ing_ars":0.0,"ing_usd":0,"platform_total_ars":0.0,"platform_total_usd":0,"gmv_ars":0,"gmv_neto_ars":0,"comm_ars":0,"fee_fijo_ars":0,"fee_ecomm_ars":0,"rate_pct":null,"rate_total_pct":null,"services_ars":{},"is_projection":false,"threshold_ars":300000000,"gmv_taxable_ars":0,"comm_theoretical_ars":0.0,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":null,"fee_fijo_usd_equiv":null,"fee_fijo_meets_min":null,"paid_media_ars":0,"paid_media_usd_equiv":null,"paid_media_usd_contract":1500,"rate_on_taxable_pct":null,"rate_on_gmv_pct":null},{"ym":"2023-06","ing_ars":0.0,"ing_usd":0,"platform_total_ars":0.0,"platform_total_usd":0,"gmv_ars":0,"gmv_neto_ars":0,"comm_ars":0,"fee_fijo_ars":0,"fee_ecomm_ars":0,"rate_pct":null,"rate_total_pct":null,"services_ars":{},"is_projection":false,"threshold_ars":300000000,"gmv_taxable_ars":0,"comm_theoretical_ars":0.0,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":null,"fee_fijo_usd_equiv":null,"fee_fijo_meets_min":null,"paid_media_ars":0,"paid_media_usd_equiv":null,"paid_media_usd_contract":1500,"rate_on_taxable_pct":null,"rate_on_gmv_pct":null},{"ym":"2023-07","ing_ars":0.0,"ing_usd":0,"platform_total_ars":0.0,"platform_total_usd":0,"gmv_ars":0,"gmv_neto_ars":0,"comm_ars":0,"fee_fijo_ars":0,"fee_ecomm_ars":0,"rate_pct":null,"rate_total_pct":null,"services_ars":{},"is_projection":false,"threshold_ars":300000000,"gmv_taxable_ars":0,"comm_theoretical_ars":0.0,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":null,"fee_fijo_usd_equiv":null,"fee_fijo_meets_min":null,"paid_media_ars":0,"paid_media_usd_equiv":null,"paid_media_usd_contract":1500,"rate_on_taxable_pct":null,"rate_on_gmv_pct":null},{"ym":"2023-08","ing_ars":0.0,"ing_usd":0,"platform_total_ars":0.0,"platform_total_usd":0,"gmv_ars":0,"gmv_neto_ars":0,"comm_ars":0,"fee_fijo_ars":0,"fee_ecomm_ars":0,"rate_pct":null,"rate_total_pct":null,"services_ars":{},"is_projection":false,"threshold_ars":300000000,"gmv_taxable_ars":0,"comm_theoretical_ars":0.0,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":null,"fee_fijo_usd_equiv":null,"fee_fijo_meets_min":null,"paid_media_ars":0,"paid_media_usd_equiv":null,"paid_media_usd_contract":1500,"rate_on_taxable_pct":null,"rate_on_gmv_pct":null},{"ym":"2023-09","ing_ars":0.0,"ing_usd":0,"platform_total_ars":0.0,"platform_total_usd":0,"gmv_ars":0,"gmv_neto_ars":0,"comm_ars":0,"fee_fijo_ars":0,"fee_ecomm_ars":0,"rate_pct":null,"rate_total_pct":null,"services_ars":{},"is_projection":false,"threshold_ars":300000000,"gmv_taxable_ars":0,"comm_theoretical_ars":0.0,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":null,"fee_fijo_usd_equiv":null,"fee_fijo_meets_min":null,"paid_media_ars":0,"paid_media_usd_equiv":null,"paid_media_usd_contract":1500,"rate_on_taxable_pct":null,"rate_on_gmv_pct":null},{"ym":"2023-10","ing_ars":0.0,"ing_usd":0,"platform_total_ars":0.0,"platform_total_usd":0,"gmv_ars":0,"gmv_neto_ars":0,"comm_ars":0,"fee_fijo_ars":0,"fee_ecomm_ars":0,"rate_pct":null,"rate_total_pct":null,"services_ars":{},"is_projection":false,"threshold_ars":300000000,"gmv_taxable_ars":0,"comm_theoretical_ars":0.0,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":null,"fee_fijo_usd_equiv":null,"fee_fijo_meets_min":null,"paid_media_ars":0,"paid_media_usd_equiv":null,"paid_media_usd_contract":1500,"rate_on_taxable_pct":null,"rate_on_gmv_pct":null},{"ym":"2023-11","ing_ars":0.0,"ing_usd":0,"platform_total_ars":0.0,"platform_total_usd":0,"gmv_ars":0,"gmv_neto_ars":0,"comm_ars":0,"fee_fijo_ars":0,"fee_ecomm_ars":0,"rate_pct":null,"rate_total_pct":null,"services_ars":{},"is_projection":false,"threshold_ars":300000000,"gmv_taxable_ars":0,"comm_theoretical_ars":0.0,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":null,"fee_fijo_usd_equiv":null,"fee_fijo_meets_min":null,"paid_media_ars":0,"paid_media_usd_equiv":null,"paid_media_usd_contract":1500,"rate_on_taxable_pct":null,"rate_on_gmv_pct":null},{"ym":"2023-12","ing_ars":0.0,"ing_usd":0,"platform_total_ars":0.0,"platform_total_usd":0,"gmv_ars":0,"gmv_neto_ars":0,"comm_ars":0,"fee_fijo_ars":0,"fee_ecomm_ars":0,"rate_pct":null,"rate_total_pct":null,"services_ars":{},"is_projection":false,"threshold_ars":300000000,"gmv_taxable_ars":0,"comm_theoretical_ars":0.0,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":null,"fee_fijo_usd_equiv":null,"fee_fijo_meets_min":null,"paid_media_ars":0,"paid_media_usd_equiv":null,"paid_media_usd_contract":1500,"rate_on_taxable_pct":null,"rate_on_gmv_pct":null},{"ym":"2024-01","ing_ars":0.0,"ing_usd":0,"platform_total_ars":0.0,"platform_total_usd":0,"gmv_ars":0,"gmv_neto_ars":0,"comm_ars":0,"fee_fijo_ars":0,"fee_ecomm_ars":0,"rate_pct":null,"rate_total_pct":null,"services_ars":{},"is_projection":false,"threshold_ars":300000000,"gmv_taxable_ars":0,"comm_theoretical_ars":0.0,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":null,"fee_fijo_usd_equiv":null,"fee_fijo_meets_min":null,"paid_media_ars":0,"paid_media_usd_equiv":null,"paid_media_usd_contract":1500,"rate_on_taxable_pct":null,"rate_on_gmv_pct":null},{"ym":"2024-02","ing_ars":0.0,"ing_usd":0,"platform_total_ars":0.0,"platform_total_usd":0,"gmv_ars":0,"gmv_neto_ars":0,"comm_ars":0,"fee_fijo_ars":0,"fee_ecomm_ars":0,"rate_pct":null,"rate_total_pct":null,"services_ars":{},"is_projection":false,"threshold_ars":300000000,"gmv_taxable_ars":0,"comm_theoretical_ars":0.0,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":null,"fee_fijo_usd_equiv":null,"fee_fijo_meets_min":null,"paid_media_ars":0,"paid_media_usd_equiv":null,"paid_media_usd_contract":1500,"rate_on_taxable_pct":null,"rate_on_gmv_pct":null},{"ym":"2024-03","ing_ars":0.0,"ing_usd":0,"platform_total_ars":0.0,"platform_total_usd":0,"gmv_ars":0,"gmv_neto_ars":0,"comm_ars":0,"fee_fijo_ars":0,"fee_ecomm_ars":0,"rate_pct":null,"rate_total_pct":null,"services_ars":{},"is_projection":false,"threshold_ars":300000000,"gmv_taxable_ars":0,"comm_theoretical_ars":0.0,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":null,"fee_fijo_usd_equiv":null,"fee_fijo_meets_min":null,"paid_media_ars":0,"paid_media_usd_equiv":null,"paid_media_usd_contract":1500,"rate_on_taxable_pct":null,"rate_on_gmv_pct":null},{"ym":"2024-04","ing_ars":0.0,"ing_usd":0,"platform_total_ars":0.0,"platform_total_usd":0,"gmv_ars":0,"gmv_neto_ars":0,"comm_ars":0,"fee_fijo_ars":0,"fee_ecomm_ars":0,"rate_pct":null,"rate_total_pct":null,"services_ars":{},"is_projection":false,"threshold_ars":300000000,"gmv_taxable_ars":0,"comm_theoretical_ars":0.0,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":null,"fee_fijo_usd_equiv":null,"fee_fijo_meets_min":null,"paid_media_ars":0,"paid_media_usd_equiv":null,"paid_media_usd_contract":1500,"rate_on_taxable_pct":null,"rate_on_gmv_pct":null},{"ym":"2024-05","ing_ars":0.0,"ing_usd":0,"platform_total_ars":0.0,"platform_total_usd":0,"gmv_ars":0,"gmv_neto_ars":0,"comm_ars":0,"fee_fijo_ars":0,"fee_ecomm_ars":0,"rate_pct":null,"rate_total_pct":null,"services_ars":{},"is_projection":false,"threshold_ars":300000000,"gmv_taxable_ars":0,"comm_theoretical_ars":0.0,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":null,"fee_fijo_usd_equiv":null,"fee_fijo_meets_min":null,"paid_media_ars":0,"paid_media_usd_equiv":null,"paid_media_usd_contract":1500,"rate_on_taxable_pct":null,"rate_on_gmv_pct":null},{"ym":"2024-06","ing_ars":0.0,"ing_usd":0,"platform_total_ars":0.0,"platform_total_usd":0,"gmv_ars":0,"gmv_neto_ars":0,"comm_ars":0,"fee_fijo_ars":0,"fee_ecomm_ars":0,"rate_pct":null,"rate_total_pct":null,"services_ars":{},"is_projection":false,"threshold_ars":300000000,"gmv_taxable_ars":0,"comm_theoretical_ars":0.0,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":null,"fee_fijo_usd_equiv":null,"fee_fijo_meets_min":null,"paid_media_ars":0,"paid_media_usd_equiv":null,"paid_media_usd_contract":1500,"rate_on_taxable_pct":null,"rate_on_gmv_pct":null},{"ym":"2024-07","ing_ars":0.0,"ing_usd":0,"platform_total_ars":0.0,"platform_total_usd":0,"gmv_ars":0,"gmv_neto_ars":0,"comm_ars":0,"fee_fijo_ars":0,"fee_ecomm_ars":0,"rate_pct":null,"rate_total_pct":null,"services_ars":{},"is_projection":false,"threshold_ars":300000000,"gmv_taxable_ars":0,"comm_theoretical_ars":0.0,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":null,"fee_fijo_usd_equiv":null,"fee_fijo_meets_min":null,"paid_media_ars":0,"paid_media_usd_equiv":null,"paid_media_usd_contract":1500,"rate_on_taxable_pct":null,"rate_on_gmv_pct":null},{"ym":"2024-08","ing_ars":0.0,"ing_usd":0,"platform_total_ars":0.0,"platform_total_usd":0,"gmv_ars":0,"gmv_neto_ars":0,"comm_ars":0,"fee_fijo_ars":0,"fee_ecomm_ars":0,"rate_pct":null,"rate_total_pct":null,"services_ars":{},"is_projection":false,"threshold_ars":300000000,"gmv_taxable_ars":0,"comm_theoretical_ars":0.0,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":null,"fee_fijo_usd_equiv":null,"fee_fijo_meets_min":null,"paid_media_ars":0,"paid_media_usd_equiv":null,"paid_media_usd_contract":1500,"rate_on_taxable_pct":null,"rate_on_gmv_pct":null},{"ym":"2024-09","ing_ars":0.0,"ing_usd":0,"platform_total_ars":0.0,"platform_total_usd":0,"gmv_ars":0,"gmv_neto_ars":0,"comm_ars":0,"fee_fijo_ars":0,"fee_ecomm_ars":0,"rate_pct":null,"rate_total_pct":null,"services_ars":{},"is_projection":false,"threshold_ars":300000000,"gmv_taxable_ars":0,"comm_theoretical_ars":0.0,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":null,"fee_fijo_usd_equiv":null,"fee_fijo_meets_min":null,"paid_media_ars":0,"paid_media_usd_equiv":null,"paid_media_usd_contract":1500,"rate_on_taxable_pct":null,"rate_on_gmv_pct":null},{"ym":"2024-10","ing_ars":0.0,"ing_usd":0,"platform_total_ars":0.0,"platform_total_usd":0,"gmv_ars":0,"gmv_neto_ars":0,"comm_ars":0,"fee_fijo_ars":0,"fee_ecomm_ars":0,"rate_pct":null,"rate_total_pct":null,"services_ars":{},"is_projection":false,"threshold_ars":300000000,"gmv_taxable_ars":0,"comm_theoretical_ars":0.0,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":null,"fee_fijo_usd_equiv":null,"fee_fijo_meets_min":null,"paid_media_ars":0,"paid_media_usd_equiv":null,"paid_media_usd_contract":1500,"rate_on_taxable_pct":null,"rate_on_gmv_pct":null},{"ym":"2024-11","ing_ars":0.0,"ing_usd":0,"platform_total_ars":0.0,"platform_total_usd":0,"gmv_ars":0,"gmv_neto_ars":0,"comm_ars":0,"fee_fijo_ars":0,"fee_ecomm_ars":0,"rate_pct":null,"rate_total_pct":null,"services_ars":{},"is_projection":false,"threshold_ars":300000000,"gmv_taxable_ars":0,"comm_theoretical_ars":0.0,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":null,"fee_fijo_usd_equiv":null,"fee_fijo_meets_min":null,"paid_media_ars":0,"paid_media_usd_equiv":null,"paid_media_usd_contract":1500,"rate_on_taxable_pct":null,"rate_on_gmv_pct":null},{"ym":"2024-12","ing_ars":3562890.0,"ing_usd":3044.14,"platform_total_ars":3562890.0,"platform_total_usd":3044.14,"gmv_ars":0,"gmv_neto_ars":0,"comm_ars":0,"fee_fijo_ars":3562890.0,"fee_ecomm_ars":3562890.0,"rate_pct":null,"rate_total_pct":null,"services_ars":{"Fee Fijo E-Commerce":3562890.0},"is_projection":false,"threshold_ars":300000000,"gmv_taxable_ars":0,"comm_theoretical_ars":0.0,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":3511228,"fee_fijo_usd_equiv":3044.14,"fee_fijo_meets_min":true,"paid_media_ars":0,"paid_media_usd_equiv":null,"paid_media_usd_contract":1500,"rate_on_taxable_pct":null,"rate_on_gmv_pct":null},{"ym":"2025-01","ing_ars":3881022.0,"ing_usd":3331.95,"platform_total_ars":3881022.0,"platform_total_usd":3331.95,"gmv_ars":261037890.0,"gmv_neto_ars":215733793.0,"comm_ars":0,"fee_fijo_ars":3622650.0,"fee_ecomm_ars":3622650.0,"rate_pct":null,"rate_total_pct":1.388,"services_ars":{"Fee Fijo E-Commerce":3622650.0,"Link-Up":258372.0},"is_projection":false,"threshold_ars":300000000,"gmv_taxable_ars":0,"comm_theoretical_ars":0.0,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":3494370,"fee_fijo_usd_equiv":3110.13,"fee_fijo_meets_min":true,"paid_media_ars":0,"paid_media_usd_equiv":null,"paid_media_usd_contract":1500,"rate_on_taxable_pct":null,"rate_on_gmv_pct":null},{"ym":"2025-02","ing_ars":4133952.0,"ing_usd":3365.1,"platform_total_ars":4133952.0,"platform_total_usd":3365.1,"gmv_ars":249337630.0,"gmv_neto_ars":206064157.0,"comm_ars":0,"fee_fijo_ars":3875580.0,"fee_ecomm_ars":3875580.0,"rate_pct":null,"rate_total_pct":1.554,"services_ars":{"Fee Fijo E-Commerce":3875580.0,"Link-Up":258372.0},"is_projection":false,"threshold_ars":300000000,"gmv_taxable_ars":0,"comm_theoretical_ars":0.0,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":3685435,"fee_fijo_usd_equiv":3154.78,"fee_fijo_meets_min":true,"paid_media_ars":0,"paid_media_usd_equiv":null,"paid_media_usd_contract":1500,"rate_on_taxable_pct":null,"rate_on_gmv_pct":null},{"ym":"2025-03","ing_ars":3722586.17,"ing_usd":2833.08,"platform_total_ars":3722586.17,"platform_total_usd":2833.08,"gmv_ars":215568250.0,"gmv_neto_ars":178155578.0,"comm_ars":0,"fee_fijo_ars":3460770.0,"fee_ecomm_ars":3460770.0,"rate_pct":null,"rate_total_pct":1.605,"services_ars":{"Fee Fijo E-Commerce":3460770.0,"Link-Up":230718.0,"Extras":31098.17},"is_projection":false,"threshold_ars":334365382,"gmv_taxable_ars":0,"comm_theoretical_ars":0.0,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":3941914,"fee_fijo_usd_equiv":2633.82,"fee_fijo_meets_min":false,"paid_media_ars":0,"paid_media_usd_equiv":null,"paid_media_usd_contract":1500,"rate_on_taxable_pct":null,"rate_on_gmv_pct":null},{"ym":"2025-04","ing_ars":5648624.28,"ing_usd":4773.34,"platform_total_ars":5648624.28,"platform_total_usd":4773.34,"gmv_ars":432596596.0,"gmv_neto_ars":357517848.0,"comm_ars":1964624.28,"fee_fijo_ars":3453750.0,"fee_ecomm_ars":5418374.28,"rate_pct":0.454,"rate_total_pct":1.253,"services_ars":{"Fee Fijo E-Commerce":3453750.0,"Fee E-Commerce":1964624.28,"Link-Up":230250.0},"is_projection":false,"threshold_ars":334365382,"gmv_taxable_ars":98231214,"comm_theoretical_ars":1964624.28,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":3550108,"fee_fijo_usd_equiv":2918.57,"fee_fijo_meets_min":false,"paid_media_ars":0,"paid_media_usd_equiv":null,"paid_media_usd_contract":1500,"rate_on_taxable_pct":2.0,"rate_on_gmv_pct":0.454},{"ym":"2025-05","ing_ars":4969060.64,"ing_usd":4169.65,"platform_total_ars":4969060.64,"platform_total_usd":4169.65,"gmv_ars":397584814.0,"gmv_neto_ars":328582491.0,"comm_ars":1264388.64,"fee_fijo_ars":3473130.0,"fee_ecomm_ars":4737518.64,"rate_pct":0.318,"rate_total_pct":1.192,"services_ars":{"Fee Fijo E-Commerce":3473130.0,"Fee E-Commerce":1264388.64,"Link-Up":231542.0},"is_projection":false,"threshold_ars":334365382,"gmv_taxable_ars":63219432,"comm_theoretical_ars":1264388.64,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":3575164,"fee_fijo_usd_equiv":2914.38,"fee_fijo_meets_min":false,"paid_media_ars":0,"paid_media_usd_equiv":null,"paid_media_usd_contract":1500,"rate_on_taxable_pct":2.0,"rate_on_gmv_pct":0.318},{"ym":"2025-06","ing_ars":7456422.0,"ing_usd":6156.74,"platform_total_ars":7456422.0,"platform_total_usd":6156.74,"gmv_ars":222129450.0,"gmv_neto_ars":183578058.0,"comm_ars":0,"fee_fijo_ars":3856770.0,"fee_ecomm_ars":3856770.0,"rate_pct":null,"rate_total_pct":1.736,"services_ars":{"Fee Fijo E-Commerce":3856770.0,"Link-Up":257118.0,"Marketing Digital":3342534.0},"is_projection":false,"threshold_ars":334365382,"gmv_taxable_ars":0,"comm_theoretical_ars":0.0,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":3633297,"fee_fijo_usd_equiv":3184.52,"fee_fijo_meets_min":true,"paid_media_ars":3342534.0,"paid_media_usd_equiv":2759.92,"paid_media_usd_contract":1500,"rate_on_taxable_pct":null,"rate_on_gmv_pct":null},{"ym":"2025-07","ing_ars":7765658.08,"ing_usd":5711.05,"platform_total_ars":7765658.08,"platform_total_usd":5711.05,"gmv_ars":288891508.0,"gmv_neto_ars":238753312.0,"comm_ars":0,"fee_fijo_ars":4001430.0,"fee_ecomm_ars":4001430.0,"rate_pct":null,"rate_total_pct":1.385,"services_ars":{"Fee Fijo E-Commerce":4001430.0,"Link-Up":266762.0,"Marketing Digital":3425666.0,"Extras":71800.08},"is_projection":false,"threshold_ars":334365382,"gmv_taxable_ars":0,"comm_theoretical_ars":0.0,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":4079280,"fee_fijo_usd_equiv":2942.75,"fee_fijo_meets_min":false,"paid_media_ars":3425666.0,"paid_media_usd_equiv":2519.32,"paid_media_usd_contract":1500,"rate_on_taxable_pct":null,"rate_on_gmv_pct":null},{"ym":"2025-08","ing_ars":7860566.0,"ing_usd":5791.15,"platform_total_ars":7860566.0,"platform_total_usd":5791.15,"gmv_ars":223428638.0,"gmv_neto_ars":184651767.0,"comm_ars":0,"fee_fijo_ars":4065810.0,"fee_ecomm_ars":4065810.0,"rate_pct":null,"rate_total_pct":1.82,"services_ars":{"Fee Fijo E-Commerce":4065810.0,"Link-Up":271054.0,"Marketing Digital":3523702.0},"is_projection":false,"threshold_ars":334365382,"gmv_taxable_ars":0,"comm_theoretical_ars":0.0,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":4072023,"fee_fijo_usd_equiv":2995.42,"fee_fijo_meets_min":true,"paid_media_ars":3523702.0,"paid_media_usd_equiv":2596.03,"paid_media_usd_contract":1500,"rate_on_taxable_pct":null,"rate_on_gmv_pct":null},{"ym":"2025-09","ing_ars":8942266.0,"ing_usd":5985.37,"platform_total_ars":8942266.0,"platform_total_usd":5985.37,"gmv_ars":244295080.0,"gmv_neto_ars":201896760.0,"comm_ars":0,"fee_fijo_ars":4625310.0,"fee_ecomm_ars":4625310.0,"rate_pct":null,"rate_total_pct":1.893,"services_ars":{"Fee Fijo E-Commerce":4625310.0,"Link-Up":308354.0,"Marketing Digital":4008602.0},"is_projection":false,"threshold_ars":334365382,"gmv_taxable_ars":0,"comm_theoretical_ars":0.0,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":4482062,"fee_fijo_usd_equiv":3095.88,"fee_fijo_meets_min":true,"paid_media_ars":4008602.0,"paid_media_usd_equiv":2683.1,"paid_media_usd_contract":1500,"rate_on_taxable_pct":null,"rate_on_gmv_pct":null},{"ym":"2025-10","ing_ars":8928788.46,"ing_usd":6043.34,"platform_total_ars":8928788.46,"platform_total_usd":6043.34,"gmv_ars":309987640.0,"gmv_neto_ars":256188132.0,"comm_ars":0,"fee_fijo_ars":4490820.0,"fee_ecomm_ars":4490820.0,"rate_pct":null,"rate_total_pct":1.449,"services_ars":{"Fee Fijo E-Commerce":4490820.0,"Link-Up":299388.0,"Marketing Digital":3892044.0,"Extras":246536.46},"is_projection":false,"threshold_ars":334365382,"gmv_taxable_ars":0,"comm_theoretical_ars":0.0,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":4432378,"fee_fijo_usd_equiv":3039.56,"fee_fijo_meets_min":true,"paid_media_ars":3892044.0,"paid_media_usd_equiv":2634.28,"paid_media_usd_contract":1500,"rate_on_taxable_pct":null,"rate_on_gmv_pct":null},{"ym":"2025-11","ing_ars":7377647.55,"ing_usd":4996.98,"platform_total_ars":7377647.55,"platform_total_usd":4996.98,"gmv_ars":270021770.0,"gmv_neto_ars":223158488.0,"comm_ars":0,"fee_fijo_ars":4522080.0,"fee_ecomm_ars":4522080.0,"rate_pct":null,"rate_total_pct":1.675,"services_ars":{"Fee Fijo E-Commerce":4522080.0,"Link-Up":301472.0,"Marketing Digital":2261040.0,"Extras":293055.55},"is_projection":false,"threshold_ars":334365382,"gmv_taxable_ars":0,"comm_theoretical_ars":0.0,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":4429264,"fee_fijo_usd_equiv":3062.87,"fee_fijo_meets_min":true,"paid_media_ars":2261040.0,"paid_media_usd_equiv":1531.43,"paid_media_usd_contract":1500,"rate_on_taxable_pct":null,"rate_on_gmv_pct":null},{"ym":"2025-12","ing_ars":7390536.33,"ing_usd":4991.11,"platform_total_ars":7390536.33,"platform_total_usd":4991.11,"gmv_ars":233135385.0,"gmv_neto_ars":192673872.0,"comm_ars":0,"fee_fijo_ars":4408470.0,"fee_ecomm_ars":4408470.0,"rate_pct":null,"rate_total_pct":1.891,"services_ars":{"Fee Fijo E-Commerce":4408470.0,"Link-Up":293898.0,"Marketing Digital":2204235.0,"Extras":483933.33},"is_projection":false,"threshold_ars":334365382,"gmv_taxable_ars":0,"comm_theoretical_ars":0.0,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":4442220,"fee_fijo_usd_equiv":2977.21,"fee_fijo_meets_min":false,"paid_media_ars":2204235.0,"paid_media_usd_equiv":1488.6,"paid_media_usd_contract":1500,"rate_on_taxable_pct":null,"rate_on_gmv_pct":null},{"ym":"2026-01","ing_ars":7274151.77,"ing_usd":4981.2,"platform_total_ars":7274151.77,"platform_total_usd":4981.2,"gmv_ars":157583307.0,"gmv_neto_ars":130234138.0,"comm_ars":0,"fee_fijo_ars":4422150.0,"fee_ecomm_ars":4422150.0,"rate_pct":null,"rate_total_pct":2.806,"services_ars":{"Fee Fijo E-Commerce":4422150.0,"Link-Up":294810.0,"Marketing Digital":2211075.0,"Extras":346116.77},"is_projection":false,"threshold_ars":334365382,"gmv_taxable_ars":0,"comm_theoretical_ars":0.0,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":4380963,"fee_fijo_usd_equiv":3028.2,"fee_fijo_meets_min":true,"paid_media_ars":2211075.0,"paid_media_usd_equiv":1514.1,"paid_media_usd_contract":1500,"rate_on_taxable_pct":null,"rate_on_gmv_pct":null},{"ym":"2026-02","ing_ars":7037207.16,"ing_usd":4957.39,"platform_total_ars":7037207.16,"platform_total_usd":4957.39,"gmv_ars":186046796.0,"gmv_neto_ars":153757683.0,"comm_ars":0,"fee_fijo_ars":4356000.0,"fee_ecomm_ars":4356000.0,"rate_pct":null,"rate_total_pct":2.341,"services_ars":{"Fee Fijo E-Commerce":4356000.0,"Link-Up":290400.0,"Marketing Digital":2178000.0,"Extras":212807.16},"is_projection":false,"threshold_ars":334365382,"gmv_taxable_ars":0,"comm_theoretical_ars":0.0,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":4258616,"fee_fijo_usd_equiv":3068.6,"fee_fijo_meets_min":true,"paid_media_ars":2178000.0,"paid_media_usd_equiv":1534.3,"paid_media_usd_contract":1500,"rate_on_taxable_pct":null,"rate_on_gmv_pct":null},{"ym":"2026-03","ing_ars":6934145.0,"ing_usd":4873.45,"platform_total_ars":6934145.0,"platform_total_usd":4873.45,"gmv_ars":187286204.0,"gmv_neto_ars":154781987.0,"comm_ars":0,"fee_fijo_ars":4426050.0,"fee_ecomm_ars":4426050.0,"rate_pct":null,"rate_total_pct":2.363,"services_ars":{"Fee Fijo E-Commerce":4426050.0,"Link-Up":295070.0,"Marketing Digital":2213025.0},"is_projection":false,"threshold_ars":334365382,"gmv_taxable_ars":0,"comm_theoretical_ars":0.0,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":4268523,"fee_fijo_usd_equiv":3110.71,"fee_fijo_meets_min":true,"paid_media_ars":2213025.0,"paid_media_usd_equiv":1555.36,"paid_media_usd_contract":1500,"rate_on_taxable_pct":null,"rate_on_gmv_pct":null},{"ym":"2026-04","ing_ars":7254205.0,"ing_usd":5029.16,"platform_total_ars":7254205.0,"platform_total_usd":5029.16,"gmv_ars":279935065.0,"gmv_neto_ars":231351293.0,"comm_ars":0,"fee_fijo_ars":4441350.0,"fee_ecomm_ars":4441350.0,"rate_pct":null,"rate_total_pct":1.587,"services_ars":{"Fee Fijo E-Commerce":4441350.0,"Link-Up":296090.0,"Marketing Digital":2516765.0},"is_projection":false,"threshold_ars":334365382,"gmv_taxable_ars":0,"comm_theoretical_ars":0.0,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":4327286,"fee_fijo_usd_equiv":3079.08,"fee_fijo_meets_min":true,"paid_media_ars":2516765.0,"paid_media_usd_equiv":1744.81,"paid_media_usd_contract":1500,"rate_on_taxable_pct":null,"rate_on_gmv_pct":null},{"ym":"2026-05","ing_ars":9980868.51,"ing_usd":6958.12,"platform_total_ars":9980868.51,"platform_total_usd":6958.12,"gmv_ars":573839005.0,"gmv_neto_ars":474247112.0,"comm_ars":2606809.51,"fee_fijo_ars":4514730.0,"fee_ecomm_ars":7121539.51,"rate_pct":0.454,"rate_total_pct":1.241,"services_ars":{"Fee Fijo E-Commerce":4514730.0,"Fee E-Commerce":2606809.51,"Link-Up":300982.0,"Marketing Digital":2558347.0},"is_projection":false,"threshold_ars":443498530,"gmv_taxable_ars":130340475,"comm_theoretical_ars":2606809.5,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":4303261,"fee_fijo_usd_equiv":3147.42,"fee_fijo_meets_min":true,"paid_media_ars":2558347.0,"paid_media_usd_equiv":1783.54,"paid_media_usd_contract":1500,"rate_on_taxable_pct":2.0,"rate_on_gmv_pct":0.454},{"ym":"2026-06","ing_ars":7557531.66,"ing_usd":4924.5,"platform_total_ars":7557531.66,"platform_total_usd":4924.5,"gmv_ars":417319425.0,"gmv_neto_ars":344892087.0,"comm_ars":0,"fee_fijo_ars":4627060.2,"fee_ecomm_ars":4627060.2,"rate_pct":null,"rate_total_pct":1.109,"services_ars":{"Fee Fijo E-Commerce":4627060.2,"Link-Up":308470.68,"Marketing Digital":2622000.78},"is_projection":true,"threshold_ars":443498530,"gmv_taxable_ars":0,"comm_theoretical_ars":0.0,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":4604040,"fee_fijo_usd_equiv":3015.0,"fee_fijo_meets_min":true,"paid_media_ars":2622000.78,"paid_media_usd_equiv":1708.5,"paid_media_usd_contract":1500,"rate_on_taxable_pct":null,"rate_on_gmv_pct":null},{"ym":"2026-07","ing_ars":7707482.69,"ing_usd":4924.5,"platform_total_ars":7707482.68,"platform_total_usd":4924.5,"gmv_ars":195846959.0,"gmv_neto_ars":161856991.0,"comm_ars":0,"fee_fijo_ars":4718866.95,"fee_ecomm_ars":4718866.95,"rate_pct":null,"rate_total_pct":2.409,"services_ars":{"Fee Fijo E-Commerce":4718866.95,"Link-Up":314591.13,"Marketing Digital":2674024.6},"is_projection":true,"threshold_ars":443498530,"gmv_taxable_ars":0,"comm_theoretical_ars":0.0,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":4695390,"fee_fijo_usd_equiv":3015.0,"fee_fijo_meets_min":true,"paid_media_ars":2674024.6,"paid_media_usd_equiv":1708.5,"paid_media_usd_contract":1500,"rate_on_taxable_pct":null,"rate_on_gmv_pct":null},{"ym":"2026-08","ing_ars":7857433.71,"ing_usd":4924.5,"platform_total_ars":7857433.71,"platform_total_usd":4924.5,"gmv_ars":175166059.0,"gmv_neto_ars":144765338.0,"comm_ars":0,"fee_fijo_ars":4810673.7,"fee_ecomm_ars":4810673.7,"rate_pct":null,"rate_total_pct":2.746,"services_ars":{"Fee Fijo E-Commerce":4810673.7,"Link-Up":320711.58,"Marketing Digital":2726048.43},"is_projection":true,"threshold_ars":443498530,"gmv_taxable_ars":0,"comm_theoretical_ars":0.0,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":4786740,"fee_fijo_usd_equiv":3015.0,"fee_fijo_meets_min":true,"paid_media_ars":2726048.43,"paid_media_usd_equiv":1708.5,"paid_media_usd_contract":1500,"rate_on_taxable_pct":null,"rate_on_gmv_pct":null},{"ym":"2026-09","ing_ars":8479886.18,"ing_usd":5211.83,"platform_total_ars":8479886.18,"platform_total_usd":5211.83,"gmv_ars":507676328.0,"gmv_neto_ars":419567214.0,"comm_ars":467503.08,"fee_fijo_ars":4905540.67,"fee_ecomm_ars":5373043.75,"rate_pct":0.092,"rate_total_pct":1.058,"services_ars":{"Fee Fijo E-Commerce":4905540.67,"Fee E-Commerce":467503.08,"Link-Up":327036.04,"Marketing Digital":2779806.38},"is_projection":true,"threshold_ars":484301174,"gmv_taxable_ars":23375154,"comm_theoretical_ars":467503.08,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":4881137,"fee_fijo_usd_equiv":3015.0,"fee_fijo_meets_min":true,"paid_media_ars":2779806.38,"paid_media_usd_equiv":1708.5,"paid_media_usd_contract":1500,"rate_on_taxable_pct":2.0,"rate_on_gmv_pct":0.092},{"ym":"2026-10","ing_ars":8172330.86,"ing_usd":4924.5,"platform_total_ars":8172330.86,"platform_total_usd":4924.5,"gmv_ars":337394058.0,"gmv_neto_ars":278838064.0,"comm_ars":0,"fee_fijo_ars":5003467.88,"fee_ecomm_ars":5003467.88,"rate_pct":null,"rate_total_pct":1.483,"services_ars":{"Fee Fijo E-Commerce":5003467.88,"Link-Up":333564.53,"Marketing Digital":2835298.46},"is_projection":true,"threshold_ars":484301174,"gmv_taxable_ars":0,"comm_theoretical_ars":0.0,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":4978575,"fee_fijo_usd_equiv":3015.0,"fee_fijo_meets_min":true,"paid_media_ars":2835298.46,"paid_media_usd_equiv":1708.5,"paid_media_usd_contract":1500,"rate_on_taxable_pct":null,"rate_on_gmv_pct":null},{"ym":"2026-11","ing_ars":8332278.62,"ing_usd":4924.5,"platform_total_ars":8332278.62,"platform_total_usd":4924.5,"gmv_ars":140169094.0,"gmv_neto_ars":115842227.0,"comm_ars":0,"fee_fijo_ars":5101395.08,"fee_ecomm_ars":5101395.08,"rate_pct":null,"rate_total_pct":3.639,"services_ars":{"Fee Fijo E-Commerce":5101395.08,"Link-Up":340093.01,"Marketing Digital":2890790.54},"is_projection":true,"threshold_ars":484301174,"gmv_taxable_ars":0,"comm_theoretical_ars":0.0,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":5076015,"fee_fijo_usd_equiv":3015.0,"fee_fijo_meets_min":true,"paid_media_ars":2890790.54,"paid_media_usd_equiv":1708.5,"paid_media_usd_contract":1500,"rate_on_taxable_pct":null,"rate_on_gmv_pct":null},{"ym":"2026-12","ing_ars":8497224.75,"ing_usd":4924.5,"platform_total_ars":8497224.75,"platform_total_usd":4924.5,"gmv_ars":231576064.0,"gmv_neto_ars":191385177.0,"comm_ars":0,"fee_fijo_ars":5202382.5,"fee_ecomm_ars":5202382.5,"rate_pct":null,"rate_total_pct":2.247,"services_ars":{"Fee Fijo E-Commerce":5202382.5,"Link-Up":346825.5,"Marketing Digital":2948016.75},"is_projection":true,"threshold_ars":484301174,"gmv_taxable_ars":0,"comm_theoretical_ars":0.0,"cap_hit":false,"min_fee_usd":3000,"min_fee_ars":5176500,"fee_fijo_usd_equiv":3015.0,"fee_fijo_meets_min":true,"paid_media_ars":2948016.75,"paid_media_usd_equiv":1708.5,"paid_media_usd_contract":1500,"rate_on_taxable_pct":null,"rate_on_gmv_pct":null}],"contract":{"rate_pct":2.0,"threshold_base_ars":300000000,"threshold_ipc_bimonthly":true,"min_fee_usd_monthly":3000,"min_fee_fx":"tipo de cambio oficial","paid_media_usd_monthly":1500,"paid_media_service":"Marketing Digital","cap_usd_monthly":8000,"current_threshold_ars":443498530,"current_bimonth":"May–Jun 2026","current_min_fee_ars":4303261,"current_paid_media_ars":2558347,"excel_platform_rows":{"ars_total":974,"usd_total":975},"formula":"Fee fijo mín. USD 3,000 (TC oficial) + Paid media USD 1,500 (Marketing Digital) + 2% × max(0, GMV − umbral IPC); tope variable USD 8,000/mes"},"threshold_schedule":[{"bimonth":"2015-B1","label":"Ene–Feb 2015","threshold_ars":300000000,"inferred":false},{"bimonth":"2015-B2","label":"Mar–Abr 2015","threshold_ars":300000000,"inferred":false},{"bimonth":"2015-B3","label":"May–Jun 2015","threshold_ars":300000000,"inferred":false},{"bimonth":"2015-B4","label":"Jul–Ago 2015","threshold_ars":300000000,"inferred":false},{"bimonth":"2015-B5","label":"Sep–Oct 2015","threshold_ars":300000000,"inferred":false},{"bimonth":"2015-B6","label":"Nov–Dic 2015","threshold_ars":300000000,"inferred":false},{"bimonth":"2016-B1","label":"Ene–Feb 2016","threshold_ars":300000000,"inferred":false},{"bimonth":"2016-B2","label":"Mar–Abr 2016","threshold_ars":300000000,"inferred":false},{"bimonth":"2016-B3","label":"May–Jun 2016","threshold_ars":300000000,"inferred":false},{"bimonth":"2016-B4","label":"Jul–Ago 2016","threshold_ars":300000000,"inferred":false},{"bimonth":"2016-B5","label":"Sep–Oct 2016","threshold_ars":300000000,"inferred":false},{"bimonth":"2016-B6","label":"Nov–Dic 2016","threshold_ars":300000000,"inferred":false},{"bimonth":"2017-B1","label":"Ene–Feb 2017","threshold_ars":300000000,"inferred":false},{"bimonth":"2017-B2","label":"Mar–Abr 2017","threshold_ars":300000000,"inferred":false},{"bimonth":"2017-B3","label":"May–Jun 2017","threshold_ars":300000000,"inferred":false},{"bimonth":"2017-B4","label":"Jul–Ago 2017","threshold_ars":300000000,"inferred":false},{"bimonth":"2017-B5","label":"Sep–Oct 2017","threshold_ars":300000000,"inferred":false},{"bimonth":"2017-B6","label":"Nov–Dic 2017","threshold_ars":300000000,"inferred":false},{"bimonth":"2018-B1","label":"Ene–Feb 2018","threshold_ars":300000000,"inferred":false},{"bimonth":"2018-B2","label":"Mar–Abr 2018","threshold_ars":300000000,"inferred":false},{"bimonth":"2018-B3","label":"May–Jun 2018","threshold_ars":300000000,"inferred":false},{"bimonth":"2018-B4","label":"Jul–Ago 2018","threshold_ars":300000000,"inferred":false},{"bimonth":"2018-B5","label":"Sep–Oct 2018","threshold_ars":300000000,"inferred":false},{"bimonth":"2018-B6","label":"Nov–Dic 2018","threshold_ars":300000000,"inferred":false},{"bimonth":"2019-B1","label":"Ene–Feb 2019","threshold_ars":300000000,"inferred":false},{"bimonth":"2019-B2","label":"Mar–Abr 2019","threshold_ars":300000000,"inferred":false},{"bimonth":"2019-B3","label":"May–Jun 2019","threshold_ars":300000000,"inferred":false},{"bimonth":"2019-B4","label":"Jul–Ago 2019","threshold_ars":300000000,"inferred":false},{"bimonth":"2019-B5","label":"Sep–Oct 2019","threshold_ars":300000000,"inferred":false},{"bimonth":"2019-B6","label":"Nov–Dic 2019","threshold_ars":300000000,"inferred":false},{"bimonth":"2020-B1","label":"Ene–Feb 2020","threshold_ars":300000000,"inferred":false},{"bimonth":"2020-B2","label":"Mar–Abr 2020","threshold_ars":300000000,"inferred":false},{"bimonth":"2020-B3","label":"May–Jun 2020","threshold_ars":300000000,"inferred":false},{"bimonth":"2020-B4","label":"Jul–Ago 2020","threshold_ars":300000000,"inferred":false},{"bimonth":"2020-B5","label":"Sep–Oct 2020","threshold_ars":300000000,"inferred":false},{"bimonth":"2020-B6","label":"Nov–Dic 2020","threshold_ars":300000000,"inferred":false},{"bimonth":"2021-B1","label":"Ene–Feb 2021","threshold_ars":300000000,"inferred":false},{"bimonth":"2021-B2","label":"Mar–Abr 2021","threshold_ars":300000000,"inferred":false},{"bimonth":"2021-B3","label":"May–Jun 2021","threshold_ars":300000000,"inferred":false},{"bimonth":"2021-B4","label":"Jul–Ago 2021","threshold_ars":300000000,"inferred":false},{"bimonth":"2021-B5","label":"Sep–Oct 2021","threshold_ars":300000000,"inferred":false},{"bimonth":"2021-B6","label":"Nov–Dic 2021","threshold_ars":300000000,"inferred":false},{"bimonth":"2023-B1","label":"Ene–Feb 2023","threshold_ars":300000000,"inferred":false},{"bimonth":"2023-B2","label":"Mar–Abr 2023","threshold_ars":300000000,"inferred":false},{"bimonth":"2023-B3","label":"May–Jun 2023","threshold_ars":300000000,"inferred":false},{"bimonth":"2023-B4","label":"Jul–Ago 2023","threshold_ars":300000000,"inferred":false},{"bimonth":"2023-B5","label":"Sep–Oct 2023","threshold_ars":300000000,"inferred":false},{"bimonth":"2023-B6","label":"Nov–Dic 2023","threshold_ars":300000000,"inferred":false},{"bimonth":"2024-B1","label":"Ene–Feb 2024","threshold_ars":300000000,"inferred":false},{"bimonth":"2024-B2","label":"Mar–Abr 2024","threshold_ars":300000000,"inferred":false},{"bimonth":"2024-B3","label":"May–Jun 2024","threshold_ars":300000000,"inferred":false},{"bimonth":"2024-B4","label":"Jul–Ago 2024","threshold_ars":300000000,"inferred":false},{"bimonth":"2024-B5","label":"Sep–Oct 2024","threshold_ars":300000000,"inferred":false},{"bimonth":"2024-B6","label":"Nov–Dic 2024","threshold_ars":300000000,"inferred":false},{"bimonth":"2025-B1","label":"Ene–Feb 2025","threshold_ars":300000000,"inferred":false},{"bimonth":"2025-B2","label":"Mar–Abr 2025","threshold_ars":334365382,"inferred":true},{"bimonth":"2025-B3","label":"May–Jun 2025","threshold_ars":334365382,"inferred":true},{"bimonth":"2025-B4","label":"Jul–Ago 2025","threshold_ars":334365382,"inferred":false},{"bimonth":"2025-B5","label":"Sep–Oct 2025","threshold_ars":334365382,"inferred":false},{"bimonth":"2025-B6","label":"Nov–Dic 2025","threshold_ars":334365382,"inferred":false},{"bimonth":"2026-B1","label":"Ene–Feb 2026","threshold_ars":334365382,"inferred":false},{"bimonth":"2026-B2","label":"Mar–Abr 2026","threshold_ars":334365382,"inferred":false},{"bimonth":"2026-B3","label":"May–Jun 2026","threshold_ars":443498530,"inferred":true},{"bimonth":"2026-B4","label":"Jul–Ago 2026","threshold_ars":443498530,"inferred":false},{"bimonth":"2026-B5","label":"Sep–Oct 2026","threshold_ars":484301174,"inferred":true},{"bimonth":"2026-B6","label":"Nov–Dic 2026","threshold_ars":484301174,"inferred":false}],"commission_tiers":[],"by_year":{"2024":{"ing_usd":3044.14,"ing_usd_real":3044.14,"ing_usd_proj":0,"ing_ars":3562890,"comm_ars":0,"gmv_ars":0},"2025":{"ing_usd":58148.86,"ing_usd_real":58148.86,"ing_usd_proj":0,"ing_ars":78077130,"comm_ars":3229013,"gmv_ars":3348014651},"2026":{"ing_usd":26799.32,"ing_usd_real":26799.32,"ing_usd_proj":34758.83,"ing_ars":38480577,"comm_ars":2606810,"gmv_ars":1384690377}},"summary":{"months_active":18,"first_month":"2024-12","last_month":"2026-05","total_ing_ars":120120597,"total_ing_usd":87992.32,"total_comm_ars":5835822,"total_comm_usd_equiv":4538.5,"total_gmv_ars":4732705028,"avg_comm_rate_pct":0.123,"ytd_2026_usd":26799.32,"ytd_2026_ars":38480577,"ytd_2025_usd":18473.12,"ytd_2025_ars":22355245,"ytd_yoy_usd_pct":null,"mrr_3m_usd":5620.0,"mrr_3m_ars":8056406.0,"mrr_3m_period":"2026-03 → 2026-05","mrr_3m_by_service":[{"service":"Fee Fijo E-Commerce","mrr_usd":3112.0,"mrr_ars":4460710.0,"share_pct":55.4},{"service":"Marketing Digital","mrr_usd":1695.0,"mrr_ars":2429379.0,"share_pct":30.2},{"service":"Fee E-Commerce","mrr_usd":606.0,"mrr_ars":868937.0,"share_pct":10.8},{"service":"Link-Up","mrr_usd":207.0,"mrr_ars":297381.0,"share_pct":3.7}],"contract_retainer_usd":4500,"comm_mrr_3m_ars":868937.0,"comm_mrr_3m_usd":606.0,"ytd_2026_months":5,"mrr_ytd_usd":5360.0,"comm_mrr_ytd_usd":363.0,"mrr_ytd_2025_usd":0,"current_rate_pct":0.454,"current_rate_total_pct":1.241,"current_threshold_ars":443498530,"contract_cap_usd":8000,"contract_min_fee_usd":3000,"contract_paid_media_usd":1500,"paid_media_mrr_3m_ars":2429379.0,"paid_media_mrr_3m_usd":1695.0,"paid_media_usd_equiv":1783.54,"fee_fijo_usd_equiv":51463.91,"months_cap_hit":0,"avg_rate_total_pct":1.603,"fee_fijo_mrr_ars":4514730.0,"fee_fijo_mrr_3m_ars":4460710.0,"fee_ecomm_mrr_3m_ars":5329647.0,"fee_ecomm_mrr_3m_usd":3718.0,"fee_fijo_total_ars":70016850,"fee_ecomm_total_ars":75852672,"fee_ecomm_usd_equiv":56002.41,"fee_fijo_share_of_ecomm_pct":83.7,"services_usd":{"Fee Fijo E-Commerce":54508,"Marketing Digital":24345,"Fee E-Commerce":4538,"Link-Up":3445,"Extras":1156},"comm_share_of_revenue_pct":5.2,"t12_gmv_ars":3176579848,"t12_fixed_ars":52130970,"t12_other_ars":39464682,"t12_revenue_usd":66475.06}};
+const D = typeof GINEBRA_DATA !== 'undefined' ? GINEBRA_DATA : {};
+const CONTRACT = D.contract || {};
+const S = D.summary || {};
+const REAL = (D.months || []).filter(m => !m.is_projection && m.ing_usd > 0);
+const T12 = REAL.slice(-12);
+const fmtUSD = n => 'U$D ' + Math.round(n).toLocaleString('en-US');
+const fmtARS = n => '$' + Math.round(n).toLocaleString('es-AR');
+const fmtPct = n => (n == null ? '—' : n.toFixed(2) + '%');
+const feeFijo = m => m.fee_fijo_ars ?? m.services_ars?.['Fee Fijo E-Commerce'] ?? 0;
+const feeVar = m => m.comm_ars || m.services_ars?.['Fee E-Commerce'] || 0;
+const feeEcomm = m => m.fee_ecomm_ars ?? (feeFijo(m) + feeVar(m));
+const rateTotal = m => m.rate_total_pct ?? (m.gmv_ars ? feeEcomm(m) / m.gmv_ars * 100 : null);
+const ymLabel = ym => {
+  const [y,m] = ym.split('-');
+  const names = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+  return names[+m-1] + ' ' + y.slice(2);
+};
+const periodLabel = period => {
+  if (!period || !period.includes('→')) return period || '—';
+  const [a, b] = period.split('→').map(s => s.trim());
+  return `${ymLabel(a)} → ${ymLabel(b)}`;
+};
+
+document.getElementById('meta').textContent =
+  `Fuente: ${D.source || '—'} · Cliente: ${D.client || 'Ginebra'} · Último mes real: ${D.lastRealYm || '—'} · ${S.first_month || ''} → ${S.last_month || ''} (${S.months_active || 0} meses)`;
+document.getElementById('note').textContent = D.note || '';
+
+const SVC_COLORS = ['#185FA5','#534AB7','#0F6E56','#854F0B','#A32D2D','#378ADD','#888780','#5F5E5A'];
+const MRR3 = S.mrr_3m_by_service || [];
+const mrr3TotalUsd = S.mrr_3m_usd || 0;
+const mrr3TotalArs = S.mrr_3m_ars || 0;
+const mrr3Period = S.mrr_3m_period || (REAL.length >= 3 ? `${REAL.at(-3).ym} → ${REAL.at(-1).ym}` : '—');
+
+document.getElementById('revOverviewPeriod').textContent = periodLabel(mrr3Period);
+document.getElementById('revHeroTotal').textContent = fmtUSD(mrr3TotalUsd);
+document.getElementById('revHeroSub').textContent =
+  `${fmtARS(mrr3TotalArs)}/mes (fila 974 · total ARS) · ${fmtUSD(mrr3TotalUsd)}/mes (fila 975 · total USD) · ${MRR3.length} líneas de servicio · ` +
+  `mínimo contractual USD ${(S.contract_retainer_usd || (CONTRACT.min_fee_usd_monthly || 3000) + (CONTRACT.paid_media_usd_monthly || 1500)).toLocaleString('en-US')} (3.000 fee + 1.500 paid media)`;
+
+document.getElementById('revBreakdownBody').innerHTML = MRR3.map((row, i) =>
+  `<tr>
+    <td><span class="rev-bar-dot" style="background:${SVC_COLORS[i % SVC_COLORS.length]};display:inline-block;vertical-align:middle;margin-right:6px"></span>${row.service}</td>
+    <td>${fmtUSD(row.mrr_usd)}</td>
+    <td>${fmtARS(row.mrr_ars)}</td>
+    <td class="rev-share">${row.share_pct}%</td>
+  </tr>`
+).join('');
+document.getElementById('revBreakdownFoot').innerHTML =
+  `<td>Total</td><td>${fmtUSD(mrr3TotalUsd)}</td><td>${fmtARS(mrr3TotalArs)}</td><td class="rev-share">100%</td>`;
+
+document.getElementById('revBar').innerHTML = MRR3.map((row, i) =>
+  `<div class="rev-bar-seg" style="width:${row.share_pct}%;background:${SVC_COLORS[i % SVC_COLORS.length]}" title="${row.service}: ${row.share_pct}%"></div>`
+).join('');
+document.getElementById('revBarLegend').innerHTML = MRR3.map((row, i) =>
+  `<span class="rev-bar-key"><span class="rev-bar-dot" style="background:${SVC_COLORS[i % SVC_COLORS.length]}"></span>${row.service} ${row.share_pct}%</span>`
+).join('');
+
+const kpis = [
+  { label: 'Ingresos históricos', value: fmtUSD(S.total_ing_usd), sub: `${S.months_active} meses activos`, cls: 'blue' },
+  { label: 'YTD 2026', value: fmtUSD(S.ytd_2026_usd), sub: `Prom. ${fmtUSD(S.mrr_ytd_usd)}/mes · ${S.ytd_2026_months || 0} meses`, cls: 'green' },
+  { label: 'MRR prom. total (3M)', value: fmtUSD(S.mrr_3m_usd || 0), sub: `${fmtARS(S.mrr_3m_ars || 0)}/mes · ${periodLabel(S.mrr_3m_period || '—')}`, cls: '' },
+  { label: 'Retainer contractual', value: fmtUSD(S.contract_retainer_usd || 4500), sub: 'USD 3.000 fee + 1.500 paid media', cls: 'purple' },
+  { label: 'Comisión variable (3M)', value: fmtUSD(S.comm_mrr_3m_usd || 0), sub: `Sobre GMV gravado · ${fmtPct(S.current_rate_pct)} s/ GMV total`, cls: 'amber' },
+  { label: 'Fee e-comm (3M)', value: fmtUSD(S.fee_ecomm_mrr_3m_usd || 0), sub: `Fijo ${fmtARS(S.fee_fijo_mrr_3m_ars || 0)} + var ${fmtUSD(S.comm_mrr_3m_usd || 0)}`, cls: '' },
+  { label: 'Umbral GMV actual', value: fmtARS(CONTRACT.current_threshold_ars || S.current_threshold_ars || 0), sub: CONTRACT.current_bimonth || '—', cls: '' },
+];
+document.getElementById('kpis').innerHTML = kpis.map(k =>
+  `<div class="kpi"><div class="kpi-label">${k.label}</div><div class="kpi-value ${k.cls}">${k.value}</div><div class="kpi-sub">${k.sub}</div></div>`
+).join('');
+
+function kpiInnerWidth(el) {
+  const box = el.closest('.kpi');
+  if (!box) return el.clientWidth;
+  const cs = getComputedStyle(box);
+  return box.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+}
+
+function fitKpiEl(els, max, min, step) {
+  if (!els.length) return;
+  let size = max;
+  const apply = s => els.forEach(el => { el.style.fontSize = s + 'px'; });
+  const overflows = () => els.some(el => el.scrollWidth > kpiInnerWidth(el) + 1);
+  apply(size);
+  while (overflows() && size > min) {
+    size -= step;
+    apply(size);
+  }
+}
+
+function fitKpiGrid() {
+  fitKpiEl([...document.querySelectorAll('#kpis .kpi-label')], 10, 6, 0.25);
+  fitKpiEl([...document.querySelectorAll('#kpis .kpi-value')], 22, 12, 0.5);
+}
+requestAnimationFrame(() => requestAnimationFrame(fitKpiGrid));
+window.addEventListener('resize', fitKpiGrid);
+
+const chartOpts = {
+  responsive: true, maintainAspectRatio: false,
+  plugins: { legend: { labels: { font: { size: 11 }, boxWidth: 12 } } },
+  scales: {
+    x: { ticks: { font: { size: 10 }, maxRotation: 0, autoSkip: true, maxTicksLimit: 14 }, grid: { display: false } },
+    y: { ticks: { font: { size: 10 } }, grid: { color: '#ECEAE2' } }
+  }
+};
+
+const revLabels = REAL.map(m => ymLabel(m.ym));
+new Chart(document.getElementById('chartRev'), {
+  type: 'line',
+  data: {
+    labels: revLabels,
+    datasets: [{
+      label: 'Ingreso total USD',
+      data: REAL.map(m => m.ing_usd),
+      borderColor: '#185FA5', backgroundColor: 'rgba(24,95,165,.08)',
+      fill: true, tension: .3, pointRadius: 0, borderWidth: 2
+    }]
+  },
+  options: { ...chartOpts, plugins: { ...chartOpts.plugins, legend: { display: false } } }
+});
+
+new Chart(document.getElementById('chartRate'), {
+  type: 'line',
+  data: {
+    labels: revLabels,
+    datasets: [{
+      label: 'Tasa %',
+      data: REAL.map(m => m.rate_pct),
+      borderColor: '#854F0B', backgroundColor: 'rgba(133,79,11,.08)',
+      fill: true, tension: .3, pointRadius: 0, borderWidth: 2
+    }]
+  },
+  options: {
+    ...chartOpts,
+    plugins: { ...chartOpts.plugins, legend: { display: false } },
+    scales: { ...chartOpts.scales, y: { ...chartOpts.scales.y, ticks: { ...chartOpts.scales.y.ticks, callback: v => v + '%' } } }
+  }
+});
+
+const svc3 = MRR3.length ? Object.fromEntries(MRR3.map(r => [r.service, r.mrr_usd])) : (S.services_usd || {});
+new Chart(document.getElementById('chartSvc'), {
+  type: 'doughnut',
+  data: {
+    labels: Object.keys(svc3),
+    datasets: [{ data: Object.values(svc3), backgroundColor: SVC_COLORS }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: {
+      legend: { position: 'right', labels: { font: { size: 10 }, boxWidth: 10 } },
+      tooltip: { callbacks: { label: c => ` ${c.label}: ${fmtUSD(c.raw)} (${MRR3[c.dataIndex]?.share_pct ?? '—'}%)` } },
+    },
+  },
+});
+
+const years = Object.keys(D.by_year || {});
+const yearReal = years.map(y => (D.by_year[y].ing_usd_real ?? D.by_year[y].ing_usd) || 0);
+const yearProj = years.map(y => D.by_year[y].ing_usd_proj || 0);
+new Chart(document.getElementById('chartYear'), {
+  type: 'bar',
+  data: {
+    labels: years,
+    datasets: [
+      {
+        label: 'Real',
+        data: yearReal,
+        backgroundColor: '#185FA5',
+        borderRadius: { topLeft: 0, topRight: 0, bottomLeft: 4, bottomRight: 4 },
+        stack: 'year',
+      },
+      {
+        label: 'Proy',
+        data: yearProj,
+        backgroundColor: 'rgba(55,138,221,0.42)',
+        borderColor: '#378ADD',
+        borderWidth: 1,
+        borderRadius: { topLeft: 4, topRight: 4, bottomLeft: 0, bottomRight: 0 },
+        stack: 'year',
+      },
+    ],
+  },
+  options: {
+    ...chartOpts,
+    plugins: {
+      ...chartOpts.plugins,
+      legend: { display: true, labels: { font: { size: 10 }, boxWidth: 10 } },
+      tooltip: {
+        callbacks: {
+          footer(items) {
+            const i = items[0]?.dataIndex;
+            if (i == null) return '';
+            const real = yearReal[i];
+            const proj = yearProj[i];
+            if (!proj) return '';
+            return `Total ${fmtUSD(real + proj)} (real + proy.)`;
+          },
+        },
+      },
+    },
+    scales: {
+      ...chartOpts.scales,
+      x: { ...chartOpts.scales.x, stacked: true },
+      y: { ...chartOpts.scales.y, stacked: true },
+    },
+  },
+});
+
+document.getElementById('tableInfo').textContent = `${REAL.length} meses reales`;
+document.getElementById('tableBody').innerHTML = [...(D.months||[])].reverse().map(m => {
+  const fijo = feeFijo(m);
+  const vari = feeVar(m);
+  const total = feeEcomm(m);
+  return `<tr class="${m.is_projection ? 'proj' : ''}">
+    <td>${ymLabel(m.ym)}${m.is_projection ? ' · proy.' : ''}</td>
+    <td>${m.ing_usd ? fmtUSD(m.ing_usd) : '—'}</td>
+    <td>${m.ing_ars ? fmtARS(m.ing_ars) : '—'}</td>
+    <td>${m.gmv_ars ? fmtARS(m.gmv_ars) : '—'}</td>
+    <td>${m.threshold_ars ? fmtARS(m.threshold_ars) : '—'}</td>
+    <td>${m.gmv_taxable_ars ? fmtARS(m.gmv_taxable_ars) : (m.gmv_ars && m.threshold_ars ? fmtARS(Math.max(0, m.gmv_ars - m.threshold_ars)) : '—')}</td>
+    <td>${vari ? fmtARS(vari) + (m.cap_hit ? ' · tope' : '') : '—'}</td>
+    <td>${fijo ? fmtARS(fijo) : '—'}</td>
+    <td>${total ? fmtARS(total) : '—'}</td>
+    <td>${fmtPct(m.rate_pct)}</td>
+    <td>${fmtPct(rateTotal(m))}</td>
+  </tr>`;
+}).join('');
+
+// ── Comisión actual · referencia ──
+function thresholdForMonth(m) {
+  return m.threshold_ars ?? CONTRACT.current_threshold_ars ?? CONTRACT.threshold_base_ars ?? 300_000_000;
+}
+
+function calcContractComm(gmv, ratePct, thresholdArs, fx, capUsd) {
+  const taxable = Math.max(0, gmv - thresholdArs);
+  let comm = taxable * ratePct / 100;
+  if (fx > 0 && capUsd > 0) {
+    const capArs = capUsd / fx;
+    if (comm > capArs) comm = capArs;
+  }
+  return comm;
+}
+
+const commReal = REAL.filter(m => m.gmv_ars > 0);
+const lastComm = commReal.filter(m => m.comm_ars > 0).slice(-1)[0] || commReal.slice(-1)[0];
+
+document.getElementById('commRefIntro').textContent =
+  `Retainer Ginebra: fee fijo mín. USD ${(CONTRACT.min_fee_usd_monthly || 3000).toLocaleString('en-US')} (TC oficial) + paid media USD ${(CONTRACT.paid_media_usd_monthly || 1500).toLocaleString('en-US')}/mes (${CONTRACT.paid_media_service || 'Marketing Digital'}). ` +
+  `Variable: ${CONTRACT.rate_pct ?? 2}% sobre GMV con IVA por encima del umbral ` +
+  `(base ${fmtARS(CONTRACT.threshold_base_ars || 300_000_000)}, IPC bimestral). Tope variable USD ${(CONTRACT.cap_usd_monthly || 8000).toLocaleString('en-US')}/mes.`;
+
+document.getElementById('commRefContractBody').innerHTML = [
+  ['Fee fijo mínimo', `USD ${(CONTRACT.min_fee_usd_monthly || 3000).toLocaleString('en-US')} × TC oficial`],
+  ['Paid media', `USD ${(CONTRACT.paid_media_usd_monthly || 1500).toLocaleString('en-US')}/mes · ${CONTRACT.paid_media_service || 'Marketing Digital'}`],
+  ['Paid media actual (3M)', `${fmtARS(S.paid_media_mrr_3m_ars || 0)} (~${fmtUSD(S.paid_media_mrr_3m_usd || 0)}/mes)`],
+  ['Fee fijo actual (May 2026)', `${fmtARS(S.fee_fijo_mrr_ars)} (~${fmtUSD(S.fee_fijo_usd_equiv || 0)} eq.)`],
+  ['Tasa variable', `${(CONTRACT.rate_pct ?? 2).toFixed(2)}% sobre GMV gravado`],
+  ['Umbral base', fmtARS(CONTRACT.threshold_base_ars || 300_000_000)],
+  ['Umbral bimestre actual', fmtARS(CONTRACT.current_threshold_ars || S.current_threshold_ars || 0)],
+  ['Bimestre vigente', CONTRACT.current_bimonth || '—'],
+  ['Tope variable', `USD ${(CONTRACT.cap_usd_monthly || 8000).toLocaleString('en-US')}/mes`],
+  ['Meses con tope variable', S.months_cap_hit ? String(S.months_cap_hit) : '0'],
+].map(([k, v]) => `<tr><td>${k}</td><td>${v}</td></tr>`).join('');
+
+document.getElementById('commRefEffective').innerHTML =
+  `Retainer = <strong>Fee Fijo</strong> (mín. USD ${(CONTRACT.min_fee_usd_monthly || 3000).toLocaleString('en-US')}) + <strong>Paid media</strong> (USD ${(CONTRACT.paid_media_usd_monthly || 1500).toLocaleString('en-US')}) + ` +
+  `<strong>comisión variable</strong> (${(CONTRACT.rate_pct ?? 2).toFixed(2)}% × max(0, GMV − umbral), tope USD ${(CONTRACT.cap_usd_monthly || 8000).toLocaleString('en-US')}). ` +
+  `Umbral actual <strong>${fmtARS(CONTRACT.current_threshold_ars || 0)}</strong> (${CONTRACT.current_bimonth || '—'}).`;
+
+document.getElementById('commRefRecentBody').innerHTML = commReal.filter(m => m.comm_ars > 0).slice(-5).map(m =>
+  `<tr>
+    <td>${ymLabel(m.ym)}</td>
+    <td>${fmtARS(m.gmv_ars)}</td>
+    <td>${fmtARS(thresholdForMonth(m))}</td>
+    <td>${fmtARS(m.gmv_taxable_ars || Math.max(0, m.gmv_ars - thresholdForMonth(m)))}</td>
+    <td>${fmtARS(feeFijo(m))}</td>
+    <td>${fmtARS(feeVar(m))}${m.cap_hit ? ' · tope' : ''}</td>
+    <td>${fmtARS(feeEcomm(m))}</td>
+    <td>${fmtPct(rateTotal(m))}</td>
+  </tr>`
+).join('');
+
+const feeCompMonths = commReal.slice(-7);
+const feeCompRates = feeCompMonths.map(m => rateTotal(m));
+const feeEcommUsd = m => (m.ing_ars ? feeEcomm(m) * m.ing_usd / m.ing_ars : 0);
+const feeCompUsdLabelsPlugin = {
+  id: 'feeCompUsdLabels',
+  afterDatasetsDraw(chart) {
+    const { ctx } = chart;
+    const meta = chart.getDatasetMeta(1);
+    feeCompMonths.forEach((m, i) => {
+      const bar = meta.data[i];
+      if (!bar) return;
+      const label = fmtUSD(feeEcommUsd(m));
+      ctx.save();
+      ctx.font = '600 10px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+      ctx.fillStyle = '#5F5E5A';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'bottom';
+      ctx.fillText(label, bar.x, bar.y - 6);
+      ctx.restore();
+    });
+  },
+};
+new Chart(document.getElementById('chartFeeComp'), {
+  type: 'bar',
+  plugins: [feeCompUsdLabelsPlugin],
+  data: {
+    labels: feeCompMonths.map(m => ymLabel(m.ym)),
+    datasets: [
+      {
+        label: 'Fee fijo',
+        data: feeCompMonths.map(feeFijo),
+        backgroundColor: '#534AB7',
+        stack: 'fee',
+        borderRadius: { topLeft: 0, topRight: 0, bottomLeft: 4, bottomRight: 4 },
+        order: 2,
+      },
+      {
+        label: 'Comisión variable',
+        data: feeCompMonths.map(feeVar),
+        backgroundColor: '#185FA5',
+        stack: 'fee',
+        borderRadius: { topLeft: 4, topRight: 4, bottomLeft: 0, bottomRight: 0 },
+        order: 2,
+      },
+      {
+        type: 'line',
+        label: 'Tasa total s/ GMV',
+        data: feeCompRates,
+        borderColor: '#854F0B',
+        backgroundColor: '#854F0B',
+        borderDash: [6, 4],
+        borderWidth: 2,
+        pointRadius: 4,
+        pointHoverRadius: 6,
+        pointBackgroundColor: '#854F0B',
+        yAxisID: 'y1',
+        order: 1,
+      },
+    ],
+  },
+  options: {
+    ...chartOpts,
+    layout: { padding: { top: 24 } },
+    plugins: {
+      ...chartOpts.plugins,
+      tooltip: {
+        callbacks: {
+          label(ctx) {
+            if (ctx.dataset.yAxisID === 'y1') {
+              return `${ctx.dataset.label}: ${fmtPct(ctx.raw)}`;
+            }
+            return `${ctx.dataset.label}: ${fmtARS(ctx.raw)}`;
+          },
+          footer(items) {
+            const m = feeCompMonths[items[0]?.dataIndex];
+            if (!m) return '';
+            return `Total e-comm: ${fmtARS(feeEcomm(m))} · ${fmtUSD(feeEcommUsd(m))} · Tasa total: ${fmtPct(rateTotal(m))}`;
+          },
+        },
+      },
+    },
+    scales: {
+      ...chartOpts.scales,
+      x: { ...chartOpts.scales.x, stacked: true },
+      y: {
+        ...chartOpts.scales.y,
+        stacked: true,
+        position: 'left',
+        title: { display: true, text: 'Fee E-Commerce ARS', font: { size: 10 } },
+      },
+      y1: {
+        position: 'right',
+        grid: { drawOnChartArea: false },
+        ticks: {
+          font: { size: 10 },
+          callback: v => v.toFixed(2) + '%',
+        },
+        title: { display: true, text: 'Tasa total %', font: { size: 10 } },
+        suggestedMin: 0,
+      },
+    },
+  },
+});
+
+if (lastComm) {
+  const th = thresholdForMonth(lastComm);
+  const taxable = lastComm.gmv_taxable_ars || Math.max(0, lastComm.gmv_ars - th);
+  document.getElementById('commRefCallout').innerHTML =
+    `<strong>Referencia ${ymLabel(lastComm.ym)}:</strong> GMV ${fmtARS(lastComm.gmv_ars)} − umbral ${fmtARS(th)} = ` +
+    `GMV gravado ${fmtARS(taxable)} × ${(CONTRACT.rate_pct ?? 2).toFixed(2)}% → variable ${fmtARS(lastComm.comm_ars)}` +
+    `${lastComm.cap_hit ? ' (tope USD 8K aplicado)' : ''}. ` +
+    `Fee e-comm total ${fmtARS(feeEcomm(lastComm))} = fijo ${fmtARS(feeFijo(lastComm))} + variable.`;
+} else {
+  document.getElementById('commRefCallout').innerHTML =
+    `Sin comisión variable reciente: GMV por debajo del umbral IPC (${fmtARS(CONTRACT.current_threshold_ars || 0)} en ${CONTRACT.current_bimonth || 'bimestre actual'}).`;
+}
+
+// ── Simulador ──
+const curRate = S.current_rate_pct || 0;
+const contractRateDefault = CONTRACT.rate_pct ?? 2;
+const contractThresholdDefault = CONTRACT.current_threshold_ars || S.current_threshold_ars || CONTRACT.threshold_base_ars || 300_000_000;
+const contractCapDefault = CONTRACT.cap_usd_monthly || S.contract_cap_usd || 8000;
+const contractMinFeeDefault = CONTRACT.min_fee_usd_monthly || S.contract_min_fee_usd || 3000;
+const contractPaidMediaDefault = CONTRACT.paid_media_usd_monthly || S.contract_paid_media_usd || 1500;
+
+const SLIDER_MIN = 400, SLIDER_MAX = 1000, SLIDER_STEP = 5;
+const CHART_RATE_MIN = 4.0, CHART_RATE_MAX = 10.0;
+const toSlider = rate => Math.max(SLIDER_MIN, Math.min(SLIDER_MAX, Math.round(rate * 100 / SLIDER_STEP) * SLIDER_STEP));
+const fromSlider = val => +val / 100;
+
+const t12Gmv = S.t12_gmv_ars || T12.reduce((a,m) => a + m.gmv_ars, 0);
+const t12Fixed = S.t12_fixed_ars || T12.reduce((a,m) => a + (m.services_ars['Fee Fijo E-Commerce']||0), 0);
+const t12Other = S.t12_other_ars || T12.reduce((a,m) => {
+  return a + Object.entries(m.services_ars).filter(([k]) => k !== 'Fee E-Commerce' && k !== 'Fee Fijo E-Commerce').reduce((s,[,v]) => s+v, 0);
+}, 0);
+const avgFx = T12.length ? T12.reduce((a,m) => a + (m.ing_ars ? m.ing_usd/m.ing_ars : 0), 0) / T12.length : 0;
+const arsToUsd = ars => ars * avgFx;
+const GMV_REF = T12.filter(m => m.gmv_ars > 0);
+const REV_REF = T12.filter(m => m.ing_usd > 0);
+const nGmvRef = GMV_REF.length || 1;
+const nRevRef = REV_REF.length || 1;
+const refMonthsLabel = T12.length < 12 ? `${nGmvRef} meses c/ GMV` : 'T12';
+const monthlyGmv = GMV_REF.reduce((a, m) => a + m.gmv_ars, 0) / nGmvRef;
+const monthlyFixed = REV_REF.reduce((a, m) => a + (m.services_ars['Fee Fijo E-Commerce'] || 0), 0) / nRevRef;
+const monthlyOther = REV_REF.reduce((a, m) => {
+  return a + Object.entries(m.services_ars).filter(([k]) => k !== 'Fee E-Commerce' && k !== 'Fee Fijo E-Commerce').reduce((s, [, v]) => s + v, 0);
+}, 0) / nRevRef;
+const curCommMonthly = GMV_REF.reduce((a, m) => a + (m.comm_ars || 0), 0) / nGmvRef;
+const curTotalMonthly = curCommMonthly + monthlyFixed + monthlyOther;
+
+document.getElementById('curRate').textContent = fmtPct(curRate);
+
+const slider = document.getElementById('rateSlider');
+slider.value = toSlider(curRate);
+
+const FORWARD = (D.months || []).filter(m => m.is_projection && m.gmv_ars > 0);
+
+const curFixedFee = S.fee_fijo_mrr_ars || monthlyFixed;
+const projFixedAvg = FORWARD.length
+  ? FORWARD.reduce((a, m) => a + feeFijo(m), 0) / FORWARD.length
+  : curFixedFee;
+const fixedFeeSlider = document.getElementById('fixedFeeSlider');
+const fixedMin = Math.max(0, Math.round(Math.min(curFixedFee, projFixedAvg) * 0.25 / 100000) * 100000);
+const fixedMax = Math.round(Math.max(curFixedFee, projFixedAvg) * 2.5 / 100000) * 100000;
+fixedFeeSlider.min = fixedMin;
+fixedFeeSlider.max = fixedMax;
+fixedFeeSlider.step = 100000;
+fixedFeeSlider.value = Math.round(projFixedAvg / 100000) * 100000;
+document.getElementById('fixedFeeMin').textContent = fmtARS(fixedMin);
+document.getElementById('fixedFeeMax').textContent = fmtARS(fixedMax);
+document.getElementById('curFixedFeeRef').textContent = fmtARS(curFixedFee);
+document.getElementById('projFixedFeeRef').textContent = fmtARS(projFixedAvg);
+
+let simChart;
+let simMode = 'contract';
+
+const contractRateInput = document.getElementById('contractRateInput');
+const contractThresholdInput = document.getElementById('contractThresholdInput');
+const contractCapInput = document.getElementById('contractCapInput');
+const contractMinFeeInput = document.getElementById('contractMinFeeInput');
+const contractPaidMediaInput = document.getElementById('contractPaidMediaInput');
+const contractFormulaEl = document.getElementById('contractFormula');
+if (contractFormulaEl) contractFormulaEl.textContent = CONTRACT.formula || 'Fee fijo mín. USD 3.000 + Paid media USD 1.500 + 2% × max(0, GMV − umbral IPC); tope variable USD 8.000/mes';
+if (contractRateInput) contractRateInput.value = contractRateDefault.toFixed(2);
+if (contractThresholdInput) contractThresholdInput.value = Math.round(contractThresholdDefault);
+if (contractCapInput) contractCapInput.value = contractCapDefault;
+if (contractMinFeeInput) contractMinFeeInput.value = contractMinFeeDefault;
+if (contractPaidMediaInput) contractPaidMediaInput.value = contractPaidMediaDefault;
+[contractRateInput, contractThresholdInput, contractCapInput, contractMinFeeInput, contractPaidMediaInput].forEach(el => {
+  if (el) el.addEventListener('input', runSim);
+});
+
+const fmtDeltaARS = n => (n >= 0 ? '+' : '') + fmtARS(n);
+const fmtDeltaUSD = n => {
+  const v = Math.round(n);
+  if (v === 0) return 'U$D 0';
+  if (v > 0) return '+U$D ' + v.toLocaleString('en-US');
+  return 'U$D ' + v.toLocaleString('en-US');
+};
+const impactCls = n => n < 0 ? 'delta-pos' : n > 0 ? 'delta-neg' : '';
+
+function minFixedFeeArs(fx, minUsd) {
+  return fx > 0 && minUsd > 0 ? minUsd / fx : 0;
+}
+
+function readContractParams() {
+  return {
+    ratePct: +(contractRateInput?.value || contractRateDefault),
+    thresholdArs: +(contractThresholdInput?.value || contractThresholdDefault),
+    capUsd: +(contractCapInput?.value || contractCapDefault),
+    minFeeUsd: +(contractMinFeeInput?.value || contractMinFeeDefault),
+    paidMediaUsd: +(contractPaidMediaInput?.value || contractPaidMediaDefault),
+  };
+}
+
+function calcNewComm(m, rates) {
+  const fx = m.ing_ars ? m.ing_usd / m.ing_ars : avgFx;
+  if (rates.mode === 'contract') {
+    const th = m.threshold_ars ?? rates.thresholdArs;
+    return calcContractComm(m.gmv_ars, rates.ratePct, th, fx, rates.capUsd);
+  }
+  return m.gmv_ars * rates.unified / 100;
+}
+
+function effectiveFixedFeeArs(m, rates) {
+  const sliderFixed = +fixedFeeSlider.value;
+  if (rates.mode !== 'contract') return sliderFixed;
+  const fx = m?.ing_ars ? m.ing_usd / m.ing_ars : avgFx;
+  return Math.max(sliderFixed, minFixedFeeArs(fx, rates.minFeeUsd ?? contractMinFeeDefault));
+}
+
+function getRates() {
+  const fixedFee = +fixedFeeSlider.value;
+  if (simMode === 'contract') {
+    const p = readContractParams();
+    return {
+      mode: 'contract',
+      ...p,
+      fixedFee: Math.max(fixedFee, minFixedFeeArs(avgFx, p.minFeeUsd)),
+    };
+  }
+  return { mode: 'unified', unified: fromSlider(slider.value), fixedFee };
+}
+
+function effectiveRateForGmv(gmv, rates, m) {
+  if (rates.mode === 'contract') {
+    const th = m?.threshold_ars ?? rates.thresholdArs;
+    const taxable = Math.max(0, gmv - th);
+    return taxable > 0 ? rates.ratePct * taxable / gmv : 0;
+  }
+  return rates.unified;
+}
+
+function forwardImpact(rates) {
+  let totOld = 0, totNew = 0, totOldFijo = 0, totNewFijo = 0;
+  let totOldEcomm = 0, totNewEcomm = 0, totDeltaUsd = 0, totDeltaFijoUsd = 0, totDeltaEcommUsd = 0;
+  FORWARD.forEach(m => {
+    const oldFijo = feeFijo(m);
+    const newFijo = effectiveFixedFeeArs(m, rates);
+    const newComm = calcNewComm(m, rates);
+    const oldComm = m.comm_ars || 0;
+    totOld += oldComm;
+    totNew += newComm;
+    totOldFijo += oldFijo;
+    totNewFijo += newFijo;
+    totOldEcomm += oldFijo + oldComm;
+    totNewEcomm += newFijo + newComm;
+    const fx = m.ing_ars ? m.ing_usd / m.ing_ars : avgFx;
+    totDeltaUsd += (newComm - oldComm) * fx;
+    totDeltaFijoUsd += (newFijo - oldFijo) * fx;
+    totDeltaEcommUsd += (newFijo + newComm - oldFijo - oldComm) * fx;
+  });
+  return {
+    totOld,
+    totNew,
+    totOldFijo,
+    totNewFijo,
+    totOldEcomm,
+    totNewEcomm,
+    totDeltaArs: totNew - totOld,
+    totDeltaFijoArs: totNewFijo - totOldFijo,
+    totDeltaEcommArs: totNewEcomm - totOldEcomm,
+    totDeltaUsd,
+    totDeltaFijoUsd,
+    totDeltaEcommUsd,
+    label: FORWARD.length
+      ? `${ymLabel(FORWARD[0].ym)}–${ymLabel(FORWARD[FORWARD.length - 1].ym)}`
+      : '—',
+  };
+}
+
+function renderSimMonths(rates) {
+  const note = document.getElementById('simMonthNote');
+  const body = document.getElementById('simMonthBody');
+  const head = document.getElementById('simMonthHead');
+  if (!FORWARD.length) {
+    if (note) note.textContent = 'No hay meses proyectados disponibles.';
+    if (body) body.innerHTML = '';
+    return;
+  }
+  const first = ymLabel(FORWARD[0].ym);
+  const last = ymLabel(FORWARD[FORWARD.length - 1].ym);
+
+  if (rates.mode === 'contract') {
+    if (note) note.textContent = `${first} → ${last} · contrato Ginebra (fijo mín. USD ${rates.minFeeUsd.toLocaleString('en-US')}, paid media USD ${rates.paidMediaUsd.toLocaleString('en-US')}, ${rates.ratePct}% s/ gravado, tope var. USD ${rates.capUsd.toLocaleString('en-US')}) · fee fijo sim. ${fmtARS(rates.fixedFee)}/mes`;
+    head.innerHTML = `<tr>
+      <th>Mes</th><th>GMV c/IVA</th><th>Umbral</th><th>GMV gravado</th><th>Fijo act.</th><th>Fijo nuevo</th>
+      <th>Var. actual</th><th>Var. nueva</th><th>Total e-comm act.</th><th>Total e-comm nueva</th>
+      <th>Δ total ARS</th><th>Δ USD eq.</th>
+    </tr>`;
+  } else {
+    if (note) note.textContent = `${first} → ${last} · variable = GMV × ${fmtPct(rates.unified)} · fee fijo propuesto ${fmtARS(rates.fixedFee)}/mes`;
+    head.innerHTML = `<tr>
+      <th>Mes</th><th>GMV c/IVA</th><th>Fijo act.</th><th>Fijo nuevo</th>
+      <th>Var. actual</th><th>Var. nueva</th><th>Total e-comm act.</th><th>Total e-comm nueva</th>
+      <th>Δ total ARS</th><th>Δ USD eq.</th>
+    </tr>`;
+  }
+
+  const fwd = forwardImpact(rates);
+  const rows = FORWARD.map(m => {
+    const oldFijo = feeFijo(m);
+    const newFijo = effectiveFixedFeeArs(m, rates);
+    const newComm = calcNewComm(m, rates);
+    const oldComm = m.comm_ars || 0;
+    const oldEcomm = oldFijo + oldComm;
+    const newEcomm = newFijo + newComm;
+    const deltaTotal = newEcomm - oldEcomm;
+    const fx = m.ing_ars ? m.ing_usd / m.ing_ars : avgFx;
+    const deltaUsd = deltaTotal * fx;
+    if (rates.mode === 'contract') {
+      const th = m.threshold_ars ?? rates.thresholdArs;
+      const taxable = Math.max(0, m.gmv_ars - th);
+      return `<tr>
+        <td>${ymLabel(m.ym)}</td>
+        <td>${fmtARS(m.gmv_ars)}</td>
+        <td>${fmtARS(th)}</td>
+        <td>${fmtARS(taxable)}</td>
+        <td>${fmtARS(oldFijo)}</td>
+        <td>${fmtARS(newFijo)}</td>
+        <td>${fmtARS(oldComm)}</td>
+        <td>${fmtARS(newComm)}</td>
+        <td>${fmtARS(oldEcomm)}</td>
+        <td>${fmtARS(newEcomm)}</td>
+        <td class="${impactCls(deltaTotal)}">${fmtDeltaARS(deltaTotal)}</td>
+        <td class="${impactCls(deltaUsd)}">${fmtDeltaUSD(deltaUsd)}</td>
+      </tr>`;
+    }
+    return `<tr>
+      <td>${ymLabel(m.ym)}</td>
+      <td>${fmtARS(m.gmv_ars)}</td>
+      <td>${fmtARS(oldFijo)}</td>
+      <td>${fmtARS(newFijo)}</td>
+      <td>${fmtARS(oldComm)}</td>
+      <td>${fmtARS(newComm)}</td>
+      <td>${fmtARS(oldEcomm)}</td>
+      <td>${fmtARS(newEcomm)}</td>
+      <td class="${impactCls(deltaTotal)}">${fmtDeltaARS(deltaTotal)}</td>
+      <td class="${impactCls(deltaUsd)}">${fmtDeltaUSD(deltaUsd)}</td>
+    </tr>`;
+  }).join('');
+
+  body.innerHTML = rows + `<tr style="background:#FAFAF8;font-weight:600">
+    <td>Total periodo</td>
+    <td>—</td>
+    <td>${fmtARS(fwd.totOldFijo)}</td>
+    <td>${fmtARS(fwd.totNewFijo)}</td>
+    ${rates.mode === 'contract' ? '<td colspan="2">—</td>' : ''}
+    <td>${fmtARS(fwd.totOld)}</td>
+    <td>${fmtARS(fwd.totNew)}</td>
+    <td>${fmtARS(fwd.totOldEcomm)}</td>
+    <td>${fmtARS(fwd.totNewEcomm)}</td>
+    <td class="${impactCls(fwd.totDeltaEcommArs)}">${fmtDeltaARS(fwd.totDeltaEcommArs)}</td>
+    <td class="${impactCls(fwd.totDeltaEcommUsd)}">${fmtDeltaUSD(fwd.totDeltaEcommUsd)}</td>
+  </tr>`;
+}
+
+function runSim() {
+  const rates = getRates();
+  const isContract = rates.mode === 'contract';
+  const refGmv = monthlyGmv || (REAL.slice(-1)[0]?.gmv_ars ?? 0);
+  const refMonth = REAL.filter(m => m.gmv_ars > 0).slice(-1)[0];
+  const refTh = refMonth?.threshold_ars ?? rates.thresholdArs ?? contractThresholdDefault;
+  const refFx = refMonth?.ing_ars ? refMonth.ing_usd / refMonth.ing_ars : avgFx;
+  const effectiveRate = isContract
+    ? effectiveRateForGmv(refGmv, rates, refMonth)
+    : rates.unified;
+  const newComm = isContract
+    ? calcContractComm(refGmv, rates.ratePct, refTh, refFx, rates.capUsd)
+    : monthlyGmv * rates.unified / 100;
+  const curCommRef = curCommMonthly;
+  const proposedFixed = effectiveFixedFeeArs(refMonth, rates);
+  const newEcommRef = newComm + proposedFixed;
+  const curEcommRef = curCommRef + monthlyFixed;
+  const newTotal = newEcommRef + monthlyOther;
+  const deltaComm = newComm - curCommRef;
+  const deltaFixed = proposedFixed - curFixedFee;
+  const impact12Usd = arsToUsd(deltaComm * 12);
+  const impact12FixedUsd = arsToUsd(deltaFixed * 12);
+  const impact12EcommUsd = arsToUsd((newEcommRef - curEcommRef) * 12);
+  const fwd = forwardImpact(rates);
+  const rateCut = curRate - effectiveRate;
+
+  document.getElementById('newRateLbl').textContent = fmtPct(rates.unified ?? effectiveRate);
+  document.getElementById('newFixedLbl').textContent = fmtARS(proposedFixed);
+  document.getElementById('curFixedFeeBox').textContent = fmtARS(curFixedFee);
+  document.getElementById('fixedDeltaLbl').textContent = deltaFixed > 0 ? 'Δ fee fijo' : deltaFixed < 0 ? 'Reducción fijo' : 'Δ fee fijo';
+  document.getElementById('fixedDelta').textContent = deltaFixed === 0
+    ? '—'
+    : (deltaFixed > 0 ? '+' : '') + fmtARS(deltaFixed) + '/mes';
+  document.getElementById('fixedDelta').className = 'val ' + (deltaFixed < 0 ? 'delta-pos' : deltaFixed > 0 ? 'delta-neg' : '');
+  if (isContract) {
+    const taxable = Math.max(0, refGmv - refTh);
+    document.getElementById('contractEffective').textContent =
+      `Ref. ${refMonthsLabel}: GMV ${fmtARS(refGmv)} − umbral ${fmtARS(refTh)} = gravado ${fmtARS(taxable)} × ${rates.ratePct}% → ~${fmtARS(newComm)}/mes (tope USD ${rates.capUsd.toLocaleString('en-US')})`;
+  } else {
+    const el = document.getElementById('contractEffective');
+    if (el) el.textContent = '';
+  }
+
+  document.getElementById('rateDeltaLbl').textContent = isContract ? 'Δ tasa s/ GMV total' : 'Reducción';
+  document.getElementById('rateDelta').textContent = rateCut > 0 ? `−${rateCut.toFixed(2)} pp` : rateCut < 0 ? `+${Math.abs(rateCut).toFixed(2)} pp` : '0 pp';
+  document.getElementById('rateDelta').className = 'val ' + (rateCut > 0 ? 'delta-pos' : rateCut < 0 ? 'delta-neg' : '');
+
+  const rateLabel = isContract
+    ? `contrato (fijo mín. USD ${rates.minFeeUsd}, ${rates.ratePct}% s/ gravado)`
+    : fmtPct(rates.unified);
+
+  document.getElementById('simResult').innerHTML = fwd && FORWARD.length ? `
+    <h3>Impacto desde el cambio · ${fwd.label}</h3>
+    <div class="sim-row"><span>Comisión variable actual (periodo)</span><span>${fmtARS(fwd.totOld)}</span></div>
+    <div class="sim-row"><span>Comisión variable nueva (${rateLabel})</span><span>${fmtARS(fwd.totNew)}</span></div>
+    <div class="sim-row"><span>Fee fijo actual (periodo proy.)</span><span>${fmtARS(fwd.totOldFijo)}</span></div>
+    <div class="sim-row"><span>Fee fijo nuevo (${fmtARS(proposedFixed)}/mes)</span><span>${fmtARS(fwd.totNewFijo)}</span></div>
+    <div class="sim-row"><span>Fee e-comm total actual (fijo + var.)</span><span>${fmtARS(fwd.totOldEcomm)}</span></div>
+    <div class="sim-row"><span>Fee e-comm total nuevo</span><span>${fmtARS(fwd.totNewEcomm)}</span></div>
+    <div class="sim-row"><span>Impacto variable Jun–Dic 2026 (USD)</span><span class="${impactCls(fwd.totDeltaUsd)}">${fmtDeltaUSD(fwd.totDeltaUsd)}</span></div>
+    <div class="sim-row"><span>Impacto fee fijo Jun–Dic 2026 (USD)</span><span class="${impactCls(fwd.totDeltaFijoUsd)}">${fmtDeltaUSD(fwd.totDeltaFijoUsd)}</span></div>
+    <div class="sim-row"><span>Impacto Fee e-comm Jun–Dic 2026 (USD)</span><span class="${impactCls(fwd.totDeltaEcommUsd)}">${fmtDeltaUSD(fwd.totDeltaEcommUsd)}</span></div>
+    <div class="sim-row" style="font-weight:400;color:#888780;font-size:12px;padding-top:8px;border-top:.5px solid #ECEAE2">
+      <span>Ref. prom. mensual (${refMonthsLabel}) · variable</span><span>${fmtARS(newComm)}/mes vs ${fmtARS(curCommRef)}/mes</span>
+    </div>
+    <div class="sim-row" style="font-weight:400;color:#888780;font-size:12px">
+      <span>Ref. prom. mensual · fee fijo</span><span>${fmtARS(proposedFixed)}/mes vs ${fmtARS(curFixedFee)}/mes (Mayo 2026)</span>
+    </div>
+    <div class="sim-row" style="font-weight:400;color:#888780;font-size:12px">
+      <span>Ref. prom. mensual · Fee e-comm (fijo + var.)</span><span>${fmtARS(newEcommRef)}/mes vs ${fmtARS(curEcommRef)}/mes</span>
+    </div>
+    <div class="sim-row"><span>Impacto anualizado variable (USD) · ×12</span><span class="${impactCls(impact12Usd)}">${fmtDeltaUSD(impact12Usd)}</span></div>
+    <div class="sim-row"><span>Impacto anualizado fee fijo (USD) · ×12</span><span class="${impactCls(impact12FixedUsd)}">${fmtDeltaUSD(impact12FixedUsd)}</span></div>
+    <div class="sim-row"><span>Impacto anualizado Fee e-comm (USD) · ×12</span><span class="${impactCls(impact12EcommUsd)}">${fmtDeltaUSD(impact12EcommUsd)}</span></div>
+  ` : `
+    <h3>Sin meses proyectados</h3>
+    <p style="font-size:13px;color:#888780">No hay proyección post-${D.lastRealYm || 'último real'} para simular el cambio.</p>
+  `;
+
+  const chartRates = [];
+  const totals = [];
+  const chartMin = CHART_RATE_MIN, chartMax = CHART_RATE_MAX;
+  for (let r = chartMin; r <= chartMax + 0.001; r += 0.05) {
+    chartRates.push(r.toFixed(2) + '%');
+    totals.push(arsToUsd(monthlyGmv * r / 100 + proposedFixed + monthlyOther));
+  }
+
+  if (simChart) simChart.destroy();
+  const highlightIdx = chartRates.reduce((best, l, i) => {
+    const diff = Math.abs(parseFloat(l) - effectiveRate);
+    return diff < best.diff ? { diff, i } : best;
+  }, { diff: Infinity, i: -1 }).i;
+
+  simChart = new Chart(document.getElementById('chartSim'), {
+    type: 'line',
+    data: {
+      labels: chartRates,
+      datasets: [
+        {
+          label: isContract ? 'Fee e-comm USD (contrato)' : 'Fee e-comm mensual USD',
+          data: totals,
+          borderColor: '#185FA5',
+          tension: .3,
+          pointRadius: 0,
+          borderWidth: 2,
+        },
+        {
+          label: 'Escenario actual (fee e-comm + otros)',
+          data: chartRates.map(() => arsToUsd(curTotalMonthly)),
+          borderColor: '#B4B2A9',
+          borderDash: [4, 4],
+          pointRadius: 0,
+          borderWidth: 1.5,
+        },
+        {
+          label: 'Propuesta',
+          data: chartRates.map((l, i) => i === highlightIdx ? arsToUsd(newTotal) : null),
+          borderColor: '#A32D2D',
+          pointRadius: 6,
+          pointHoverRadius: 8,
+          showLine: false,
+        },
+      ],
+    },
+    options: {
+      ...chartOpts,
+      scales: {
+        ...chartOpts.scales,
+        x: {
+          ...chartOpts.scales.x,
+          title: {
+            display: true,
+            text: isContract ? `Tasa equiv. s/ GMV total (ref. ${refMonthsLabel})` : 'Tasa comisión %',
+            font: { size: 11 },
+          },
+        },
+      },
+    },
+  });
+  renderSimMonths(rates);
+}
+
+document.getElementById('simMode').addEventListener('click', e => {
+  const btn = e.target.closest('[data-mode]');
+  if (!btn) return;
+  simMode = btn.dataset.mode;
+  document.querySelectorAll('.sim-mode-btn').forEach(b => b.classList.toggle('active', b === btn));
+  document.getElementById('panelUnified').classList.toggle('active', simMode === 'unified');
+  document.getElementById('panelContract').classList.toggle('active', simMode === 'contract');
+  runSim();
+});
+
+slider.addEventListener('input', runSim);
+fixedFeeSlider.addEventListener('input', runSim);
+runSim();
+
+</script>
+</body>
+</html>

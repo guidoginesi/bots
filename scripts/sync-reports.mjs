@@ -62,6 +62,13 @@ const SOURCES = [
     description: "Simulador tasa única y escalas por GMV · Jun 2026",
   },
   {
+    slug: "ginebra-comision",
+    source: path.join(ROOT, "..", "app-directorio", "ginebra-comision-report.html"),
+    file: "ginebra-comision-report.html",
+    title: "Ginebra · Comisión e ingresos",
+    description: "Retainer + comisión variable · simulador · Jun 2026",
+  },
+  {
     slug: "crecimiento-ars",
     source: path.join(
       ROOT,
