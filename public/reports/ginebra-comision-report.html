@@ -397,9 +397,9 @@ body.has-report-topbar{padding-top:40px!important;box-sizing:border-box}
         <div class="sim-fixed-fee">
           <label>Fee Fijo E-Commerce propuesto · mensual ARS</label>
           <div class="rate-display" id="newFixedLbl">—</div>
-          <input type="range" id="fixedFeeSlider">
+          <input type="range" id="fixedFeeSlider" min="1000000" max="12000000" step="100000">
           <div style="display:flex;justify-content:space-between;font-size:11px;color:#B4B2A9">
-            <span id="fixedFeeMin">—</span><span id="fixedFeeMax">—</span>
+            <span id="fixedFeeMin">$1.000.000</span><span id="fixedFeeMax">$12.000.000</span>
           </div>
           <div style="font-size:10px;color:#888780;margin-top:6px">
             Actual Mayo 2026: <span id="curFixedFeeRef">—</span> · Proy. prom. Jun–Dic: <span id="projFixedFeeRef">—</span>
@@ -891,16 +891,8 @@ const projFixedAvg = FORWARD.length
   ? FORWARD.reduce((a, m) => a + feeFijo(m), 0) / FORWARD.length
   : curFixedFee;
 const fixedFeeSlider = document.getElementById('fixedFeeSlider');
-const fixedMin = Math.max(0, Math.round(Math.min(curFixedFee, projFixedAvg) * 0.25 / 100000) * 100000);
-const fixedMax = Math.round(Math.max(curFixedFee, projFixedAvg) * 2.5 / 100000) * 100000;
-fixedFeeSlider.min = fixedMin;
-fixedFeeSlider.max = fixedMax;
-fixedFeeSlider.step = 100000;
-fixedFeeSlider.value = Math.round(projFixedAvg / 100000) * 100000;
-document.getElementById('fixedFeeMin').textContent = fmtARS(fixedMin);
-document.getElementById('fixedFeeMax').textContent = fmtARS(fixedMax);
-document.getElementById('curFixedFeeRef').textContent = fmtARS(curFixedFee);
-document.getElementById('projFixedFeeRef').textContent = fmtARS(projFixedAvg);
+const FIXED_FEE_MIN = 1_000_000;
+const FIXED_FEE_MAX = 12_000_000;
 
 let simChart;
 let simMode = 'contract';
@@ -917,6 +909,23 @@ if (contractThresholdInput) contractThresholdInput.value = Math.round(contractTh
 if (contractCapInput) contractCapInput.value = contractCapDefault;
 if (contractMinFeeInput) contractMinFeeInput.value = contractMinFeeDefault;
 if (contractPaidMediaInput) contractPaidMediaInput.value = contractPaidMediaDefault;
+
+function initFixedFeeSlider() {
+  const defaultVal = Math.round(
+    Math.min(FIXED_FEE_MAX, Math.max(FIXED_FEE_MIN, projFixedAvg)) / 100000
+  ) * 100000;
+  fixedFeeSlider.min = FIXED_FEE_MIN;
+  fixedFeeSlider.max = FIXED_FEE_MAX;
+  fixedFeeSlider.step = 100000;
+  fixedFeeSlider.value = defaultVal;
+  document.getElementById('fixedFeeMin').textContent = fmtARS(FIXED_FEE_MIN);
+  document.getElementById('fixedFeeMax').textContent = fmtARS(FIXED_FEE_MAX);
+}
+
+initFixedFeeSlider();
+document.getElementById('curFixedFeeRef').textContent = fmtARS(curFixedFee);
+document.getElementById('projFixedFeeRef').textContent = fmtARS(projFixedAvg);
+
 [contractRateInput, contractThresholdInput, contractCapInput, contractMinFeeInput, contractPaidMediaInput].forEach(el => {
   if (el) el.addEventListener('input', runSim);
 });
@@ -929,10 +938,6 @@ const fmtDeltaUSD = n => {
   return 'U$D ' + v.toLocaleString('en-US');
 };
 const impactCls = n => n < 0 ? 'delta-pos' : n > 0 ? 'delta-neg' : '';
-
-function minFixedFeeArs(fx, minUsd) {
-  return fx > 0 && minUsd > 0 ? minUsd / fx : 0;
-}
 
 function readContractParams() {
   return {
@@ -953,22 +958,15 @@ function calcNewComm(m, rates) {
   return m.gmv_ars * rates.unified / 100;
 }
 
-function effectiveFixedFeeArs(m, rates) {
-  const sliderFixed = +fixedFeeSlider.value;
-  if (rates.mode !== 'contract') return sliderFixed;
-  const fx = m?.ing_ars ? m.ing_usd / m.ing_ars : avgFx;
-  return Math.max(sliderFixed, minFixedFeeArs(fx, rates.minFeeUsd ?? contractMinFeeDefault));
+function effectiveFixedFeeArs() {
+  return +fixedFeeSlider.value;
 }
 
 function getRates() {
   const fixedFee = +fixedFeeSlider.value;
   if (simMode === 'contract') {
     const p = readContractParams();
-    return {
-      mode: 'contract',
-      ...p,
-      fixedFee: Math.max(fixedFee, minFixedFeeArs(avgFx, p.minFeeUsd)),
-    };
+    return { mode: 'contract', ...p, fixedFee };
   }
   return { mode: 'unified', unified: fromSlider(slider.value), fixedFee };
 }
@@ -987,7 +985,7 @@ function forwardImpact(rates) {
   let totOldEcomm = 0, totNewEcomm = 0, totDeltaUsd = 0, totDeltaFijoUsd = 0, totDeltaEcommUsd = 0;
   FORWARD.forEach(m => {
     const oldFijo = feeFijo(m);
-    const newFijo = effectiveFixedFeeArs(m, rates);
+    const newFijo = effectiveFixedFeeArs();
     const newComm = calcNewComm(m, rates);
     const oldComm = m.comm_ars || 0;
     totOld += oldComm;
@@ -1051,7 +1049,7 @@ function renderSimMonths(rates) {
   const fwd = forwardImpact(rates);
   const rows = FORWARD.map(m => {
     const oldFijo = feeFijo(m);
-    const newFijo = effectiveFixedFeeArs(m, rates);
+    const newFijo = effectiveFixedFeeArs();
     const newComm = calcNewComm(m, rates);
     const oldComm = m.comm_ars || 0;
     const oldEcomm = oldFijo + oldComm;
@@ -1120,7 +1118,7 @@ function runSim() {
     ? calcContractComm(refGmv, rates.ratePct, refTh, refFx, rates.capUsd)
     : monthlyGmv * rates.unified / 100;
   const curCommRef = curCommMonthly;
-  const proposedFixed = effectiveFixedFeeArs(refMonth, rates);
+  const proposedFixed = effectiveFixedFeeArs();
   const newEcommRef = newComm + proposedFixed;
   const curEcommRef = curCommRef + monthlyFixed;
   const newTotal = newEcommRef + monthlyOther;
