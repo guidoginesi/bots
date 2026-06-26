@@ -59,8 +59,11 @@ tr:hover td{background:#FAFAF8}
 .sim-row{display:flex;justify-content:space-between;gap:12px;font-size:12px;padding:6px 0;border-bottom:.5px solid #ECEAE2}
 .sim-row:last-child{border-bottom:none}
 .sim-row span:last-child{font-weight:600;text-align:right;white-space:nowrap}
-.sim-btn{font-size:11px;font-weight:500;padding:6px 12px;border-radius:6px;border:.5px solid #D3D1C7;background:white;cursor:pointer;color:#185FA5;margin-bottom:1rem}
+.sim-btn{font-size:11px;font-weight:500;padding:6px 12px;border-radius:6px;border:.5px solid #D3D1C7;background:white;cursor:pointer;color:#185FA5}
 .sim-btn:hover{border-color:#185FA5}
+.sim-btn.primary{background:#185FA5;color:white;border-color:#185FA5}
+.sim-btn.primary:hover{background:#134a82}
+.sim-actions{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:1rem}
 .sim-note{font-size:11px;color:#888780;margin-top:10px;line-height:1.45}
 .sim-ok{color:#0F6E56}.sim-warn{color:#854F0B}.sim-bad{color:#A32D2D}
 
@@ -174,7 +177,10 @@ body.has-report-topbar{padding-top:40px!important;box-sizing:border-box}
     <div class="sim-kpis" id="simKpis"></div>
     <div class="sim-grid">
       <div class="sim-controls">
-        <button type="button" class="sim-btn" id="simPresetBtn">Aplicar mix sugerido 70/30 (sueldos / estructura)</button>
+        <div class="sim-actions">
+          <button type="button" class="sim-btn primary" id="simEquilibriumBtn">Punto de equilibrio</button>
+          <button type="button" class="sim-btn" id="simPresetBtn">Mix 70/30 (sueldos / estructura)</button>
+        </div>
         <label>Recorte sueldos · % sobre proyección 2026</label>
         <div class="sim-val" id="sueCutLbl">0%</div>
         <input type="range" id="sueCutSlider" min="0" max="20" step="0.5" value="0">
