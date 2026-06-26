@@ -42,6 +42,28 @@ tr:hover td{background:#FAFAF8}
 .table-wrap{overflow:auto;border:.5px solid #ECEAE2;border-radius:8px}
 .pill{font-size:10px;font-weight:600;padding:2px 7px;border-radius:4px;background:#F1EFE8;color:#5F5E5A}
 
+.sim-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;align-items:start}
+@media(max-width:760px){.sim-grid{grid-template-columns:1fr}}
+.sim-controls label{display:block;font-size:11px;color:#5F5E5A;margin-bottom:4px;font-weight:500}
+.sim-controls input[type=range]{width:100%;accent-color:#185FA5;margin:6px 0 8px}
+.sim-val{font-size:18px;font-weight:600;color:#185FA5;margin-bottom:2px}
+.sim-range{display:flex;justify-content:space-between;font-size:11px;color:#B4B2A9;margin-bottom:1rem}
+.sim-kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:1rem}
+@media(max-width:700px){.sim-kpis{grid-template-columns:1fr}}
+.sim-kpi{background:#FAFAF8;border-radius:8px;padding:.7rem .85rem;border:.5px solid #ECEAE2;min-width:0}
+.sim-kpi .lbl{font-size:10px;color:#888780;text-transform:uppercase;letter-spacing:.04em;white-space:nowrap}
+.sim-kpi .val{font-size:15px;font-weight:600;margin-top:4px;white-space:nowrap;line-height:1.2}
+.sim-kpi .sub{font-size:10px;color:#888780;margin-top:3px;line-height:1.3}
+.sim-result{background:#FAFAF8;border-radius:10px;padding:1rem 1.1rem;border:.5px solid #ECEAE2}
+.sim-result h3{font-size:13px;font-weight:600;margin-bottom:10px;color:#1a1a18}
+.sim-row{display:flex;justify-content:space-between;gap:12px;font-size:12px;padding:6px 0;border-bottom:.5px solid #ECEAE2}
+.sim-row:last-child{border-bottom:none}
+.sim-row span:last-child{font-weight:600;text-align:right;white-space:nowrap}
+.sim-btn{font-size:11px;font-weight:500;padding:6px 12px;border-radius:6px;border:.5px solid #D3D1C7;background:white;cursor:pointer;color:#185FA5;margin-bottom:1rem}
+.sim-btn:hover{border-color:#185FA5}
+.sim-note{font-size:11px;color:#888780;margin-top:10px;line-height:1.45}
+.sim-ok{color:#0F6E56}.sim-warn{color:#854F0B}.sim-bad{color:#A32D2D}
+
 body.has-report-topbar{padding-top:40px!important;box-sizing:border-box}
 #report-topbar{
   position:fixed;top:0;left:0;right:0;z-index:10000;height:40px;
@@ -139,13 +161,46 @@ body.has-report-topbar{padding-top:40px!important;box-sizing:border-box}
     <div class="card-header"><span class="card-title"><strong>7 · Implicaciones</strong></span></div>
     <ul class="impl-list" id="impl"></ul>
   </div>
+
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title"><strong>8 · Simulador de equilibrio</strong> · Alinear crecimiento 2026 PROY</span>
+      <span class="pill">Objetivo: egresos al ritmo de ingresos</span>
+    </div>
+    <p style="font-size:13px;color:#5F5E5A;margin-bottom:1rem;line-height:1.55">
+      Ajustá recortes sobre la proyección 2026 en <strong>sueldos</strong>, <strong>estructura</strong> y <strong>otros egresos</strong>.
+      El objetivo es que los egresos crezcan al mismo ritmo que los ingresos (<span id="simTargetRate"></span> ARS · <span id="simTargetRateUsd"></span> USD).
+    </p>
+    <div class="sim-kpis" id="simKpis"></div>
+    <div class="sim-grid">
+      <div class="sim-controls">
+        <button type="button" class="sim-btn" id="simPresetBtn">Aplicar mix sugerido 70/30 (sueldos / estructura)</button>
+        <label>Recorte sueldos · % sobre proyección 2026</label>
+        <div class="sim-val" id="sueCutLbl">0%</div>
+        <input type="range" id="sueCutSlider" min="0" max="20" step="0.5" value="0">
+        <div class="sim-range"><span>0%</span><span id="sueCutMax">20%</span></div>
+        <label>Recorte estructura · % sobre proyección 2026</label>
+        <div class="sim-val" id="estrCutLbl">0%</div>
+        <input type="range" id="estrCutSlider" min="0" max="30" step="0.5" value="0">
+        <div class="sim-range"><span>0%</span><span>30%</span></div>
+        <label>Recorte otros egresos · % sobre proyección 2026</label>
+        <div class="sim-val" id="otherCutLbl">0%</div>
+        <input type="range" id="otherCutSlider" min="0" max="50" step="0.5" value="0">
+        <div class="sim-range"><span>0%</span><span>50%</span></div>
+      </div>
+      <div class="sim-result" id="simResult"></div>
+    </div>
+    <p class="sim-note" id="simDisclaimer"></p>
+  </div>
 </div>
 
 <script>
-const REPORT_DATA = /* injected */ {"source":"REGISTRO GASTOS E INGRESOS - POW S.A - [ARCHIVO POW] - 5.xlsx","generated":"16/06/2026","summary":{"rev25_ars":2734195551.8,"rev26_ars":3482178433.9000006,"egr25_ars":2306772642.7000003,"egr26_ars":3303734238.3,"sue25_ars":1611248667.4999998,"sue26_ars":2297640170.4,"yoy_i":27.4,"yoy_e":43.2,"yoy_s":42.6,"gap_pp":15.8},"usd_compare":{"rev_usd_yoy":15.8,"egr_usd_yoy":23.3,"rev_ars_yoy":27.4,"egr_ars_yoy":43.2},"ytd":{"rev25_ars":1277410901.9,"rev26_ars":1687178184.9,"egr25_ars":1032774618.0,"egr26_ars":1542241050.0,"sue25_ars":728050719.3,"sue26_ars":1062494674.2,"yoy_i_ars":32.1,"yoy_e_ars":49.3,"yoy_s_ars":45.9,"yoy_i_usd":10.3,"yoy_e_usd":24.4},"history":[{"label":"2021","ing_ars":47.5,"egr_ars":131.6,"sue_ars":175.7,"ing_usd":3.3,"egr_usd":60.3},{"label":"2022","ing_ars":39.6,"egr_ars":82.2,"sue_ars":130.8,"ing_usd":-9.5,"egr_usd":21.4},{"label":"2023","ing_ars":189.3,"egr_ars":166.5,"sue_ars":143.0,"ing_usd":24.3,"egr_usd":11.3},{"label":"2024","ing_ars":176.3,"egr_ars":161.2,"sue_ars":215.6,"ing_usd":41.0,"egr_usd":36.8},{"label":"2025","ing_ars":41.1,"egr_ars":43.8,"sue_ars":43.8,"ing_usd":24.8,"egr_usd":26.5},{"label":"2026 PROY","ing_ars":27.4,"egr_ars":43.2,"sue_ars":42.6,"ing_usd":9.2,"egr_usd":22.6}],"sueldos_share":[{"year":"2024","pct":69.9},{"year":"2025","pct":69.8},{"year":"2026 PROY","pct":69.5}]};
+const REPORT_DATA = /* injected */ {"source":"REGISTRO GASTOS E INGRESOS - POW S.A - [ARCHIVO POW] - 5.xlsx","generated":"26/06/2026","summary":{"rev25_ars":2734195551.8,"rev26_ars":3482178433.9000006,"egr25_ars":2306772642.7000003,"egr26_ars":3303734238.3,"sue25_ars":1611248667.4999998,"sue26_ars":2297640170.4,"yoy_i":27.4,"yoy_e":43.2,"yoy_s":42.6,"gap_pp":15.8},"usd_compare":{"rev_usd_yoy":9.2,"egr_usd_yoy":22.6,"rev_ars_yoy":27.4,"egr_ars_yoy":43.2},"ytd":{"rev25_ars":1277410901.9,"rev26_ars":1687178184.9,"egr25_ars":1032774618.0,"egr26_ars":1542241050.0,"sue25_ars":728050719.3,"sue26_ars":1062494674.2,"yoy_i_ars":32.1,"yoy_e_ars":49.3,"yoy_s_ars":45.9,"yoy_i_usd":10.3,"yoy_e_usd":24.4},"history":[{"label":"2021","ing_ars":47.5,"egr_ars":131.6,"sue_ars":175.7,"ing_usd":3.3,"egr_usd":60.3},{"label":"2022","ing_ars":39.6,"egr_ars":82.2,"sue_ars":130.8,"ing_usd":-9.5,"egr_usd":21.4},{"label":"2023","ing_ars":189.3,"egr_ars":166.5,"sue_ars":143.0,"ing_usd":24.3,"egr_usd":11.3},{"label":"2024","ing_ars":176.3,"egr_ars":161.2,"sue_ars":215.6,"ing_usd":41.0,"egr_usd":36.8},{"label":"2025","ing_ars":41.1,"egr_ars":43.8,"sue_ars":43.8,"ing_usd":24.8,"egr_usd":26.5},{"label":"2026 PROY","ing_ars":27.4,"egr_ars":43.2,"sue_ars":42.6,"ing_usd":9.2,"egr_usd":22.6}],"sueldos_share":[{"year":"2024","pct":69.9},{"year":"2025","pct":69.8},{"year":"2026 PROY","pct":69.5}],"equilibrium":{"rev25_ars":2734195552,"rev26_ars":3482178434,"egr25_ars":2306772643,"egr26_ars":3303734238,"sue25_ars":1611248667,"sue26_ars":2297640170,"estr25_ars":616958308,"estr26_ars":905475084,"other25_ars":78565668,"other26_ars":100618984,"rev25_usd":2063328,"rev26_usd":2253355,"egr25_usd":1736351,"egr26_usd":2129623,"yoy_i_usd":9.2,"yoy_e_usd":22.6,"target_egr_ars":2938828347,"target_egr_usd":1896095,"cut_align_ars":364905892,"cut_align_usd":233528,"cut_align_month_ars":30408824,"cut_align_month_usd":19461,"avg_headcount_26":41.1,"cost_fte_year_ars":55926333,"cost_fte_month_ars":4660528,"cost_fte_year_usd":36191,"fte_if_all_from_payroll":6.5,"surplus_ars":178444196,"surplus_usd":123732,"sue_share_pct":69.5,"estr_share_pct":27.4,"other_share_pct":3.0,"default_sue_cut_pct":11.1,"default_estr_cut_pct":12.1}};
 
 const S = REPORT_DATA;
+const E = S.equilibrium || {};
 const fmtM = n => n >= 1e9 ? `$${(n/1e9).toFixed(2)}B` : `$${Math.round(n/1e6).toLocaleString('es-AR')}M`;
+const fmtUSD = n => 'U$D ' + Math.round(n).toLocaleString('en-US');
 const fmtP = v => v == null ? '—' : `${v >= 0 ? '+' : ''}${v.toFixed(1)}%`;
 const fmtGap = v => v == null ? '—' : `${v >= 0 ? '+' : ''}${v.toFixed(1)} pp`;
 const gapPP = (egr, ing) => egr == null || ing == null ? null : Math.round((egr - ing) * 10) / 10;
@@ -228,6 +283,82 @@ document.getElementById('impl').innerHTML = [
   'Sueldos-only es un proxy válido del ~70% de egresos — útil para separar nómina del resto (estructura, tech, bonos).',
   'La compresión de margen en USD no es solo tipo de cambio: en ARS nominal también hay desbalance estructural.',
 ].map(t => `<li>${t}</li>`).join('');
+
+// ── Simulador de equilibrio ──
+const arsToUsd = ars => E.rev26_ars ? ars * E.rev26_usd / E.rev26_ars : 0;
+const pctLabel = v => `${(+v).toFixed(1)}%`;
+
+if (E.cut_align_ars != null) {
+  document.getElementById('simTargetRate').textContent = fmtP(S.summary.yoy_i);
+  document.getElementById('simTargetRateUsd').textContent = fmtP(E.yoy_i_usd);
+
+  document.getElementById('simKpis').innerHTML = [
+    { lbl: 'Recorte para alinear', val: fmtM(E.cut_align_ars), sub: `${fmtM(E.cut_align_month_ars)}/mes · ${fmtUSD(E.cut_align_usd)}/año` },
+    { lbl: 'Gap crecimiento hoy', val: fmtGap(S.summary.gap_pp), sub: `${fmtP(S.summary.yoy_e)} egr vs ${fmtP(S.summary.yoy_i)} ing` },
+    { lbl: 'FTE eq. (100% nómina)', val: E.fte_if_all_from_payroll.toFixed(1), sub: `${fmtM(E.cost_fte_year_ars)}/año · HC prom ${E.avg_headcount_26}` },
+  ].map(k => `<div class="sim-kpi"><div class="lbl">${k.lbl}</div><div class="val">${k.val}</div><div class="sub">${k.sub}</div></div>`).join('');
+
+  const sueSlider = document.getElementById('sueCutSlider');
+  const estrSlider = document.getElementById('estrCutSlider');
+  const otherSlider = document.getElementById('otherCutSlider');
+  const sueMax = Math.min(20, Math.ceil(E.default_sue_cut_pct * 1.5));
+  sueSlider.max = Math.max(20, sueMax);
+  document.getElementById('sueCutMax').textContent = `${sueSlider.max}%`;
+
+  function runSim() {
+    const suePct = +sueSlider.value;
+    const estrPct = +estrSlider.value;
+    const otherPct = +otherSlider.value;
+    document.getElementById('sueCutLbl').textContent = pctLabel(suePct);
+    document.getElementById('estrCutLbl').textContent = pctLabel(estrPct);
+    document.getElementById('otherCutLbl').textContent = pctLabel(otherPct);
+
+    const cutSue = E.sue26_ars * suePct / 100;
+    const cutEstr = E.estr26_ars * estrPct / 100;
+    const cutOther = E.other26_ars * otherPct / 100;
+    const totalCut = cutSue + cutEstr + cutOther;
+    const totalCutUsd = arsToUsd(totalCut);
+
+    const adjEgr = E.egr26_ars - totalCut;
+    const adjEgrUsd = E.egr26_usd - arsToUsd(totalCut);
+    const yoyAdj = (adjEgr / E.egr25_ars - 1) * 100;
+    const yoyAdjUsd = (adjEgrUsd / E.egr25_usd - 1) * 100;
+    const gapAdj = yoyAdj - (S.summary.yoy_i || 0);
+    const gapAdjUsd = yoyAdjUsd - (E.yoy_i_usd || 0);
+    const remaining = adjEgr - E.target_egr_ars;
+    const remainingUsd = adjEgrUsd - E.target_egr_usd;
+    const fte = cutSue / E.cost_fte_year_ars;
+    const aligned = Math.abs(gapAdj) < 0.5;
+    const statusCls = aligned ? 'sim-ok' : remaining > 0 ? 'sim-warn' : 'sim-ok';
+
+    document.getElementById('simResult').innerHTML = `
+      <h3>Escenario ajustado · 2026 PROY</h3>
+      <div class="sim-row"><span>Recorte total simulado</span><span>${fmtM(totalCut)} · ${fmtUSD(totalCutUsd)}</span></div>
+      <div class="sim-row"><span>→ Sueldos / Estructura / Otros</span><span>${fmtM(cutSue)} / ${fmtM(cutEstr)} / ${fmtM(cutOther)}</span></div>
+      <div class="sim-row"><span>FTE equivalentes (solo nómina)</span><span>${fte.toFixed(1)}</span></div>
+      <div class="sim-row"><span>Egresos ajustados</span><span>${fmtM(adjEgr)} · ${fmtUSD(Math.round(adjEgrUsd))}</span></div>
+      <div class="sim-row"><span>YoY egresos ajustado</span><span class="${statusCls}">${fmtP(yoyAdj)} ARS · ${fmtP(yoyAdjUsd)} USD</span></div>
+      <div class="sim-row"><span>Gap vs ingresos (objetivo 0 pp)</span><span class="${statusCls}">${fmtGap(Math.round(gapAdj * 10) / 10)} ARS · ${fmtGap(Math.round(gapAdjUsd * 10) / 10)} USD</span></div>
+      <div class="sim-row"><span>Falta recortar p/alinear</span><span class="${remaining <= 0 ? 'sim-ok' : 'sim-bad'}">${remaining <= 0 ? 'Objetivo alcanzado' : fmtM(remaining) + ' · ' + fmtUSD(Math.round(remainingUsd))}</span></div>
+      <div class="sim-row"><span>Superávit ing − egr (actual / ajustado)</span><span>${fmtM(E.surplus_ars)} → ${fmtM(E.rev26_ars - adjEgr)}</span></div>
+    `;
+  }
+
+  document.getElementById('simPresetBtn').addEventListener('click', () => {
+    sueSlider.value = Math.min(+sueSlider.max, E.default_sue_cut_pct || 0);
+    estrSlider.value = Math.min(30, E.default_estr_cut_pct || 0);
+    otherSlider.value = 0;
+    runSim();
+  });
+
+  [sueSlider, estrSlider, otherSlider].forEach(el => el.addEventListener('input', runSim));
+  runSim();
+
+  document.getElementById('simDisclaimer').textContent =
+    `Referencia: sueldos ${E.sue_share_pct}% · estructura ${E.estr_share_pct}% · otros ${E.other_share_pct}% del egreso 2026 PROY. ` +
+    `Costo cargado prom. ${fmtM(E.cost_fte_year_ars)}/año por FTE (${E.avg_headcount_26} HC prom.). ` +
+    'Los FTE equivalentes son un proxy contable, no un plan de desvinculaciones.';
+}
 </script>
 </body>
 </html>
