@@ -350,12 +350,34 @@ if (E.cut_align_ars != null) {
     `;
   }
 
-  document.getElementById('simPresetBtn').addEventListener('click', () => {
-    sueSlider.value = Math.min(+sueSlider.max, E.default_sue_cut_pct || 0);
-    estrSlider.value = Math.min(30, E.default_estr_cut_pct || 0);
-    otherSlider.value = 0;
+  function applyEquilibrium(sueShare = 0.7, estrShare = 0.3, spillOther = true) {
+    const cut = E.cut_align_ars;
+    let sueCut = cut * sueShare;
+    let estrCut = cut * estrShare;
+    let suePct = sueCut / E.sue26_ars * 100;
+    let estrPct = estrCut / E.estr26_ars * 100;
+    if (suePct > +sueSlider.max) {
+      suePct = +sueSlider.max;
+      sueCut = E.sue26_ars * suePct / 100;
+    }
+    if (estrPct > +estrSlider.max) {
+      estrPct = +estrSlider.max;
+      estrCut = E.estr26_ars * estrPct / 100;
+    }
+    let otherPct = 0;
+    if (spillOther) {
+      const remainder = cut - sueCut - estrCut;
+      otherPct = remainder > 0 ? remainder / E.other26_ars * 100 : 0;
+      if (otherPct > +otherSlider.max) otherPct = +otherSlider.max;
+    }
+    sueSlider.value = suePct;
+    estrSlider.value = estrPct;
+    otherSlider.value = otherPct;
     runSim();
-  });
+  }
+
+  document.getElementById('simEquilibriumBtn').addEventListener('click', () => applyEquilibrium(0.7, 0.3, true));
+  document.getElementById('simPresetBtn').addEventListener('click', () => applyEquilibrium(0.7, 0.3, false));
 
   [sueSlider, estrSlider, otherSlider].forEach(el => el.addEventListener('input', runSim));
   runSim();
