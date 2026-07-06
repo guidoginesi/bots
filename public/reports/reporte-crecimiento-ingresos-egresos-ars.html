@@ -11,6 +11,17 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .header{margin-bottom:1.5rem}
 .header h1{font-size:24px;font-weight:600;letter-spacing:-.02em}
 .meta{font-size:12px;color:#888780;margin-top:6px;max-width:720px;line-height:1.5}
+.version-bar{
+  display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;
+  margin:12px 0 4px;padding:10px 12px;background:white;border:.5px solid #D3D1C7;border-radius:10px;
+}
+.version-bar label{font-size:11px;font-weight:600;color:#5F5E5A;white-space:nowrap}
+.version-bar select{
+  min-width:min(100%,280px);flex:1;font-size:12px;padding:7px 10px;border-radius:8px;
+  border:.5px solid #D3D1C7;background:#FAFAF8;color:#1a1a18;
+}
+.version-bar select:focus{outline:none;border-color:#185FA5;box-shadow:0 0 0 2px rgba(24,95,165,.12)}
+.version-file{font-size:11px;color:#888780;flex:1 1 100%;line-height:1.45}
 .badge{display:inline-block;font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;background:#E6F1FB;color:#185FA5;padding:3px 8px;border-radius:4px;margin-bottom:8px}
 .note{font-size:12px;color:#5F5E5A;background:white;border:.5px solid #D3D1C7;border-radius:10px;padding:12px 14px;margin-bottom:1.25rem;line-height:1.55}
 .note strong{color:#1a1a18}
@@ -125,6 +136,11 @@ body.has-report-topbar{padding-top:40px!important;box-sizing:border-box}
   <div class="header">
     <div class="badge">Informe financiero</div>
     <h1>Crecimiento en pesos · Ingresos vs egresos</h1>
+    <div class="version-bar">
+      <label for="versionSelect">Versión del archivo</label>
+      <select id="versionSelect" aria-label="Versión del archivo fuente"></select>
+      <span class="version-file" id="versionFile"></span>
+    </div>
     <p class="meta" id="meta"></p>
   </div>
 
@@ -231,10 +247,12 @@ body.has-report-topbar{padding-top:40px!important;box-sizing:border-box}
 </div>
 
 <script>
-const REPORT_DATA = /* injected */ {"source":"REGISTRO GASTOS E INGRESOS - POW S.A - [ARCHIVO POW] - 5.xlsx","generated":"26/06/2026","summary":{"rev25_ars":2734195551.8,"rev26_ars":3482178433.9000006,"egr25_ars":2306772642.7000003,"egr26_ars":3303734238.3,"sue25_ars":1611248667.4999998,"sue26_ars":2297640170.4,"yoy_i":27.4,"yoy_e":43.2,"yoy_s":42.6,"gap_pp":15.8},"usd_compare":{"rev_usd_yoy":9.2,"egr_usd_yoy":22.6,"rev_ars_yoy":27.4,"egr_ars_yoy":43.2},"ytd":{"rev25_ars":1277410901.9,"rev26_ars":1687178184.9,"egr25_ars":1032774618.0,"egr26_ars":1542241050.0,"sue25_ars":728050719.3,"sue26_ars":1062494674.2,"yoy_i_ars":32.1,"yoy_e_ars":49.3,"yoy_s_ars":45.9,"yoy_i_usd":10.3,"yoy_e_usd":24.4},"history":[{"label":"2021","ing_ars":47.5,"egr_ars":131.6,"sue_ars":175.7,"ing_usd":3.3,"egr_usd":60.3},{"label":"2022","ing_ars":39.6,"egr_ars":82.2,"sue_ars":130.8,"ing_usd":-9.5,"egr_usd":21.4},{"label":"2023","ing_ars":189.3,"egr_ars":166.5,"sue_ars":143.0,"ing_usd":24.3,"egr_usd":11.3},{"label":"2024","ing_ars":176.3,"egr_ars":161.2,"sue_ars":215.6,"ing_usd":41.0,"egr_usd":36.8},{"label":"2025","ing_ars":41.1,"egr_ars":43.8,"sue_ars":43.8,"ing_usd":24.8,"egr_usd":26.5},{"label":"2026 PROY","ing_ars":27.4,"egr_ars":43.2,"sue_ars":42.6,"ing_usd":9.2,"egr_usd":22.6}],"sueldos_share":[{"year":"2024","pct":69.9},{"year":"2025","pct":69.8},{"year":"2026 PROY","pct":69.5}],"equilibrium":{"rev25_ars":2734195552,"rev26_ars":3482178434,"egr25_ars":2306772643,"egr26_ars":3303734238,"sue25_ars":1611248667,"sue26_ars":2297640170,"estr25_ars":616958308,"estr26_ars":905475084,"other25_ars":78565668,"other26_ars":100618984,"rev25_usd":2063328,"rev26_usd":2253355,"egr25_usd":1736351,"egr26_usd":2129623,"yoy_i_usd":9.2,"yoy_e_usd":22.6,"target_egr_ars":2938828347,"target_egr_usd":1896095,"cut_align_ars":364905892,"cut_align_usd":233528,"cut_align_month_ars":30408824,"cut_align_month_usd":19461,"avg_headcount_26":41.1,"cost_fte_year_ars":55926333,"cost_fte_month_ars":4660528,"cost_fte_year_usd":36191,"fte_if_all_from_payroll":6.5,"surplus_ars":178444196,"surplus_usd":123732,"sue_share_pct":69.5,"estr_share_pct":27.4,"other_share_pct":3.0,"default_sue_cut_pct":11.1,"default_estr_cut_pct":12.1}};
+const REPORT_VERSIONS = /* injected */ {"default":"28-jun-2026","versions":[{"id":"28-jun-2026","label":"28 Jun 2026 \u00b7 m\u00e1s reciente","is_latest":true,"source":"REGISTRO GASTOS E INGRESOS - POW S.A - [ARCHIVO POW] (28-Jun).xlsx","generated":"28/06/2026","summary":{"rev25_ars":2734195551.8,"rev26_ars":3507378667.0,"egr25_ars":2306764842.7000003,"egr26_ars":3198013883.7999997,"sue25_ars":1611240867.4999998,"sue26_ars":2231816915.0,"yoy_i":28.3,"yoy_e":38.6,"yoy_s":38.5,"gap_pp":10.3},"usd_compare":{"rev_usd_yoy":10.3,"egr_usd_yoy":19.2,"rev_ars_yoy":28.3,"egr_ars_yoy":38.6},"ytd":{"rev25_ars":1277410901.9,"rev26_ars":1711970486.6,"egr25_ars":1032770718.0,"egr26_ars":1522056928.3000002,"sue25_ars":728046819.3,"sue26_ars":1056109905.6000001,"yoy_i_ars":34.0,"yoy_e_ars":47.4,"yoy_s_ars":45.1,"yoy_i_usd":12.3,"yoy_e_usd":23.5},"history":[{"label":"2021","ing_ars":47.5,"egr_ars":131.6,"sue_ars":175.7,"ing_usd":3.3,"egr_usd":60.3},{"label":"2022","ing_ars":39.6,"egr_ars":82.2,"sue_ars":130.8,"ing_usd":-9.5,"egr_usd":21.4},{"label":"2023","ing_ars":189.3,"egr_ars":166.5,"sue_ars":143.0,"ing_usd":24.3,"egr_usd":11.3},{"label":"2024","ing_ars":176.3,"egr_ars":161.3,"sue_ars":215.6,"ing_usd":41.0,"egr_usd":36.9},{"label":"2025","ing_ars":41.1,"egr_ars":43.8,"sue_ars":43.8,"ing_usd":24.8,"egr_usd":26.5},{"label":"2026 PROY","ing_ars":28.3,"egr_ars":38.6,"sue_ars":38.5,"ing_usd":10.3,"egr_usd":19.2}],"sueldos_share":[{"year":"2024","pct":69.8},{"year":"2025","pct":69.8},{"year":"2026 PROY","pct":69.8}],"equilibrium":{"rev25_ars":2734195552,"rev26_ars":3507378667,"egr25_ars":2306764843,"egr26_ars":3198013884,"sue25_ars":1611240867,"sue26_ars":2231816915,"estr25_ars":616958308,"estr26_ars":863932022,"other25_ars":78565668,"other26_ars":102264947,"rev25_usd":2063328,"rev26_usd":2275669,"egr25_usd":1736343,"egr26_usd":2069681,"yoy_i_usd":10.3,"yoy_e_usd":19.2,"target_egr_ars":2959579293,"target_egr_usd":1915186,"cut_align_ars":238434591,"cut_align_usd":154495,"cut_align_month_ars":19869549,"cut_align_month_usd":12875,"avg_headcount_26":37.2,"cost_fte_year_ars":59914548,"cost_fte_month_ars":4992879,"cost_fte_year_usd":38874,"fte_if_all_from_payroll":4.0,"surplus_ars":309364783,"surplus_usd":205988,"sue_share_pct":69.8,"estr_share_pct":27.0,"other_share_pct":3.2,"default_sue_cut_pct":7.5,"default_estr_cut_pct":8.3}},{"id":"prueba-aumento-10pct","label":"Prueba aumento 10%","is_latest":false,"source":"REGISTRO GASTOS E INGRESOS - POW S.A - [ARCHIVO POW] (Prueba aumento 10%).xlsx","generated":"28/06/2026","summary":{"rev25_ars":2734195551.8,"rev26_ars":3490933518.7,"egr25_ars":2306764842.7000003,"egr26_ars":3139722676.2999997,"sue25_ars":1611240867.4999998,"sue26_ars":2179944193.2,"yoy_i":27.7,"yoy_e":36.1,"yoy_s":35.3,"gap_pp":8.4},"usd_compare":{"rev_usd_yoy":9.8,"egr_usd_yoy":17.1,"rev_ars_yoy":27.7,"egr_ars_yoy":36.1},"ytd":{"rev25_ars":1277410901.9,"rev26_ars":1713634017.8999999,"egr25_ars":1032770718.0,"egr26_ars":1518744819.2,"sue25_ars":728046819.3,"sue26_ars":1052818593.1,"yoy_i_ars":34.1,"yoy_e_ars":47.1,"yoy_s_ars":44.6,"yoy_i_usd":12.4,"yoy_e_usd":23.2},"history":[{"label":"2021","ing_ars":47.5,"egr_ars":131.6,"sue_ars":175.7,"ing_usd":3.3,"egr_usd":60.3},{"label":"2022","ing_ars":39.6,"egr_ars":82.2,"sue_ars":130.8,"ing_usd":-9.5,"egr_usd":21.4},{"label":"2023","ing_ars":189.3,"egr_ars":166.5,"sue_ars":143.0,"ing_usd":24.3,"egr_usd":11.3},{"label":"2024","ing_ars":176.3,"egr_ars":161.3,"sue_ars":215.6,"ing_usd":41.0,"egr_usd":36.9},{"label":"2025","ing_ars":41.1,"egr_ars":43.8,"sue_ars":43.8,"ing_usd":24.8,"egr_usd":26.5},{"label":"2026 PROY","ing_ars":27.7,"egr_ars":36.1,"sue_ars":35.3,"ing_usd":9.8,"egr_usd":17.1}],"sueldos_share":[{"year":"2024","pct":69.8},{"year":"2025","pct":69.8},{"year":"2026 PROY","pct":69.4}],"equilibrium":{"rev25_ars":2734195552,"rev26_ars":3490933519,"egr25_ars":2306764843,"egr26_ars":3139722676,"sue25_ars":1611240867,"sue26_ars":2179944193,"estr25_ars":616958308,"estr26_ars":858015799,"other25_ars":78565668,"other26_ars":101762684,"rev25_usd":2063328,"rev26_usd":2265867,"egr25_usd":1736343,"egr26_usd":2034046,"yoy_i_usd":9.8,"yoy_e_usd":17.1,"target_egr_ars":2945738704,"target_egr_usd":1906505,"cut_align_ars":193983972,"cut_align_usd":127541,"cut_align_month_ars":16165331,"cut_align_month_usd":10628,"avg_headcount_26":37.2,"cost_fte_year_ars":58521992,"cost_fte_month_ars":4876833,"cost_fte_year_usd":37985,"fte_if_all_from_payroll":3.3,"surplus_ars":351210842,"surplus_usd":231821,"sue_share_pct":69.4,"estr_share_pct":27.3,"other_share_pct":3.2,"default_sue_cut_pct":6.2,"default_estr_cut_pct":6.8}},{"id":"v5","label":"Versi\u00f3n 5","is_latest":false,"source":"REGISTRO GASTOS E INGRESOS - POW S.A - [ARCHIVO POW] - 5.xlsx","generated":"28/06/2026","summary":{"rev25_ars":2734195551.8,"rev26_ars":3482178433.9000006,"egr25_ars":2306772642.7000003,"egr26_ars":3303734238.3,"sue25_ars":1611248667.4999998,"sue26_ars":2297640170.4,"yoy_i":27.4,"yoy_e":43.2,"yoy_s":42.6,"gap_pp":15.8},"usd_compare":{"rev_usd_yoy":9.2,"egr_usd_yoy":22.6,"rev_ars_yoy":27.4,"egr_ars_yoy":43.2},"ytd":{"rev25_ars":1277410901.9,"rev26_ars":1687178184.9,"egr25_ars":1032774618.0,"egr26_ars":1542241050.0,"sue25_ars":728050719.3,"sue26_ars":1062494674.2,"yoy_i_ars":32.1,"yoy_e_ars":49.3,"yoy_s_ars":45.9,"yoy_i_usd":10.3,"yoy_e_usd":24.4},"history":[{"label":"2021","ing_ars":47.5,"egr_ars":131.6,"sue_ars":175.7,"ing_usd":3.3,"egr_usd":60.3},{"label":"2022","ing_ars":39.6,"egr_ars":82.2,"sue_ars":130.8,"ing_usd":-9.5,"egr_usd":21.4},{"label":"2023","ing_ars":189.3,"egr_ars":166.5,"sue_ars":143.0,"ing_usd":24.3,"egr_usd":11.3},{"label":"2024","ing_ars":176.3,"egr_ars":161.2,"sue_ars":215.6,"ing_usd":41.0,"egr_usd":36.8},{"label":"2025","ing_ars":41.1,"egr_ars":43.8,"sue_ars":43.8,"ing_usd":24.8,"egr_usd":26.5},{"label":"2026 PROY","ing_ars":27.4,"egr_ars":43.2,"sue_ars":42.6,"ing_usd":9.2,"egr_usd":22.6}],"sueldos_share":[{"year":"2024","pct":69.9},{"year":"2025","pct":69.8},{"year":"2026 PROY","pct":69.5}],"equilibrium":{"rev25_ars":2734195552,"rev26_ars":3482178434,"egr25_ars":2306772643,"egr26_ars":3303734238,"sue25_ars":1611248667,"sue26_ars":2297640170,"estr25_ars":616958308,"estr26_ars":905475084,"other25_ars":78565668,"other26_ars":100618984,"rev25_usd":2063328,"rev26_usd":2253355,"egr25_usd":1736351,"egr26_usd":2129623,"yoy_i_usd":9.2,"yoy_e_usd":22.6,"target_egr_ars":2938828347,"target_egr_usd":1896095,"cut_align_ars":364905892,"cut_align_usd":233528,"cut_align_month_ars":30408824,"cut_align_month_usd":19461,"avg_headcount_26":41.1,"cost_fte_year_ars":55926333,"cost_fte_month_ars":4660528,"cost_fte_year_usd":36191,"fte_if_all_from_payroll":6.5,"surplus_ars":178444196,"surplus_usd":123732,"sue_share_pct":69.5,"estr_share_pct":27.4,"other_share_pct":3.0,"default_sue_cut_pct":11.1,"default_estr_cut_pct":12.1}},{"id":"v4","label":"Versi\u00f3n 4","is_latest":false,"source":"REGISTRO GASTOS E INGRESOS - POW S.A - [ARCHIVO POW] - 4.xlsx","generated":"28/06/2026","summary":{"rev25_ars":2734195551.8,"rev26_ars":3711006196.8999996,"egr25_ars":2305045961.3999996,"egr26_ars":3323911226.6,"sue25_ars":1613751867.4999998,"sue26_ars":2301940535.0,"yoy_i":35.7,"yoy_e":44.2,"yoy_s":42.6,"gap_pp":8.5},"usd_compare":{"rev_usd_yoy":15.7,"egr_usd_yoy":23.3,"rev_ars_yoy":35.7,"egr_ars_yoy":44.2},"ytd":{"rev25_ars":1277410901.9,"rev26_ars":1780947235.5000002,"egr25_ars":1022747687.5,"egr26_ars":1549521066.7,"sue25_ars":729302319.3,"sue26_ars":1067788323.2,"yoy_i_ars":39.4,"yoy_e_ars":51.5,"yoy_s_ars":46.4,"yoy_i_usd":15.2,"yoy_e_usd":25.6},"history":[{"label":"2021","ing_ars":47.5,"egr_ars":131.6,"sue_ars":175.7,"ing_usd":3.3,"egr_usd":60.3},{"label":"2022","ing_ars":39.6,"egr_ars":82.2,"sue_ars":130.8,"ing_usd":-9.5,"egr_usd":21.4},{"label":"2023","ing_ars":189.3,"egr_ars":166.5,"sue_ars":143.0,"ing_usd":24.3,"egr_usd":11.3},{"label":"2024","ing_ars":176.3,"egr_ars":161.2,"sue_ars":215.6,"ing_usd":41.0,"egr_usd":36.8},{"label":"2025","ing_ars":41.1,"egr_ars":43.7,"sue_ars":44.0,"ing_usd":24.8,"egr_usd":26.3},{"label":"2026 PROY","ing_ars":35.7,"egr_ars":44.2,"sue_ars":42.6,"ing_usd":15.7,"egr_usd":23.3}],"sueldos_share":[{"year":"2024","pct":69.9},{"year":"2025","pct":70.0},{"year":"2026 PROY","pct":69.3}],"equilibrium":{"rev25_ars":2734195552,"rev26_ars":3711006197,"egr25_ars":2305045961,"egr26_ars":3323911227,"sue25_ars":1613751867,"sue26_ars":2301940535,"estr25_ars":612728426,"estr26_ars":915018725,"other25_ars":78565667,"other26_ars":106951967,"rev25_usd":2063328,"rev26_usd":2386988,"egr25_usd":1733552,"egr26_usd":2137125,"yoy_i_usd":15.7,"yoy_e_usd":23.3,"target_egr_ars":3127947370,"target_egr_usd":2005720,"cut_align_ars":195963857,"cut_align_usd":131405,"cut_align_month_ars":16330321,"cut_align_month_usd":10950,"avg_headcount_26":41.1,"cost_fte_year_ars":56031007,"cost_fte_month_ars":4669251,"cost_fte_year_usd":36040,"fte_if_all_from_payroll":3.5,"surplus_ars":387094970,"surplus_usd":249863,"sue_share_pct":69.3,"estr_share_pct":27.5,"other_share_pct":3.2,"default_sue_cut_pct":6.0,"default_estr_cut_pct":6.4}},{"id":"v3","label":"Versi\u00f3n 3","is_latest":false,"source":"REGISTRO GASTOS E INGRESOS - POW S.A - [ARCHIVO POW] - 3.xlsx","generated":"28/06/2026","summary":{"rev25_ars":2734195551.8,"rev26_ars":3462089558.9000006,"egr25_ars":2305045961.3999996,"egr26_ars":3316509349.0999994,"sue25_ars":1613751867.4999998,"sue26_ars":2301940535.0,"yoy_i":26.6,"yoy_e":43.9,"yoy_s":42.6,"gap_pp":17.3},"usd_compare":{"rev_usd_yoy":7.6,"egr_usd_yoy":23.0,"rev_ars_yoy":26.6,"egr_ars_yoy":43.9},"ytd":{"rev25_ars":1277410901.9,"rev26_ars":1531993031.0000002,"egr25_ars":1022747687.5,"egr26_ars":1542118871.3,"sue25_ars":729302319.3,"sue26_ars":1067788323.2,"yoy_i_ars":19.9,"yoy_e_ars":50.8,"yoy_s_ars":46.4,"yoy_i_usd":-0.7,"yoy_e_usd":25.1},"history":[{"label":"2021","ing_ars":47.5,"egr_ars":131.6,"sue_ars":175.7,"ing_usd":3.3,"egr_usd":60.3},{"label":"2022","ing_ars":39.6,"egr_ars":82.2,"sue_ars":130.8,"ing_usd":-9.5,"egr_usd":21.4},{"label":"2023","ing_ars":189.3,"egr_ars":166.5,"sue_ars":143.0,"ing_usd":24.3,"egr_usd":11.3},{"label":"2024","ing_ars":176.3,"egr_ars":161.2,"sue_ars":215.6,"ing_usd":41.0,"egr_usd":36.8},{"label":"2025","ing_ars":41.1,"egr_ars":43.7,"sue_ars":44.0,"ing_usd":24.8,"egr_usd":26.3},{"label":"2026 PROY","ing_ars":26.6,"egr_ars":43.9,"sue_ars":42.6,"ing_usd":7.6,"egr_usd":23.0}],"sueldos_share":[{"year":"2024","pct":69.9},{"year":"2025","pct":70.0},{"year":"2026 PROY","pct":69.4}],"equilibrium":{"rev25_ars":2734195552,"rev26_ars":3462089559,"egr25_ars":2305045961,"egr26_ars":3316509349,"sue25_ars":1613751867,"sue26_ars":2301940535,"estr25_ars":612728426,"estr26_ars":915104228,"other25_ars":78565667,"other26_ars":99464586,"rev25_usd":2063328,"rev26_usd":2220122,"egr25_usd":1733552,"egr26_usd":2132946,"yoy_i_usd":7.6,"yoy_e_usd":23.0,"target_egr_ars":2918188187,"target_egr_usd":1865302,"cut_align_ars":398321162,"cut_align_usd":267644,"cut_align_month_ars":33193430,"cut_align_month_usd":22304,"avg_headcount_26":41.1,"cost_fte_year_ars":56031007,"cost_fte_month_ars":4669251,"cost_fte_year_usd":35931,"fte_if_all_from_payroll":7.1,"surplus_ars":145580210,"surplus_usd":87176,"sue_share_pct":69.4,"estr_share_pct":27.6,"other_share_pct":3.0,"default_sue_cut_pct":12.1,"default_estr_cut_pct":13.1}},{"id":"v2","label":"Versi\u00f3n 2","is_latest":false,"source":"REGISTRO GASTOS E INGRESOS - POW S.A - [ARCHIVO POW] - 2.xlsx","generated":"28/06/2026","summary":{"rev25_ars":2734195551.8,"rev26_ars":3459319991.5000005,"egr25_ars":2305045961.3999996,"egr26_ars":3316424877.1999993,"sue25_ars":1613751867.4999998,"sue26_ars":2301940535.0,"yoy_i":26.5,"yoy_e":43.9,"yoy_s":42.6,"gap_pp":17.4},"usd_compare":{"rev_usd_yoy":7.5,"egr_usd_yoy":23.0,"rev_ars_yoy":26.5,"egr_ars_yoy":43.9},"ytd":{"rev25_ars":1277410901.9,"rev26_ars":1529223463.6000001,"egr25_ars":1022747687.5,"egr26_ars":1542034399.3999999,"sue25_ars":729302319.3,"sue26_ars":1067788323.2,"yoy_i_ars":19.7,"yoy_e_ars":50.8,"yoy_s_ars":46.4,"yoy_i_usd":-0.8,"yoy_e_usd":25.0},"history":[{"label":"2021","ing_ars":47.5,"egr_ars":131.6,"sue_ars":175.7,"ing_usd":3.3,"egr_usd":60.3},{"label":"2022","ing_ars":39.6,"egr_ars":82.2,"sue_ars":130.8,"ing_usd":-9.5,"egr_usd":21.4},{"label":"2023","ing_ars":189.3,"egr_ars":166.5,"sue_ars":143.0,"ing_usd":24.3,"egr_usd":11.3},{"label":"2024","ing_ars":176.3,"egr_ars":161.2,"sue_ars":215.6,"ing_usd":41.0,"egr_usd":36.8},{"label":"2025","ing_ars":41.1,"egr_ars":43.7,"sue_ars":44.0,"ing_usd":24.8,"egr_usd":26.3},{"label":"2026 PROY","ing_ars":26.5,"egr_ars":43.9,"sue_ars":42.6,"ing_usd":7.5,"egr_usd":23.0}],"sueldos_share":[{"year":"2024","pct":69.9},{"year":"2025","pct":70.0},{"year":"2026 PROY","pct":69.4}],"equilibrium":{"rev25_ars":2734195552,"rev26_ars":3459319992,"egr25_ars":2305045961,"egr26_ars":3316424877,"sue25_ars":1613751867,"sue26_ars":2301940535,"estr25_ars":612728426,"estr26_ars":915104228,"other25_ars":78565667,"other26_ars":99380114,"rev25_usd":2063328,"rev26_usd":2218256,"egr25_usd":1733552,"egr26_usd":2132889,"yoy_i_usd":7.5,"yoy_e_usd":23.0,"target_egr_ars":2915883141,"target_egr_usd":1863568,"cut_align_ars":400541736,"cut_align_usd":269321,"cut_align_month_ars":33378478,"cut_align_month_usd":22443,"avg_headcount_26":41.1,"cost_fte_year_ars":56031007,"cost_fte_month_ars":4669251,"cost_fte_year_usd":35929,"fte_if_all_from_payroll":7.1,"surplus_ars":142895114,"surplus_usd":85367,"sue_share_pct":69.4,"estr_share_pct":27.6,"other_share_pct":3.0,"default_sue_cut_pct":12.2,"default_estr_cut_pct":13.1}},{"id":"base","label":"Archivo base","is_latest":false,"source":"REGISTRO GASTOS E INGRESOS - POW S.A - [ARCHIVO POW].xlsx","generated":"28/06/2026","summary":{"rev25_ars":2734992937.9,"rev26_ars":3714801450.4,"egr25_ars":2305045961.3999996,"egr26_ars":3324089405.4999995,"sue25_ars":1613751867.4999998,"sue26_ars":2301940535.0,"yoy_i":35.8,"yoy_e":44.2,"yoy_s":42.6,"gap_pp":8.4},"usd_compare":{"rev_usd_yoy":15.8,"egr_usd_yoy":23.3,"rev_ars_yoy":35.8,"egr_ars_yoy":44.2},"ytd":{"rev25_ars":1277812548.1000001,"rev26_ars":1784309182.6000001,"egr25_ars":1022747687.5,"egr26_ars":1549698927.7,"sue25_ars":729302319.3,"sue26_ars":1067788323.2,"yoy_i_ars":39.6,"yoy_e_ars":51.5,"yoy_s_ars":46.4,"yoy_i_usd":15.5,"yoy_e_usd":25.7},"history":[{"label":"2021","ing_ars":47.5,"egr_ars":131.6,"sue_ars":175.7,"ing_usd":3.3,"egr_usd":60.3},{"label":"2022","ing_ars":39.6,"egr_ars":82.2,"sue_ars":130.8,"ing_usd":-9.5,"egr_usd":21.4},{"label":"2023","ing_ars":189.3,"egr_ars":166.5,"sue_ars":143.0,"ing_usd":24.3,"egr_usd":11.3},{"label":"2024","ing_ars":176.3,"egr_ars":161.2,"sue_ars":215.6,"ing_usd":41.0,"egr_usd":36.8},{"label":"2025","ing_ars":41.1,"egr_ars":43.7,"sue_ars":44.0,"ing_usd":24.8,"egr_usd":26.3},{"label":"2026 PROY","ing_ars":35.8,"egr_ars":44.2,"sue_ars":42.6,"ing_usd":15.8,"egr_usd":23.3}],"sueldos_share":[{"year":"2024","pct":69.9},{"year":"2025","pct":70.0},{"year":"2026 PROY","pct":69.3}],"equilibrium":{"rev25_ars":2734992938,"rev26_ars":3714801450,"egr25_ars":2305045961,"egr26_ars":3324089405,"sue25_ars":1613751867,"sue26_ars":2301940535,"estr25_ars":612728426,"estr26_ars":915104228,"other25_ars":78565667,"other26_ars":107044643,"rev25_usd":2063937,"rev26_usd":2390399,"egr25_usd":1733552,"egr26_usd":2138054,"yoy_i_usd":15.8,"yoy_e_usd":23.3,"target_egr_ars":3130252416,"target_egr_usd":2007453,"cut_align_ars":193836990,"cut_align_usd":130601,"cut_align_month_ars":16153082,"cut_align_month_usd":10883,"avg_headcount_26":39.1,"cost_fte_year_ars":58898265,"cost_fte_month_ars":4908189,"cost_fte_year_usd":37900,"fte_if_all_from_payroll":3.3,"surplus_ars":390712045,"surplus_usd":252345,"sue_share_pct":69.3,"estr_share_pct":27.5,"other_share_pct":3.2,"default_sue_cut_pct":5.9,"default_estr_cut_pct":6.4}}]};
 
-const S = REPORT_DATA;
-const E = S.equilibrium || {};
+let S = null;
+let E = {};
+let arsToUsd = () => 0;
+
 const fmtM = n => n >= 1e9 ? `$${(n/1e9).toFixed(2)}B` : `$${Math.round(n/1e6).toLocaleString('es-AR')}M`;
 const fmtUSD = n => 'U$D ' + Math.round(n).toLocaleString('en-US');
 const fmtP = v => v == null ? '—' : `${v >= 0 ? '+' : ''}${v.toFixed(1)}%`;
@@ -242,13 +260,7 @@ const fmtGap = v => v == null ? '—' : `${v >= 0 ? '+' : ''}${v.toFixed(1)} pp`
 const gapPP = (egr, ing) => egr == null || ing == null ? null : Math.round((egr - ing) * 10) / 10;
 const clsP = v => v == null ? '' : v >= 0 ? 'pos' : 'neg';
 const clsGap = v => v == null ? '' : v > 0 ? 'neg' : v < 0 ? 'pos' : '';
-
-document.getElementById('meta').textContent =
-  `Fuente: ${S.source} · hoja ESTADO DE RESULTADOS + EGRESOS | POW · Generado ${S.generated}`;
-
-document.getElementById('note').innerHTML =
-  `<strong>Lectura:</strong> el CEO Scorecard muestra cifras en USD. En pesos las tasas son más altas por inflación y devaluación. ` +
-  `Los egresos crecen más rápido que los ingresos — gap de crecimiento ${fmtGap(S.summary.gap_pp)} en 2026 PROY (ARS).`;
+const pctLabel = v => `${(+v).toFixed(1)}%`;
 
 function fillTable(id, head, rows, rowClass) {
   const el = document.getElementById(id);
@@ -260,71 +272,214 @@ function fillTable(id, head, rows, rowClass) {
   }</tbody>`;
 }
 
-fillTable('tbl-summary',
-  ['Concepto', '2025 (ARS)', '2026 PROY (ARS)', 'Crecimiento YoY'],
-  [
-    ['Ingresos', fmtM(S.summary.rev25_ars), fmtM(S.summary.rev26_ars), {t: fmtP(S.summary.yoy_i), cls: clsP(S.summary.yoy_i)}],
-    ['Egresos totales', fmtM(S.summary.egr25_ars), fmtM(S.summary.egr26_ars), {t: fmtP(S.summary.yoy_e), cls: 'neg'}],
-    ['Sueldos', fmtM(S.summary.sue25_ars), fmtM(S.summary.sue26_ars), {t: fmtP(S.summary.yoy_s), cls: 'neg'}],
-  ]
-);
+function renderReport(data) {
+  S = data;
+  E = S.equilibrium || {};
+  arsToUsd = ars => E.rev26_ars ? ars * E.rev26_usd / E.rev26_ars : 0;
 
-document.getElementById('brecha').textContent =
-  `Gap de crecimiento (egresos − ingresos): ${fmtGap(S.summary.gap_pp)} — ${fmtP(S.summary.yoy_e)} egresos vs ${fmtP(S.summary.yoy_i)} ingresos.`;
+  document.getElementById('meta').textContent =
+    `Fuente: ${S.source} · hoja ESTADO DE RESULTADOS + EGRESOS | POW · Generado ${S.generated}`;
+  document.getElementById('versionFile').textContent = S.source;
 
-fillTable('tbl-gap',
-  ['Período', 'Moneda', 'YoY Ingresos', 'YoY Egresos', 'Gap (Egr − Ing)'],
-  [
-    ['2026 PROY', 'ARS', fmtP(S.summary.yoy_i), fmtP(S.summary.yoy_e), {t: fmtGap(S.summary.gap_pp), cls: clsGap(S.summary.gap_pp)}],
-    ['2026 PROY', 'USD', fmtP(S.usd_compare.rev_usd_yoy), fmtP(S.usd_compare.egr_usd_yoy), {t: fmtGap(gapPP(S.usd_compare.egr_usd_yoy, S.usd_compare.rev_usd_yoy)), cls: clsGap(gapPP(S.usd_compare.egr_usd_yoy, S.usd_compare.rev_usd_yoy))}],
-    ['YTD Ene–Jun', 'ARS', fmtP(S.ytd.yoy_i_ars), fmtP(S.ytd.yoy_e_ars), {t: fmtGap(gapPP(S.ytd.yoy_e_ars, S.ytd.yoy_i_ars)), cls: clsGap(gapPP(S.ytd.yoy_e_ars, S.ytd.yoy_i_ars))}],
-    ['YTD Ene–Jun', 'USD', fmtP(S.ytd.yoy_i_usd), fmtP(S.ytd.yoy_e_usd), {t: fmtGap(gapPP(S.ytd.yoy_e_usd, S.ytd.yoy_i_usd)), cls: clsGap(gapPP(S.ytd.yoy_e_usd, S.ytd.yoy_i_usd))}],
-  ]
-);
+  document.getElementById('note').innerHTML =
+    `<strong>Lectura:</strong> el CEO Scorecard muestra cifras en USD. En pesos las tasas son más altas por inflación y devaluación. ` +
+    `Los egresos crecen más rápido que los ingresos — gap de crecimiento ${fmtGap(S.summary.gap_pp)} en 2026 PROY (ARS).`;
 
-fillTable('tbl-usd',
-  ['Concepto', 'YoY USD (Scorecard)', 'YoY ARS (nominal)'],
-  [
-    ['Ingresos', fmtP(S.usd_compare.rev_usd_yoy), {t: fmtP(S.usd_compare.rev_ars_yoy), cls: clsP(S.usd_compare.rev_ars_yoy)}],
-    ['Egresos', fmtP(S.usd_compare.egr_usd_yoy), {t: fmtP(S.usd_compare.egr_ars_yoy), cls: 'neg'}],
-  ]
-);
+  fillTable('tbl-summary',
+    ['Concepto', '2025 (ARS)', '2026 PROY (ARS)', 'Crecimiento YoY'],
+    [
+      ['Ingresos', fmtM(S.summary.rev25_ars), fmtM(S.summary.rev26_ars), {t: fmtP(S.summary.yoy_i), cls: clsP(S.summary.yoy_i)}],
+      ['Egresos totales', fmtM(S.summary.egr25_ars), fmtM(S.summary.egr26_ars), {t: fmtP(S.summary.yoy_e), cls: 'neg'}],
+      ['Sueldos', fmtM(S.summary.sue25_ars), fmtM(S.summary.sue26_ars), {t: fmtP(S.summary.yoy_s), cls: 'neg'}],
+    ]
+  );
 
-fillTable('tbl-ytd',
-  ['Concepto', '2025 YTD', '2026 YTD', 'YoY ARS', 'YoY USD'],
-  [
-    ['Ingresos', fmtM(S.ytd.rev25_ars), fmtM(S.ytd.rev26_ars), {t: fmtP(S.ytd.yoy_i_ars), cls: clsP(S.ytd.yoy_i_ars)}, {t: fmtP(S.ytd.yoy_i_usd), cls: clsP(S.ytd.yoy_i_usd)}],
-    ['Egresos', fmtM(S.ytd.egr25_ars), fmtM(S.ytd.egr26_ars), {t: fmtP(S.ytd.yoy_e_ars), cls: 'neg'}, {t: fmtP(S.ytd.yoy_e_usd), cls: 'neg'}],
-    ['Sueldos', fmtM(S.ytd.sue25_ars), fmtM(S.ytd.sue26_ars), {t: fmtP(S.ytd.yoy_s_ars), cls: 'neg'}, '—'],
-  ]
-);
+  document.getElementById('brecha').textContent =
+    `Gap de crecimiento (egresos − ingresos): ${fmtGap(S.summary.gap_pp)} — ${fmtP(S.summary.yoy_e)} egresos vs ${fmtP(S.summary.yoy_i)} ingresos.`;
 
-fillTable('tbl-history',
-  ['Año', 'Ing. ARS', 'Egr. ARS', 'Gap ARS', 'Sueldos ARS', 'Ing. USD', 'Egr. USD', 'Gap USD'],
-  S.history.map(r => {
-    const gA = gapPP(r.egr_ars, r.ing_ars);
-    const gU = gapPP(r.egr_usd, r.ing_usd);
-    return [r.label, fmtP(r.ing_ars), fmtP(r.egr_ars), {t: fmtGap(gA), cls: clsGap(gA)}, fmtP(r.sue_ars), fmtP(r.ing_usd), fmtP(r.egr_usd), {t: fmtGap(gU), cls: clsGap(gU)}];
-  })
-);
+  fillTable('tbl-gap',
+    ['Período', 'Moneda', 'YoY Ingresos', 'YoY Egresos', 'Gap (Egr − Ing)'],
+    [
+      ['2026 PROY', 'ARS', fmtP(S.summary.yoy_i), fmtP(S.summary.yoy_e), {t: fmtGap(S.summary.gap_pp), cls: clsGap(S.summary.gap_pp)}],
+      ['2026 PROY', 'USD', fmtP(S.usd_compare.rev_usd_yoy), fmtP(S.usd_compare.egr_usd_yoy), {t: fmtGap(gapPP(S.usd_compare.egr_usd_yoy, S.usd_compare.rev_usd_yoy)), cls: clsGap(gapPP(S.usd_compare.egr_usd_yoy, S.usd_compare.rev_usd_yoy))}],
+      ['YTD Ene–Jun', 'ARS', fmtP(S.ytd.yoy_i_ars), fmtP(S.ytd.yoy_e_ars), {t: fmtGap(gapPP(S.ytd.yoy_e_ars, S.ytd.yoy_i_ars)), cls: clsGap(gapPP(S.ytd.yoy_e_ars, S.ytd.yoy_i_ars))}],
+      ['YTD Ene–Jun', 'USD', fmtP(S.ytd.yoy_i_usd), fmtP(S.ytd.yoy_e_usd), {t: fmtGap(gapPP(S.ytd.yoy_e_usd, S.ytd.yoy_i_usd)), cls: clsGap(gapPP(S.ytd.yoy_e_usd, S.ytd.yoy_i_usd))}],
+    ]
+  );
 
-fillTable('tbl-share',
-  ['Año', 'Sueldos / Egresos'],
-  S.sueldos_share.map(r => [r.year, `${r.pct.toFixed(1)}%`])
-);
+  fillTable('tbl-usd',
+    ['Concepto', 'YoY USD (Scorecard)', 'YoY ARS (nominal)'],
+    [
+      ['Ingresos', fmtP(S.usd_compare.rev_usd_yoy), {t: fmtP(S.usd_compare.rev_ars_yoy), cls: clsP(S.usd_compare.rev_ars_yoy)}],
+      ['Egresos', fmtP(S.usd_compare.egr_usd_yoy), {t: fmtP(S.usd_compare.egr_ars_yoy), cls: 'neg'}],
+    ]
+  );
 
-document.getElementById('impl').innerHTML = [
-  `Gap de crecimiento 2026 PROY: ${fmtGap(S.summary.gap_pp)} en ARS · ${fmtGap(gapPP(S.usd_compare.egr_usd_yoy, S.usd_compare.rev_usd_yoy))} en USD — los egresos superan al revenue en ritmo nominal.`,
-  `En pesos el negocio factura más (${fmtP(S.summary.yoy_i)} anual · ${fmtP(S.ytd.yoy_i_ars)} YTD), pero gasta mucho más rápido (${fmtP(S.summary.yoy_e)} anual · ${fmtP(S.ytd.yoy_e_ars)} YTD).`,
-  'Sueldos-only es un proxy válido del ~70% de egresos — útil para separar nómina del resto (estructura, tech, bonos).',
-  'La compresión de margen en USD no es solo tipo de cambio: en ARS nominal también hay desbalance estructural.',
-].map(t => `<li>${t}</li>`).join('');
+  fillTable('tbl-ytd',
+    ['Concepto', '2025 YTD', '2026 YTD', 'YoY ARS', 'YoY USD'],
+    [
+      ['Ingresos', fmtM(S.ytd.rev25_ars), fmtM(S.ytd.rev26_ars), {t: fmtP(S.ytd.yoy_i_ars), cls: clsP(S.ytd.yoy_i_ars)}, {t: fmtP(S.ytd.yoy_i_usd), cls: clsP(S.ytd.yoy_i_usd)}],
+      ['Egresos', fmtM(S.ytd.egr25_ars), fmtM(S.ytd.egr26_ars), {t: fmtP(S.ytd.yoy_e_ars), cls: 'neg'}, {t: fmtP(S.ytd.yoy_e_usd), cls: 'neg'}],
+      ['Sueldos', fmtM(S.ytd.sue25_ars), fmtM(S.ytd.sue26_ars), {t: fmtP(S.ytd.yoy_s_ars), cls: 'neg'}, '—'],
+    ]
+  );
+
+  fillTable('tbl-history',
+    ['Año', 'Ing. ARS', 'Egr. ARS', 'Gap ARS', 'Sueldos ARS', 'Ing. USD', 'Egr. USD', 'Gap USD'],
+    S.history.map(r => {
+      const gA = gapPP(r.egr_ars, r.ing_ars);
+      const gU = gapPP(r.egr_usd, r.ing_usd);
+      return [r.label, fmtP(r.ing_ars), fmtP(r.egr_ars), {t: fmtGap(gA), cls: clsGap(gA)}, fmtP(r.sue_ars), fmtP(r.ing_usd), fmtP(r.egr_usd), {t: fmtGap(gU), cls: clsGap(gU)}];
+    })
+  );
+
+  fillTable('tbl-share',
+    ['Año', 'Sueldos / Egresos'],
+    S.sueldos_share.map(r => [r.year, `${r.pct.toFixed(1)}%`])
+  );
+
+  document.getElementById('impl').innerHTML = [
+    `Gap de crecimiento 2026 PROY: ${fmtGap(S.summary.gap_pp)} en ARS · ${fmtGap(gapPP(S.usd_compare.egr_usd_yoy, S.usd_compare.rev_usd_yoy))} en USD — los egresos superan al revenue en ritmo nominal.`,
+    `En pesos el negocio factura más (${fmtP(S.summary.yoy_i)} anual · ${fmtP(S.ytd.yoy_i_ars)} YTD), pero gasta mucho más rápido (${fmtP(S.summary.yoy_e)} anual · ${fmtP(S.ytd.yoy_e_ars)} YTD).`,
+    'Sueldos-only es un proxy válido del ~70% de egresos — útil para separar nómina del resto (estructura, tech, bonos).',
+    'La compresión de margen en USD no es solo tipo de cambio: en ARS nominal también hay desbalance estructural.',
+  ].map(t => `<li>${t}</li>`).join('');
+
+  refreshSimulator();
+}
 
 // ── Simulador de equilibrio ──
-const arsToUsd = ars => E.rev26_ars ? ars * E.rev26_usd / E.rev26_ars : 0;
-const pctLabel = v => `${(+v).toFixed(1)}%`;
+let sueSlider, estrSlider, otherSlider, mixSue, mixEstr, mixOther, mixSum;
+let mixWarning = '';
+let equilibriumWarning = '';
+let simReady = false;
 
-if (E.cut_align_ars != null) {
+function readMixShares() {
+  const raw = [+mixSue.value, +mixEstr.value, +mixOther.value];
+  const sum = raw.reduce((a, b) => a + b, 0);
+  if (sum <= 0) return [1 / 3, 1 / 3, 1 / 3];
+  return raw.map(v => v / sum);
+}
+
+function updateMixUI() {
+  document.getElementById('mixSueLbl').textContent = `${mixSue.value}%`;
+  document.getElementById('mixEstrLbl').textContent = `${mixEstr.value}%`;
+  document.getElementById('mixOtherLbl').textContent = `${mixOther.value}%`;
+  const sum = +mixSue.value + +mixEstr.value + +mixOther.value;
+  mixWarning = '';
+  if (Math.abs(sum - 100) < 0.1) {
+    mixSum.className = 'sim-mix-sum ok';
+    mixSum.textContent = 'Total 100% — listo para equilibrio';
+  } else {
+    mixSum.className = 'sim-mix-sum warn';
+    mixSum.textContent = `Total ${sum}% — se normalizará al aplicar equilibrio`;
+    mixWarning = `Reparto normalizado desde ${sum}% → 100%.`;
+  }
+}
+
+function ensureSliderMax(slider, pct) {
+  if (pct > +slider.max) {
+    slider.max = Math.ceil(pct / 5) * 5;
+    if (slider === sueSlider) document.getElementById('sueCutMax').textContent = `${slider.max}%`;
+  }
+}
+
+function runSim() {
+  if (!simReady || E.cut_align_ars == null) return;
+  const suePct = +sueSlider.value;
+  const estrPct = +estrSlider.value;
+  const otherPct = +otherSlider.value;
+  document.getElementById('sueCutLbl').textContent = pctLabel(suePct);
+  document.getElementById('estrCutLbl').textContent = pctLabel(estrPct);
+  document.getElementById('otherCutLbl').textContent = pctLabel(otherPct);
+
+  const cutSue = E.sue26_ars * suePct / 100;
+  const cutEstr = E.estr26_ars * estrPct / 100;
+  const cutOther = E.other26_ars * otherPct / 100;
+  const totalCut = cutSue + cutEstr + cutOther;
+
+  const adjEgr = E.egr26_ars - totalCut;
+  const adjEgrUsd = E.egr26_usd - arsToUsd(totalCut);
+  const yoyAdj = (adjEgr / E.egr25_ars - 1) * 100;
+  const yoyAdjUsd = (adjEgrUsd / E.egr25_usd - 1) * 100;
+  const gapAdj = yoyAdj - (S.summary.yoy_i || 0);
+  const gapAdjUsd = yoyAdjUsd - (E.yoy_i_usd || 0);
+  const remaining = adjEgr - E.target_egr_ars;
+  const remainingUsd = adjEgrUsd - E.target_egr_usd;
+  const fte = cutSue / E.cost_fte_year_ars;
+  const aligned = Math.abs(gapAdj) < 0.5;
+  const statusCls = aligned ? 'sim-ok' : remaining > 0 ? 'sim-warn' : 'sim-ok';
+
+  document.getElementById('simResult').innerHTML = `
+    <h3>Escenario ajustado · 2026 PROY</h3>
+    ${mixWarning ? `<div class="sim-row"><span>Nota reparto</span><span class="sim-warn">${mixWarning}</span></div>` : ''}
+    ${equilibriumWarning ? `<div class="sim-row"><span>Límite sliders</span><span class="sim-bad">${equilibriumWarning}</span></div>` : ''}
+    <div class="sim-row"><span>Recorte total simulado</span><span>${fmtM(totalCut)} · ${fmtUSD(arsToUsd(totalCut))}</span></div>
+    <div class="sim-row"><span>→ Sueldos / Estructura / Otros</span><span>${fmtM(cutSue)} / ${fmtM(cutEstr)} / ${fmtM(cutOther)}</span></div>
+    <div class="sim-row"><span>FTE equivalentes (solo nómina)</span><span>${fte.toFixed(1)}</span></div>
+    <div class="sim-row"><span>Egresos ajustados</span><span>${fmtM(adjEgr)} · ${fmtUSD(Math.round(adjEgrUsd))}</span></div>
+    <div class="sim-row"><span>YoY egresos ajustado</span><span class="${statusCls}">${fmtP(yoyAdj)} ARS · ${fmtP(yoyAdjUsd)} USD</span></div>
+    <div class="sim-row"><span>Gap vs ingresos (objetivo 0 pp)</span><span class="${statusCls}">${fmtGap(Math.round(gapAdj * 10) / 10)} ARS · ${fmtGap(Math.round(gapAdjUsd * 10) / 10)} USD</span></div>
+    <div class="sim-row"><span>Falta recortar p/alinear</span><span class="${remaining <= 0 ? 'sim-ok' : 'sim-bad'}">${remaining <= 0 ? 'Objetivo alcanzado' : fmtM(remaining) + ' · ' + fmtUSD(Math.round(remainingUsd))}</span></div>
+    <div class="sim-row"><span>Superávit ing − egr (actual / ajustado)</span><span>${fmtM(E.surplus_ars)} → ${fmtM(E.rev26_ars - adjEgr)}</span></div>
+  `;
+}
+
+function applyEquilibrium() {
+  if (!simReady || E.cut_align_ars == null) return;
+  equilibriumWarning = '';
+  const [sueShare, estrShare, otherShare] = readMixShares();
+  const cut = E.cut_align_ars;
+  const sueCut = cut * sueShare;
+  const estrCut = cut * estrShare;
+  const otherCut = cut * otherShare;
+  let suePct = sueCut / E.sue26_ars * 100;
+  let estrPct = estrCut / E.estr26_ars * 100;
+  let otherPct = otherCut / E.other26_ars * 100;
+
+  ensureSliderMax(sueSlider, suePct);
+  ensureSliderMax(estrSlider, estrPct);
+  ensureSliderMax(otherSlider, otherPct);
+
+  if (suePct > +sueSlider.max) {
+    suePct = +sueSlider.max;
+    equilibriumWarning = 'Recorte sueldos capped — subí el slider o cambiá el reparto.';
+  }
+  if (estrPct > +estrSlider.max) {
+    estrPct = +estrSlider.max;
+    equilibriumWarning = (equilibriumWarning ? equilibriumWarning + ' ' : '') + 'Recorte estructura capped.';
+  }
+  if (otherPct > +otherSlider.max) {
+    otherPct = +otherSlider.max;
+    equilibriumWarning = (equilibriumWarning ? equilibriumWarning + ' ' : '') + 'Recorte otros capped.';
+  }
+
+  sueSlider.value = suePct;
+  estrSlider.value = estrPct;
+  otherSlider.value = otherPct;
+  runSim();
+}
+
+function setupSimulatorOnce() {
+  if (simReady) return;
+  sueSlider = document.getElementById('sueCutSlider');
+  estrSlider = document.getElementById('estrCutSlider');
+  otherSlider = document.getElementById('otherCutSlider');
+  mixSue = document.getElementById('mixSue');
+  mixEstr = document.getElementById('mixEstr');
+  mixOther = document.getElementById('mixOther');
+  mixSum = document.getElementById('mixSum');
+
+  document.getElementById('simEquilibriumBtn').addEventListener('click', applyEquilibrium);
+  [mixSue, mixEstr, mixOther].forEach(el => el.addEventListener('input', updateMixUI));
+  [sueSlider, estrSlider, otherSlider].forEach(el => el.addEventListener('input', runSim));
+  simReady = true;
+}
+
+function refreshSimulator() {
+  setupSimulatorOnce();
+  if (E.cut_align_ars == null) return;
+
   document.getElementById('simTargetRate').textContent = fmtP(S.summary.yoy_i);
   document.getElementById('simTargetRateUsd').textContent = fmtP(E.yoy_i_usd);
 
@@ -334,132 +489,19 @@ if (E.cut_align_ars != null) {
     { lbl: 'FTE eq. (100% nómina)', val: E.fte_if_all_from_payroll.toFixed(1), sub: `${fmtM(E.cost_fte_year_ars)}/año · HC prom ${E.avg_headcount_26}` },
   ].map(k => `<div class="sim-kpi"><div class="lbl">${k.lbl}</div><div class="val">${k.val}</div><div class="sub">${k.sub}</div></div>`).join('');
 
-  const sueSlider = document.getElementById('sueCutSlider');
-  const estrSlider = document.getElementById('estrCutSlider');
-  const otherSlider = document.getElementById('otherCutSlider');
-  const mixSue = document.getElementById('mixSue');
-  const mixEstr = document.getElementById('mixEstr');
-  const mixOther = document.getElementById('mixOther');
-  const mixSum = document.getElementById('mixSum');
-  let mixWarning = '';
-  let equilibriumWarning = '';
-
-  function readMixShares() {
-    const raw = [+mixSue.value, +mixEstr.value, +mixOther.value];
-    const sum = raw.reduce((a, b) => a + b, 0);
-    if (sum <= 0) return [1 / 3, 1 / 3, 1 / 3];
-    return raw.map(v => v / sum);
-  }
-
-  function updateMixUI() {
-    document.getElementById('mixSueLbl').textContent = `${mixSue.value}%`;
-    document.getElementById('mixEstrLbl').textContent = `${mixEstr.value}%`;
-    document.getElementById('mixOtherLbl').textContent = `${mixOther.value}%`;
-    const sum = +mixSue.value + +mixEstr.value + +mixOther.value;
-    mixWarning = '';
-    if (Math.abs(sum - 100) < 0.1) {
-      mixSum.className = 'sim-mix-sum ok';
-      mixSum.textContent = 'Total 100% — listo para equilibrio';
-    } else {
-      mixSum.className = 'sim-mix-sum warn';
-      mixSum.textContent = `Total ${sum}% — se normalizará al aplicar equilibrio`;
-      mixWarning = `Reparto normalizado desde ${sum}% → 100%.`;
-    }
-  }
-
-  function ensureSliderMax(slider, pct) {
-    if (pct > +slider.max) {
-      slider.max = Math.ceil(pct / 5) * 5;
-      if (slider === sueSlider) document.getElementById('sueCutMax').textContent = `${slider.max}%`;
-    }
-  }
-
   const sueMax = Math.min(20, Math.ceil(E.default_sue_cut_pct * 1.5));
   sueSlider.max = Math.max(20, sueMax);
   document.getElementById('sueCutMax').textContent = `${sueSlider.max}%`;
 
-  function runSim() {
-    const suePct = +sueSlider.value;
-    const estrPct = +estrSlider.value;
-    const otherPct = +otherSlider.value;
-    document.getElementById('sueCutLbl').textContent = pctLabel(suePct);
-    document.getElementById('estrCutLbl').textContent = pctLabel(estrPct);
-    document.getElementById('otherCutLbl').textContent = pctLabel(otherPct);
-
-    const cutSue = E.sue26_ars * suePct / 100;
-    const cutEstr = E.estr26_ars * estrPct / 100;
-    const cutOther = E.other26_ars * otherPct / 100;
-    const totalCut = cutSue + cutEstr + cutOther;
-    const totalCutUsd = arsToUsd(totalCut);
-
-    const adjEgr = E.egr26_ars - totalCut;
-    const adjEgrUsd = E.egr26_usd - arsToUsd(totalCut);
-    const yoyAdj = (adjEgr / E.egr25_ars - 1) * 100;
-    const yoyAdjUsd = (adjEgrUsd / E.egr25_usd - 1) * 100;
-    const gapAdj = yoyAdj - (S.summary.yoy_i || 0);
-    const gapAdjUsd = yoyAdjUsd - (E.yoy_i_usd || 0);
-    const remaining = adjEgr - E.target_egr_ars;
-    const remainingUsd = adjEgrUsd - E.target_egr_usd;
-    const fte = cutSue / E.cost_fte_year_ars;
-    const aligned = Math.abs(gapAdj) < 0.5;
-    const statusCls = aligned ? 'sim-ok' : remaining > 0 ? 'sim-warn' : 'sim-ok';
-
-    document.getElementById('simResult').innerHTML = `
-      <h3>Escenario ajustado · 2026 PROY</h3>
-      ${mixWarning ? `<div class="sim-row"><span>Nota reparto</span><span class="sim-warn">${mixWarning}</span></div>` : ''}
-      ${equilibriumWarning ? `<div class="sim-row"><span>Límite sliders</span><span class="sim-bad">${equilibriumWarning}</span></div>` : ''}
-      <div class="sim-row"><span>Recorte total simulado</span><span>${fmtM(totalCut)} · ${fmtUSD(totalCutUsd)}</span></div>
-      <div class="sim-row"><span>→ Sueldos / Estructura / Otros</span><span>${fmtM(cutSue)} / ${fmtM(cutEstr)} / ${fmtM(cutOther)}</span></div>
-      <div class="sim-row"><span>FTE equivalentes (solo nómina)</span><span>${fte.toFixed(1)}</span></div>
-      <div class="sim-row"><span>Egresos ajustados</span><span>${fmtM(adjEgr)} · ${fmtUSD(Math.round(adjEgrUsd))}</span></div>
-      <div class="sim-row"><span>YoY egresos ajustado</span><span class="${statusCls}">${fmtP(yoyAdj)} ARS · ${fmtP(yoyAdjUsd)} USD</span></div>
-      <div class="sim-row"><span>Gap vs ingresos (objetivo 0 pp)</span><span class="${statusCls}">${fmtGap(Math.round(gapAdj * 10) / 10)} ARS · ${fmtGap(Math.round(gapAdjUsd * 10) / 10)} USD</span></div>
-      <div class="sim-row"><span>Falta recortar p/alinear</span><span class="${remaining <= 0 ? 'sim-ok' : 'sim-bad'}">${remaining <= 0 ? 'Objetivo alcanzado' : fmtM(remaining) + ' · ' + fmtUSD(Math.round(remainingUsd))}</span></div>
-      <div class="sim-row"><span>Superávit ing − egr (actual / ajustado)</span><span>${fmtM(E.surplus_ars)} → ${fmtM(E.rev26_ars - adjEgr)}</span></div>
-    `;
-  }
-
-  let equilibriumWarning = '';
-
-  function applyEquilibrium() {
-    equilibriumWarning = '';
-    const [sueShare, estrShare, otherShare] = readMixShares();
-    const cut = E.cut_align_ars;
-    const sueCut = cut * sueShare;
-    const estrCut = cut * estrShare;
-    const otherCut = cut * otherShare;
-    let suePct = sueCut / E.sue26_ars * 100;
-    let estrPct = estrCut / E.estr26_ars * 100;
-    let otherPct = otherCut / E.other26_ars * 100;
-
-    ensureSliderMax(sueSlider, suePct);
-    ensureSliderMax(estrSlider, estrPct);
-    ensureSliderMax(otherSlider, otherPct);
-
-    if (suePct > +sueSlider.max) {
-      suePct = +sueSlider.max;
-      equilibriumWarning = 'Recorte sueldos capped — subí el slider o cambiá el reparto.';
-    }
-    if (estrPct > +estrSlider.max) {
-      estrPct = +estrSlider.max;
-      equilibriumWarning = (equilibriumWarning ? equilibriumWarning + ' ' : '') + 'Recorte estructura capped.';
-    }
-    if (otherPct > +otherSlider.max) {
-      otherPct = +otherSlider.max;
-      equilibriumWarning = (equilibriumWarning ? equilibriumWarning + ' ' : '') + 'Recorte otros capped.';
-    }
-
-    sueSlider.value = suePct;
-    estrSlider.value = estrPct;
-    otherSlider.value = otherPct;
-    runSim();
-  }
-
-  document.getElementById('simEquilibriumBtn').addEventListener('click', applyEquilibrium);
-  [mixSue, mixEstr, mixOther].forEach(el => el.addEventListener('input', updateMixUI));
+  mixSue.value = 70;
+  mixEstr.value = 30;
+  mixOther.value = 0;
   updateMixUI();
 
-  [sueSlider, estrSlider, otherSlider].forEach(el => el.addEventListener('input', runSim));
+  sueSlider.value = 0;
+  estrSlider.value = 0;
+  otherSlider.value = 0;
+  equilibriumWarning = '';
   runSim();
 
   document.getElementById('simDisclaimer').textContent =
@@ -467,6 +509,34 @@ if (E.cut_align_ars != null) {
     `Costo cargado prom. ${fmtM(E.cost_fte_year_ars)}/año por FTE (${E.avg_headcount_26} HC prom.). ` +
     'Los FTE equivalentes son un proxy contable, no un plan de desvinculaciones.';
 }
+
+function initVersionSelect() {
+  const sel = document.getElementById('versionSelect');
+  const params = new URLSearchParams(location.search);
+  const requested = params.get('version');
+  const hasRequested = REPORT_VERSIONS.versions.some(v => v.id === requested);
+
+  REPORT_VERSIONS.versions.forEach(v => {
+    const opt = document.createElement('option');
+    opt.value = v.id;
+    opt.textContent = v.label;
+    sel.appendChild(opt);
+  });
+
+  sel.value = hasRequested ? requested : REPORT_VERSIONS.default;
+  sel.addEventListener('change', () => {
+    const v = REPORT_VERSIONS.versions.find(x => x.id === sel.value);
+    if (v) {
+      renderReport(v);
+      history.replaceState(null, '', `?version=${encodeURIComponent(sel.value)}`);
+    }
+  });
+
+  const initial = REPORT_VERSIONS.versions.find(v => v.id === sel.value) || REPORT_VERSIONS.versions[0];
+  if (initial) renderReport(initial);
+}
+
+initVersionSelect();
 </script>
 </body>
 </html>
