@@ -6,7 +6,6 @@ import {
   chromium as playwright,
   type Browser,
   type BrowserContext,
-  type Locator,
   type Page,
 } from "playwright-core";
 import { addComment, attachFile } from "@/lib/asana";
@@ -48,20 +47,19 @@ const VIEWPORT = { width: 1440, height: 900 };
 /**
  * Llena un input y verifica que el value haya quedado. Los inputs de las apps
  * son controlados por React: si se llenan antes de la hidratación, el onChange
- * todavía no está enganchado y el value se pierde. Reintentamos hasta que quede
- * (o se agoten los intentos). `fill()` dispara los eventos que React necesita.
+ * todavía no está enganchado y el value se pierde. Independiente de timing:
+ * llena, lee el value y reintenta hasta que pegue (o falla ruidosamente).
  */
-async function fillStable(
-  page: Page,
-  locator: Locator,
-  value: string,
-  retries = 6
-): Promise<void> {
-  for (let attempt = 0; attempt < retries; attempt++) {
-    await locator.fill(value);
-    if ((await locator.inputValue().catch(() => "")) === value) return;
-    await page.waitForTimeout(300); // esperar a que hidrate y reintentar
+async function fillReliable(page: Page, selector: string, value: string): Promise<void> {
+  for (let i = 0; i < 10; i++) {
+    await page.fill(selector, value);
+    await page.waitForTimeout(150);
+    if ((await page.inputValue(selector).catch(() => "")) === value) return; // pegó
   }
+  throw new EvidenceError(
+    `No se pudo setear ${selector} (input controlado no hidratado)`,
+    502
+  );
 }
 
 /**
@@ -189,31 +187,23 @@ export async function runEvidence(input: EvidenceInput): Promise<EvidenceResult>
     // Login opcional (para páginas con sesión).
     if (email && password) {
       await page.goto(`${baseUrl}${signinPath}`, { waitUntil: "networkidle", timeout: 60000 });
-      const emailInput = page.locator('input[type="email"]');
-      const passwordInput = page.locator('input[type="password"]');
-      await emailInput.waitFor({ state: "visible", timeout: 60000 });
 
-      // Email primero, verificando que el value quedó (esto además da tiempo a
-      // que la página termine de hidratar); recién ahí password y submit.
-      await fillStable(page, emailInput, email);
-      await fillStable(page, passwordInput, password);
+      // Email primero, verificado; recién después password y submit.
+      await fillReliable(page, 'input[type="email"]', email);
+      await fillReliable(page, 'input[type="password"]', password);
+      await page.click('button:has-text("Ingresar")');
 
-      // Click real del botón "Ingresar" (auto-wait + eventos que React espera).
-      const submit = page.getByRole("button", { name: /ingresar/i });
-      if (await submit.count()) {
-        await submit.first().click();
-      } else {
-        // Fallback: si no matchea por rol/nombre, buscar por texto en el DOM.
-        await page.evaluate(() => {
-          const btn = Array.from(document.querySelectorAll("button")).find((b) =>
-            /ingresar/i.test(b.textContent || "")
-          );
-          (btn as HTMLButtonElement | undefined)?.click();
-        });
+      // Confirmar que salió del login. Si no prospera, fallar ruidosamente en
+      // vez de seguir y capturar el login en silencio.
+      try {
+        await page.waitForURL((url) => !/\/login|\/auth/.test(url.href), { timeout: 15000 });
+      } catch {
+        throw new EvidenceError(
+          `El login no prosperó (sigue en ${new URL(page.url()).pathname}). ` +
+            `Revisá credenciales/selectores de la app "${input.app ?? "?"}".`,
+          502
+        );
       }
-      await page
-        .waitForURL((url) => !url.pathname.includes("/auth/signin"), { timeout: 60000 })
-        .catch(() => {});
     }
 
     // Recorrido por los paths. Con video, esta navegación queda grabada.
