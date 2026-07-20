@@ -1,0 +1,128 @@
+.layout {
+  min-height: 100vh;
+  padding: 3rem 1.5rem 5rem;
+  max-width: 760px;
+  margin: 0 auto;
+  line-height: 1.6;
+}
+
+.header {
+  margin-bottom: 2rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.eyebrow {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.header h1 {
+  font-size: 28px;
+  font-weight: 600;
+  color: var(--text);
+  letter-spacing: -0.02em;
+  margin: 6px 0 8px;
+}
+
+.lead {
+  font-size: 15px;
+  color: var(--text-muted);
+}
+
+.section {
+  margin-top: 2.25rem;
+}
+
+.section h2 {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text);
+  letter-spacing: -0.01em;
+  margin-bottom: 10px;
+}
+
+.section h3 {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  margin: 18px 0 6px;
+}
+
+.section p {
+  font-size: 14px;
+  color: var(--text);
+  margin-bottom: 10px;
+}
+
+.section ul {
+  margin: 0 0 12px;
+  padding-left: 20px;
+}
+
+.section li {
+  font-size: 14px;
+  color: var(--text);
+  margin-bottom: 6px;
+}
+
+.muted {
+  color: var(--text-muted);
+}
+
+.pre {
+  background: var(--gray-bg, #f4f3ef);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px 16px;
+  overflow-x: auto;
+  font-size: 12.5px;
+  line-height: 1.55;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  color: var(--text);
+  margin: 8px 0 4px;
+}
+
+.code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.9em;
+  background: var(--gray-bg, #f4f3ef);
+  padding: 1px 5px;
+  border-radius: 5px;
+}
+
+.link {
+  color: var(--text);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.pill {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--gray-bg, #f4f3ef);
+  color: var(--text-muted);
+  margin-right: 6px;
+}
+
+.callout {
+  border-left: 3px solid var(--border);
+  padding: 4px 0 4px 14px;
+  margin: 12px 0;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.footer {
+  margin-top: 3rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--border);
+  font-size: 12px;
+  color: var(--text-muted);
+}

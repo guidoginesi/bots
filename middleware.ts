@@ -6,7 +6,7 @@ import {
   verifyReportsSession,
 } from "@/lib/reportsAuth";
 
-const PUBLIC_PATHS = ["/login"];
+const PUBLIC_PATHS = ["/login", "/evidencia/docs"];
 
 function isPublicPath(pathname: string): boolean {
   if (PUBLIC_PATHS.includes(pathname)) return true;

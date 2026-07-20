@@ -20,7 +20,10 @@ export default function EvidenciaPage() {
         <h1>Evidencia QA</h1>
         <p>
           Capturá pantallas (o grabá un video del recorrido) de una app y
-          adjuntalas automáticamente a una tarea de Asana.
+          adjuntalas automáticamente a una tarea de Asana.{" "}
+          <Link href="/evidencia/docs" className={styles.taskLink}>
+            Cómo usarla / API →
+          </Link>
         </p>
       </header>
 
