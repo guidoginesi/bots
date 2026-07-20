@@ -1,4 +1,10 @@
 {
+  "functions": {
+    "app/api/evidence/route.ts": {
+      "memory": 3009,
+      "maxDuration": 300
+    }
+  },
   "headers": [
     {
       "source": "/reports/(.*\\.html)",
