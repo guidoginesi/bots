@@ -60,7 +60,9 @@ export async function POST(request: NextRequest) {
   let signinPath: string;
   if (body.app) {
     const K = body.app.toUpperCase().replace(/[^A-Z0-9]/g, "");
-    baseUrl = process.env[`EVIDENCE_${K}_BASEURL`];
+    // `baseUrl` opcional overridea el env (útil para apuntar a un preview de la
+    // misma app usando sus credenciales).
+    baseUrl = body.baseUrl ?? process.env[`EVIDENCE_${K}_BASEURL`];
     email = process.env[`EVIDENCE_${K}_EMAIL`];
     password = process.env[`EVIDENCE_${K}_PASSWORD`];
     signinPath = process.env[`EVIDENCE_${K}_SIGNIN_PATH`] ?? "/auth/signin";
