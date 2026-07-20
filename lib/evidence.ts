@@ -32,7 +32,38 @@ export interface EvidenceResult {
   results: Array<{ path: string; attachmentGid?: string; error?: string }>;
 }
 
+// Playwright graba video con un binario ffmpeg propio que resuelve desde su
+// registry. Con PLAYWRIGHT_BROWSERS_PATH=0 lo busca dentro de node_modules
+// (donde lo instala el build), así entra al bundle de la función.
+process.env.PLAYWRIGHT_BROWSERS_PATH ??= "0";
+
 const VIEWPORT = { width: 1440, height: 900 };
+
+/**
+ * El file-tracing de Vercel puede no preservar el bit de ejecución del binario
+ * de ffmpeg. Antes de grabar, lo buscamos en node_modules y le forzamos +x.
+ * Best-effort: si algo falla, dejamos que Playwright reporte el error real.
+ */
+async function ensureFfmpegExecutable(): Promise<void> {
+  try {
+    const base = nodePath.join(
+      process.cwd(),
+      "node_modules/playwright-core/.local-browsers"
+    );
+    const dirs = await fs.readdir(base).catch(() => [] as string[]);
+    for (const d of dirs) {
+      if (!d.startsWith("ffmpeg")) continue;
+      const dir = nodePath.join(base, d);
+      for (const f of await fs.readdir(dir).catch(() => [] as string[])) {
+        if (f.startsWith("ffmpeg")) {
+          await fs.chmod(nodePath.join(dir, f), 0o755).catch(() => {});
+        }
+      }
+    }
+  } catch {
+    /* best-effort */
+  }
+}
 
 /**
  * Extrae el gid de tarea de un link de Asana (o acepta el gid pelado).
@@ -120,6 +151,7 @@ export async function runEvidence(input: EvidenceInput): Promise<EvidenceResult>
     // nativo (sin ffmpeg) hacia un directorio en /tmp; el archivo se finaliza al
     // cerrar el context.
     if (wantVideo) {
+      await ensureFfmpegExecutable();
       videoDir = await fs.mkdtemp(nodePath.join(os.tmpdir(), "evidence-video-"));
     }
     context = await browser.newContext({
