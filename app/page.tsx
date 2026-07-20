@@ -29,6 +29,14 @@ export default function HomeLanding() {
             CEO Scorecard, CRM Pow/Undo, Markova y más.
           </p>
         </Link>
+
+        <Link href="/evidencia" className={`${styles.card} ${styles.hubCard}`}>
+          <span className={styles.hubLabel}>QA</span>
+          <span className={styles.hubTitle}>Evidencia</span>
+          <p className={styles.cardDesc}>
+            Capturas y video de las apps, adjuntados a Asana.
+          </p>
+        </Link>
       </div>
     </main>
   );
