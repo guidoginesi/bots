@@ -15,7 +15,9 @@ export const maxDuration = 300;
  *
  * POST /api/evidence
  *   Header:  x-evidence-key: <EVIDENCE_API_KEY>
- *   Body:    { baseUrl, paths: string[], taskGid, comment?, fullPage?, login? }
+ *   Body:    { app, paths: string[], taskGid, comment?, fullPage? }
+ *            (multi-app: `app` -> EVIDENCE_<APP>_BASEURL/EMAIL/PASSWORD/SIGNIN_PATH.
+ *             Compat: se puede pasar `baseUrl`+`login` directo en vez de `app`.)
  *
  * Login (opcional): si EVIDENCE_EMAIL/EVIDENCE_PASSWORD está en el env (o se pasa
  * `login`), completa el formulario /auth/signin de la app target antes de
@@ -23,7 +25,8 @@ export const maxDuration = 300;
  */
 
 interface Body {
-  baseUrl: string;
+  app?: string; // clave de app -> resuelve EVIDENCE_<APP>_BASEURL/EMAIL/PASSWORD/SIGNIN_PATH
+  baseUrl?: string; // alternativa a `app` (compat): URL directa
   paths: string[];
   taskGid: string;
   comment?: string;
@@ -43,14 +46,39 @@ export async function POST(request: NextRequest) {
   } catch {
     return NextResponse.json({ error: "Body inválido" }, { status: 400 });
   }
-  const { baseUrl, paths, taskGid } = body;
-  if (!baseUrl || !Array.isArray(paths) || paths.length === 0 || !taskGid) {
-    return NextResponse.json({ error: "Faltan baseUrl, paths[] o taskGid" }, { status: 400 });
+  const { paths, taskGid } = body;
+  if (!Array.isArray(paths) || paths.length === 0 || !taskGid) {
+    return NextResponse.json({ error: "Faltan paths[] o taskGid" }, { status: 400 });
   }
 
-  const email = body.login?.email ?? process.env.EVIDENCE_EMAIL;
-  const password = body.login?.password ?? process.env.EVIDENCE_PASSWORD;
-  const signinPath = body.login?.signinPath ?? "/auth/signin";
+  // Resolución de config por app. Si viene `app`, se leen las env con prefijo
+  // EVIDENCE_<APP>_* (multi-app). Si viene `baseUrl` directo, se usa el esquema
+  // global (compat). Los secretos SIEMPRE salen del env.
+  let baseUrl: string | undefined;
+  let email: string | undefined;
+  let password: string | undefined;
+  let signinPath: string;
+  if (body.app) {
+    const K = body.app.toUpperCase().replace(/[^A-Z0-9]/g, "");
+    baseUrl = process.env[`EVIDENCE_${K}_BASEURL`];
+    email = process.env[`EVIDENCE_${K}_EMAIL`];
+    password = process.env[`EVIDENCE_${K}_PASSWORD`];
+    signinPath = process.env[`EVIDENCE_${K}_SIGNIN_PATH`] ?? "/auth/signin";
+    if (!baseUrl) {
+      return NextResponse.json(
+        { error: `App "${body.app}" no configurada (falta EVIDENCE_${K}_BASEURL en el env)` },
+        { status: 400 }
+      );
+    }
+  } else {
+    baseUrl = body.baseUrl;
+    email = body.login?.email ?? process.env.EVIDENCE_EMAIL;
+    password = body.login?.password ?? process.env.EVIDENCE_PASSWORD;
+    signinPath = body.login?.signinPath ?? "/auth/signin";
+    if (!baseUrl) {
+      return NextResponse.json({ error: "Falta `app` o `baseUrl`" }, { status: 400 });
+    }
+  }
 
   const results: Array<{ path: string; attachmentGid?: string; error?: string }> = [];
   let browser: Awaited<ReturnType<typeof puppeteer.launch>> | null = null;
