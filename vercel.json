@@ -1,7 +1,7 @@
 {
   "functions": {
     "app/api/evidence/route.ts": {
-      "memory": 3009,
+      "memory": 1024,
       "maxDuration": 300
     }
   },
