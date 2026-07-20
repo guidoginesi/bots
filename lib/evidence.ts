@@ -2,7 +2,13 @@ import { promises as fs } from "fs";
 import os from "os";
 import nodePath from "path";
 import chromium from "@sparticuz/chromium";
-import { chromium as playwright, type Browser, type BrowserContext } from "playwright-core";
+import {
+  chromium as playwright,
+  type Browser,
+  type BrowserContext,
+  type Locator,
+  type Page,
+} from "playwright-core";
 import { addComment, attachFile } from "@/lib/asana";
 
 /**
@@ -38,6 +44,25 @@ export interface EvidenceResult {
 process.env.PLAYWRIGHT_BROWSERS_PATH ??= "0";
 
 const VIEWPORT = { width: 1440, height: 900 };
+
+/**
+ * Llena un input y verifica que el value haya quedado. Los inputs de las apps
+ * son controlados por React: si se llenan antes de la hidratación, el onChange
+ * todavía no está enganchado y el value se pierde. Reintentamos hasta que quede
+ * (o se agoten los intentos). `fill()` dispara los eventos que React necesita.
+ */
+async function fillStable(
+  page: Page,
+  locator: Locator,
+  value: string,
+  retries = 6
+): Promise<void> {
+  for (let attempt = 0; attempt < retries; attempt++) {
+    await locator.fill(value);
+    if ((await locator.inputValue().catch(() => "")) === value) return;
+    await page.waitForTimeout(300); // esperar a que hidrate y reintentar
+  }
+}
 
 /**
  * El file-tracing de Vercel puede no preservar el bit de ejecución del binario
@@ -164,15 +189,28 @@ export async function runEvidence(input: EvidenceInput): Promise<EvidenceResult>
     // Login opcional (para páginas con sesión).
     if (email && password) {
       await page.goto(`${baseUrl}${signinPath}`, { waitUntil: "networkidle", timeout: 60000 });
-      await page.fill('input[type="email"]', email);
-      await page.fill('input[type="password"]', password);
-      // El botón dice "Ingresar".
-      await page.evaluate(() => {
-        const btn = Array.from(document.querySelectorAll("button")).find((b) =>
-          /ingresar/i.test(b.textContent || "")
-        );
-        (btn as HTMLButtonElement | undefined)?.click();
-      });
+      const emailInput = page.locator('input[type="email"]');
+      const passwordInput = page.locator('input[type="password"]');
+      await emailInput.waitFor({ state: "visible", timeout: 60000 });
+
+      // Email primero, verificando que el value quedó (esto además da tiempo a
+      // que la página termine de hidratar); recién ahí password y submit.
+      await fillStable(page, emailInput, email);
+      await fillStable(page, passwordInput, password);
+
+      // Click real del botón "Ingresar" (auto-wait + eventos que React espera).
+      const submit = page.getByRole("button", { name: /ingresar/i });
+      if (await submit.count()) {
+        await submit.first().click();
+      } else {
+        // Fallback: si no matchea por rol/nombre, buscar por texto en el DOM.
+        await page.evaluate(() => {
+          const btn = Array.from(document.querySelectorAll("button")).find((b) =>
+            /ingresar/i.test(b.textContent || "")
+          );
+          (btn as HTMLButtonElement | undefined)?.click();
+        });
+      }
       await page
         .waitForURL((url) => !url.pathname.includes("/auth/signin"), { timeout: 60000 })
         .catch(() => {});
