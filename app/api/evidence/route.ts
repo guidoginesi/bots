@@ -12,8 +12,12 @@ export const maxDuration = 300;
  *
  * POST /api/evidence
  *   Header:  x-evidence-key: <EVIDENCE_API_KEY>
- *   Body:    { app, paths: string[], taskGid, comment?, fullPage?, capture? }
+ *   Body:    { app, taskGid, comment?, fullPage?, capture?, settleMs?,
+ *              paths?: string[],   // recorrido simple: navega y captura cada ruta
+ *              steps?: Step[] }    // recorrido de QA: interacciones grabadas
  *            capture: "screenshot" (default) | "video" | "both"
+ *            Si viene `steps`, ejecuta el recorrido (click/fill/select/waitFor/...)
+ *            mientras graba, para que el video muestre la funcionalidad en uso.
  */
 
 export async function POST(request: NextRequest) {

@@ -53,14 +53,33 @@ export default function EvidenceForm({ apps }: { apps: string[] }) {
 
         <div className={styles.field}>
           <label className={styles.label} htmlFor="paths">
-            Pantallas <span className={styles.hint}>— una ruta por línea</span>
+            Pantallas <span className={styles.hint}>— una ruta por línea (o dejá vacío y usá pasos)</span>
           </label>
           <textarea
             id="paths"
             name="paths"
             className={styles.textarea}
             placeholder={"/dashboard/home\n/pedidos?estado=pendiente"}
-            required
+          />
+        </div>
+
+        <div className={styles.field}>
+          <label className={styles.label} htmlFor="steps">
+            Recorrido de QA <span className={styles.hint}>— avanzado, pasos JSON; graba las interacciones. Si lo completás, tiene prioridad sobre las pantallas</span>
+          </label>
+          <textarea
+            id="steps"
+            name="steps"
+            className={styles.textarea}
+            spellCheck={false}
+            placeholder={`[
+  { "action": "goto",   "path": "/budget" },
+  { "action": "click",  "selector": "tr:has-text('CX') >> text=Editar" },
+  { "action": "select", "selector": "[name=owner]", "value": "Andrés Acerenza" },
+  { "action": "click",  "selector": "button:has-text('Guardar')" },
+  { "action": "waitFor", "text": "Andrés Acerenza" },
+  { "action": "screenshot", "name": "owner-asignado" }
+]`}
           />
         </div>
 

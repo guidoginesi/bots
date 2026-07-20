@@ -19,14 +19,42 @@ import { addComment, attachFile } from "@/lib/asana";
 
 export type CaptureMode = "screenshot" | "video" | "both";
 
+/**
+ * Un paso del recorrido de QA. Los pasos se ejecutan en orden mientras se graba
+ * el video, de modo que el .webm muestre la funcionalidad en uso (no una pantalla
+ * quieta). Cada acción mapea a una operación de Playwright.
+ *
+ *  - goto:       navegar a una ruta relativa de la app
+ *  - click:      click en un selector (soporta text=, :has-text(), >> de Playwright)
+ *  - fill:       escribir en un input (con verificación de value, anti-hidratación)
+ *  - select:     elegir opción de un <select> nativo (por value o label)
+ *  - hover:      pasar el mouse por encima (revela menús/tooltips)
+ *  - press:      tecla (Enter, Escape, etc.)
+ *  - waitFor:    esperar por texto visible, por selector, o por ms fijos
+ *  - scroll:     scrollear al top/bottom o hasta un selector
+ *  - screenshot: capturar y adjuntar un PNG en ese punto del recorrido
+ */
+export type Step =
+  | { action: "goto"; path: string }
+  | { action: "click"; selector: string }
+  | { action: "fill"; selector: string; value: string }
+  | { action: "select"; selector: string; value: string }
+  | { action: "hover"; selector: string }
+  | { action: "press"; key: string }
+  | { action: "waitFor"; text?: string; selector?: string; ms?: number }
+  | { action: "scroll"; to?: "top" | "bottom"; selector?: string }
+  | { action: "screenshot"; name?: string; fullPage?: boolean };
+
 export interface EvidenceInput {
   app?: string; // clave -> EVIDENCE_<APP>_BASEURL/EMAIL/PASSWORD/SIGNIN_PATH
   baseUrl?: string; // alternativa/override a `app`
-  paths: string[];
+  paths?: string[]; // recorrido simple: solo navega y captura cada ruta
+  steps?: Step[]; // recorrido de QA: interacciones grabadas (tiene prioridad sobre paths)
   taskGid: string;
   comment?: string;
   fullPage?: boolean;
   capture?: CaptureMode;
+  settleMs?: number; // pausa tras cada paso para que el video sea legible (default 700)
   login?: { email: string; password: string; signinPath?: string };
 }
 
@@ -121,9 +149,11 @@ export class EvidenceError extends Error {
 }
 
 export async function runEvidence(input: EvidenceInput): Promise<EvidenceResult> {
-  const { paths, taskGid } = input;
-  if (!Array.isArray(paths) || paths.length === 0 || !taskGid) {
-    throw new EvidenceError("Faltan paths[] o taskGid", 400);
+  const { paths, steps, taskGid } = input;
+  const hasSteps = Array.isArray(steps) && steps.length > 0;
+  const hasPaths = Array.isArray(paths) && paths.length > 0;
+  if ((!hasSteps && !hasPaths) || !taskGid) {
+    throw new EvidenceError("Faltan steps[] o paths[], o taskGid", 400);
   }
   const capture: CaptureMode = input.capture ?? "screenshot";
   const wantVideo = capture === "video" || capture === "both";
@@ -206,21 +236,99 @@ export async function runEvidence(input: EvidenceInput): Promise<EvidenceResult>
       }
     }
 
-    // Recorrido por los paths. Con video, esta navegación queda grabada.
-    for (const p of paths) {
-      try {
-        await page.goto(`${baseUrl}${p}`, { waitUntil: "networkidle", timeout: 60000 });
-        await page.waitForTimeout(1500); // datos async
-        if (wantShots) {
-          const png = await page.screenshot({ fullPage: input.fullPage ?? true, type: "png" });
-          const safe = p.replace(/[^a-z0-9]+/gi, "_").replace(/^_|_$/g, "") || "home";
-          const att = await attachFile(taskGid, png, `${safe}.png`, "image/png");
-          results.push({ path: p, attachmentGid: att.gid });
-        } else {
-          results.push({ path: p });
+    // Helper: captura un PNG y lo adjunta a la tarea.
+    const shoot = async (label: string, fullPage: boolean) => {
+      const png = await page.screenshot({ fullPage, type: "png" });
+      const safe = label.replace(/[^a-z0-9]+/gi, "_").replace(/^_|_$/g, "") || "shot";
+      const att = await attachFile(taskGid, png, `${safe}.png`, "image/png");
+      results.push({ path: label, attachmentGid: att.gid });
+    };
+
+    const settleMs = input.settleMs ?? 700;
+
+    if (hasSteps) {
+      // Recorrido de QA: ejecuta las interacciones en orden mientras se graba el
+      // video. Si un paso falla, se corta el recorrido pero igual se finaliza y
+      // adjunta el video (para ver DÓNDE falló) y se reporta el error.
+      let shotCount = 0;
+      for (let i = 0; i < steps!.length; i++) {
+        const s = steps![i];
+        const tag = `paso ${i + 1}: ${s.action}`;
+        try {
+          switch (s.action) {
+            case "goto":
+              await page.goto(`${baseUrl}${s.path}`, { waitUntil: "networkidle", timeout: 60000 });
+              await page.waitForTimeout(1200); // datos async
+              break;
+            case "click":
+              await page.click(s.selector, { timeout: 15000 });
+              break;
+            case "fill":
+              await fillReliable(page, s.selector, s.value);
+              break;
+            case "select":
+              // Intenta por value y por label (elige lo que exista).
+              await page.selectOption(s.selector, [{ value: s.value }, { label: s.value }], {
+                timeout: 15000,
+              });
+              break;
+            case "hover":
+              await page.hover(s.selector, { timeout: 15000 });
+              break;
+            case "press":
+              await page.keyboard.press(s.key);
+              break;
+            case "waitFor":
+              if (s.text) {
+                await page.getByText(s.text, { exact: false }).first().waitFor({ timeout: 15000 });
+              } else if (s.selector) {
+                await page.waitForSelector(s.selector, { timeout: 15000 });
+              } else if (s.ms) {
+                await page.waitForTimeout(s.ms);
+              }
+              break;
+            case "scroll":
+              if (s.selector) {
+                await page.locator(s.selector).first().scrollIntoViewIfNeeded({ timeout: 15000 });
+              } else {
+                await page.evaluate(
+                  (to) => window.scrollTo({ top: to === "top" ? 0 : document.body.scrollHeight, behavior: "smooth" }),
+                  s.to ?? "bottom"
+                );
+              }
+              break;
+            case "screenshot":
+              shotCount++;
+              await shoot(s.name ?? `recorrido_${shotCount}`, s.fullPage ?? input.fullPage ?? true);
+              break;
+          }
+          await page.waitForTimeout(settleMs); // legibilidad del video
+        } catch (e) {
+          results.push({ path: tag, error: e instanceof Error ? e.message : String(e) });
+          break; // corta el recorrido; el video igual se adjunta abajo
         }
-      } catch (e) {
-        results.push({ path: p, error: e instanceof Error ? e.message : String(e) });
+      }
+      // Si se pidió foto (screenshot/both) y no hubo un paso screenshot explícito,
+      // deja una captura final del estado alcanzado.
+      if (wantShots && shotCount === 0) {
+        await shoot("recorrido_final", input.fullPage ?? true).catch((e) =>
+          results.push({ path: "recorrido_final", error: e instanceof Error ? e.message : String(e) })
+        );
+      }
+    } else {
+      // Recorrido simple por los paths. Con video, esta navegación queda grabada.
+      for (const p of paths!) {
+        try {
+          await page.goto(`${baseUrl}${p}`, { waitUntil: "networkidle", timeout: 60000 });
+          await page.waitForTimeout(1500); // datos async
+          if (wantShots) {
+            await shoot(p, input.fullPage ?? true);
+          } else {
+            results.push({ path: p });
+          }
+        } catch (e) {
+          results.push({ path: p, error: e instanceof Error ? e.message : String(e) });
+        }
       }
     }
 
@@ -232,7 +340,7 @@ export async function runEvidence(input: EvidenceInput): Promise<EvidenceResult>
       const videoPath = video ? await video.path() : undefined;
       if (videoPath) {
         const bytes = await fs.readFile(videoPath);
-        const stamp = paths.length === 1 ? "recorrido" : `recorrido_${paths.length}p`;
+        const stamp = hasSteps || (paths && paths.length > 1) ? "recorrido_qa" : "recorrido";
         const att = await attachFile(taskGid, bytes, `${stamp}.webm`, "video/webm");
         results.push({ path: "(video)", attachmentGid: att.gid });
       } else {

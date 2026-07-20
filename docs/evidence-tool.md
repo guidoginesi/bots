@@ -22,6 +22,28 @@ curl -X POST https://bots-one-zeta.vercel.app/api/evidence \
 - **`baseUrl`** (opcional): overridea la URL de la app manteniendo sus credenciales (útil para capturar un **preview**).
 - **Usar el dominio de PRODUCCIÓN público** (`https://bots-one-zeta.vercel.app` o `https://bots-guido-ginesi-pow.vercel.app`). Las URLs de deploy con hash (`bots-XXXX.vercel.app`) están detrás del **SSO de Vercel (Deployment Protection)**.
 
+## Recorrido de QA (`steps`) — que el video muestre la funcionalidad en uso
+`paths[]` solo **navega** (el video queda como pase de pantallas cargando). Para un QA real —entrar, hacer la acción, ver el resultado— se pasa `steps[]`: el bot ejecuta las interacciones **en orden mientras graba**. `steps` tiene prioridad sobre `paths`.
+
+```json
+{
+  "app": "appadm", "taskGid": "…", "capture": "video",
+  "comment": "QA — asignación de owner",
+  "steps": [
+    { "action": "goto",       "path": "/budget" },
+    { "action": "waitFor",    "text": "Budgets de Equipos" },
+    { "action": "click",      "selector": "tr:has-text('CX') >> text=Editar" },
+    { "action": "select",     "selector": "[name=owner]", "value": "Andrés Acerenza" },
+    { "action": "click",      "selector": "button:has-text('Guardar')" },
+    { "action": "waitFor",    "text": "Andrés Acerenza" },
+    { "action": "screenshot", "name": "owner-asignado" }
+  ]
+}
+```
+Acciones: `goto` (path), `click`/`hover` (selector), `fill` (selector+value, anti-hidratación), `select` (selector+value, por value o label), `press` (key), `waitFor` (text | selector | ms), `scroll` (to top/bottom | selector), `screenshot` (name?, fullPage?). `selector` acepta la sintaxis de Playwright (`text=`, `:has-text()`, `>>`). `settleMs` (default 700) es la pausa tras cada paso para que el video sea legible. Si un paso falla, se **corta** el recorrido pero **igual se adjunta el video** (para ver dónde falló) y se reporta el error.
+
+En la página `/evidencia` hay un textarea **"Recorrido de QA"** para pegar ese JSON de `steps` (modo avanzado).
+
 ## Archivos
 - `lib/evidence.ts` — **núcleo** compartido: `runEvidence()` (login + recorrido + screenshot/video + attach), `listConfiguredApps()`, `parseTaskGid()`. Usa `playwright-core` + `@sparticuz/chromium`.
 - `app/api/evidence/route.ts` — endpoint HTTP fino (auth por API key → `runEvidence`).
